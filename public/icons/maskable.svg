@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="WhiSchedule">
+  <defs>
+    <linearGradient id="g" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#3b8bff"/>
+      <stop offset="1" stop-color="#9b7dff"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Maskable icons should allow safe-area cropping. Keep content centered with padding. -->
+  <rect width="512" height="512" fill="#060d1a"/>
+  <circle cx="256" cy="256" r="196" fill="#111f35" opacity="0.96"/>
+  <path d="M176 294c18 0 30-14 36-34l16-42 18 60c6 20 14 30 30 30 15 0 26-10 32-28l20-52 12 34c7 20 18 32 36 32"
+        fill="none" stroke="url(#g)" stroke-width="28" stroke-linecap="round" stroke-linejoin="round"/>
+  <circle cx="186" cy="294" r="14" fill="#3b8bff"/>
+  <circle cx="326" cy="294" r="14" fill="#9b7dff"/>
+</svg>
+
