@@ -981,8 +981,7 @@ function setChipLoggedOut() {
 
 function openProfile() {
   const creds = loadCredentials();
-  // Avoid revealing a previously-saved pass number by default.
-  document.getElementById('inputPassNumber').value = '';
+  document.getElementById('inputPassNumber').value = creds.passNumber;
   document.getElementById('inputPassword').value   = creds.password;
   document.getElementById('modalStatus').textContent = '';
   document.getElementById('profileModal').classList.add('open');
