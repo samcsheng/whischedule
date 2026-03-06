@@ -72,6 +72,17 @@ body::after { content:''; position:fixed; inset:0; pointer-events:none; z-index:
   border:1px solid var(--border); color:var(--snow); cursor:pointer;
   display:flex; align-items:center; justify-content:center; font-size:16px; transition:background 0.15s; }
 .nav-btn:hover { background:var(--dim); }
+.today-btn {
+  width:auto;
+  padding:0 10px;
+  font-size:11px;
+  font-weight:700;
+  letter-spacing:0.05em;
+  text-transform:uppercase;
+  background:rgba(59,139,255,0.12);
+  border-color:rgba(59,139,255,0.22);
+}
+.today-btn:hover { background:rgba(59,139,255,0.18); }
 
 /* WEEK STRIP */
 .week-strip { display:flex; gap:6px; padding:14px 20px 0; overflow-x:auto; scrollbar-width:none; }
@@ -94,6 +105,44 @@ body::after { content:''; position:fixed; inset:0; pointer-events:none; z-index:
 .day-detail-header { font-family:'Syne',sans-serif; font-size:14px; font-weight:600;
   color:var(--muted); margin-bottom:12px; letter-spacing:0.05em; text-transform:uppercase; }
 .no-lessons { text-align:center; padding:32px; color:var(--muted); font-size:14px; }
+
+/* MULTI-DAY LIST */
+.day-list { display:flex; flex-direction:column; gap:12px; }
+.day-section {
+  scroll-margin-top: 120px; /* accounts for header/month/week-strip */
+}
+.day-section-header {
+  position:sticky; top:0;
+  z-index:5;
+  padding:10px 12px;
+  margin:0 0 10px 0;
+  background:rgba(6,13,26,0.92);
+  backdrop-filter: blur(10px);
+  border:1px solid var(--border);
+  border-radius:14px;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:10px;
+}
+.day-section-title {
+  font-family:'Syne',sans-serif;
+  font-size:12px;
+  font-weight:800;
+  letter-spacing:0.08em;
+  text-transform:uppercase;
+  color:var(--muted);
+}
+.day-section-title.is-today { color:var(--blue); }
+.day-section-meta {
+  font-family:'Syne Mono',monospace;
+  font-size:11px;
+  color:var(--muted);
+}
+.day-section.selected .day-section-header {
+  border-color:rgba(59,139,255,0.35);
+  box-shadow:0 6px 20px rgba(59,139,255,0.08);
+}
 
 .day-summary-bar { display:flex; gap:8px; margin-bottom:12px; flex-wrap:wrap; }
 .dsb-item { font-size:11px; font-weight:600; padding:4px 10px; border-radius:20px; letter-spacing:0.03em; }
@@ -316,14 +365,14 @@ body::after { content:''; position:fixed; inset:0; pointer-events:none; z-index:
   <div class="month-nav">
     <div class="month-label" id="monthLabel">—</div>
     <div class="nav-arrows">
+      <button class="nav-btn today-btn" onclick="goToToday()">Today</button>
       <button class="nav-btn" onclick="shiftWeek(-1)">‹</button>
       <button class="nav-btn" onclick="shiftWeek(1)">›</button>
     </div>
   </div>
   <div class="week-strip" id="weekStrip"></div>
   <div class="day-detail">
-    <div class="day-detail-header" id="dayDetailHeader">Today</div>
-    <div id="dayCards"></div>
+    <div id="dayList" class="day-list"></div>
   </div>
 </div>
 
@@ -613,37 +662,15 @@ const PROG_CONFIG = {
   other:        { label:'Other',           color:'var(--muted)',  textColor:'var(--muted)' },
 };
 
-function renderDayCards(key) {
+let dayKeys = [];
+let hasFocusedInitialDay = false;
+
+function formatDayTitle(key) {
   const d = new Date(key + 'T12:00:00');
-  const dayStr = DAYS_SHORT[d.getDay()] + ', ' + MONTHS_SHORT[d.getMonth()] + ' ' + d.getDate();
-  document.getElementById('dayDetailHeader').textContent = dayStr;
+  return DAYS_SHORT[d.getDay()] + ', ' + MONTHS_SHORT[d.getMonth()] + ' ' + d.getDate();
+}
 
-  const cards = buildDayView(key);
-
-  if (!cards.length) {
-    const hasAnyData = Object.keys(byDate).length > 0;
-    if (!hasAnyData) {
-      document.getElementById('dayCards').innerHTML = `
-        <div class="empty-state">
-          <div class="empty-emoji">🏔️</div>
-          <div class="empty-title">Your season awaits</div>
-          <div class="empty-sub">Enter your portal credentials and tap refresh to load your full season schedule.</div>
-          <button class="empty-cta" onclick="openProfile()">Set up credentials</button>
-        </div>
-        <div class="skel-card"><div class="skel-line skel-title"></div><div class="skel-line skel-sub"></div><div class="skel-line skel-hrs"></div></div>
-        <div class="skel-card" style="opacity:0.55"><div class="skel-line skel-title" style="width:45%"></div><div class="skel-line skel-sub" style="width:28%"></div><div class="skel-line skel-hrs"></div></div>
-        <div class="skel-card" style="opacity:0.3"><div class="skel-line skel-title" style="width:70%"></div><div class="skel-line skel-sub" style="width:40%"></div><div class="skel-line skel-hrs"></div></div>`;
-    } else {
-      document.getElementById('dayCards').innerHTML = `
-        <div class="empty-state" style="padding:40px 24px">
-          <div class="empty-emoji">☀️</div>
-          <div class="empty-title">Day off</div>
-          <div class="empty-sub">Nothing scheduled — enjoy the mountain!</div>
-        </div>`;
-    }
-    return;
-  }
-
+function buildCardsHtml(cards) {
   let html = '';
   cards.forEach(c => {
     const cfg = PROG_CONFIG[c.program] || PROG_CONFIG.other;
@@ -681,8 +708,137 @@ function renderDayCards(key) {
       ${pills ? `<div class="lcard-meta">${pills}</div>` : ''}
     </div>`;
   });
+  return html;
+}
 
-  document.getElementById('dayCards').innerHTML = html;
+function computeDayKeys() {
+  const keys = Object.keys(byDate).sort();
+  if (!keys.length) return [];
+
+  const minKey = keys[0];
+  const maxKey = (SEASON_END_KEY && SEASON_END_KEY >= minKey) ? SEASON_END_KEY : keys[keys.length - 1];
+
+  const out = [];
+  const start = new Date(minKey + 'T12:00:00');
+  const end   = new Date(maxKey + 'T12:00:00');
+
+  for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
+    out.push(toKey(d));
+  }
+  return out;
+}
+
+function renderDaySection(key) {
+  const title = formatDayTitle(key);
+  const isToday = key === TODAY_KEY;
+  const isFuture = key > TODAY_KEY;
+
+  const cards = buildDayView(key);
+  const metaText = cards.length ? `${cards.length} item${cards.length === 1 ? '' : 's'}` : (isFuture ? 'No schedule yet' : 'Day off');
+
+  const headerCls = ['day-section-title', isToday ? 'is-today' : ''].filter(Boolean).join(' ');
+  const sectionCls = ['day-section', key === selectedKey ? 'selected' : ''].filter(Boolean).join(' ');
+
+  const cardsHtml = cards.length
+    ? buildCardsHtml(cards)
+    : `<div class="no-lessons">${metaText}</div>`;
+
+  return `<section class="${sectionCls}" data-key="${key}">
+    <div class="day-section-header">
+      <div class="${headerCls}">${title}${isToday ? ' · Today' : ''}</div>
+      <div class="day-section-meta">${metaText}</div>
+    </div>
+    <div class="day-section-cards">${cardsHtml}</div>
+  </section>`;
+}
+
+function renderDayList() {
+  const el = document.getElementById('dayList');
+  if (!el) return;
+
+  const hasAnyData = Object.keys(byDate).length > 0;
+  if (!hasAnyData) {
+    el.innerHTML = `
+      <div class="empty-state">
+        <div class="empty-emoji">🏔️</div>
+        <div class="empty-title">Your season awaits</div>
+        <div class="empty-sub">Enter your portal credentials and tap refresh to load your full season schedule.</div>
+        <button class="empty-cta" onclick="openProfile()">Set up credentials</button>
+      </div>
+      <div class="skel-card"><div class="skel-line skel-title"></div><div class="skel-line skel-sub"></div><div class="skel-line skel-hrs"></div></div>
+      <div class="skel-card" style="opacity:0.55"><div class="skel-line skel-title" style="width:45%"></div><div class="skel-line skel-sub" style="width:28%"></div><div class="skel-line skel-hrs"></div></div>
+      <div class="skel-card" style="opacity:0.3"><div class="skel-line skel-title" style="width:70%"></div><div class="skel-line skel-sub" style="width:40%"></div><div class="skel-line skel-hrs"></div></div>`;
+    dayKeys = [];
+    return;
+  }
+
+  dayKeys = computeDayKeys();
+  el.innerHTML = dayKeys.map(k => renderDaySection(k)).join('');
+}
+
+function updateSelectedDaySection() {
+  const el = document.getElementById('dayList');
+  if (!el) return;
+  el.querySelectorAll('.day-section.selected').forEach(s => s.classList.remove('selected'));
+  const sec = el.querySelector(`.day-section[data-key="${selectedKey}"]`);
+  if (sec) sec.classList.add('selected');
+}
+
+function focusInitialDay() {
+  if (hasFocusedInitialDay) return;
+  if (!dayKeys || !dayKeys.length) return;
+
+  selectedKey = dayKeys.includes(TODAY_KEY)
+    ? TODAY_KEY
+    : (TODAY_KEY < dayKeys[0] ? dayKeys[0] : dayKeys[dayKeys.length - 1]);
+
+  selectedKey = clampSelectedKey();
+  weekOffset = computeWeekOffsetForKey(selectedKey);
+  renderWeek();
+  scrollToDay(selectedKey, false);
+  hasFocusedInitialDay = true;
+}
+
+function clampSelectedKey() {
+  if (!dayKeys || !dayKeys.length) return selectedKey;
+  if (dayKeys.includes(selectedKey)) return selectedKey;
+  if (selectedKey < dayKeys[0]) return dayKeys[0];
+  if (selectedKey > dayKeys[dayKeys.length - 1]) return dayKeys[dayKeys.length - 1];
+  // Shouldn't happen because we render a contiguous date range, but fall back anyway:
+  return dayKeys[0];
+}
+
+function scrollToDay(key, smooth = true) {
+  const el = document.getElementById('dayList');
+  if (!el) return;
+  const sec = el.querySelector(`.day-section[data-key="${key}"]`);
+  if (!sec) return;
+  sec.scrollIntoView({ behavior: smooth ? 'smooth' : 'auto', block: 'start' });
+}
+
+function computeWeekOffsetForKey(key) {
+  const base = new Date(TODAY_KEY + 'T12:00:00');
+  const baseSunday = new Date(base);
+  baseSunday.setDate(base.getDate() - base.getDay());
+
+  const target = new Date(key + 'T12:00:00');
+  const targetSunday = new Date(target);
+  targetSunday.setDate(target.getDate() - target.getDay());
+
+  const diffDays = Math.round((targetSunday - baseSunday) / (24 * 60 * 60 * 1000));
+  return Math.round(diffDays / 7);
+}
+
+function goToToday() {
+  // Prefer the actual today; if schedule doesn't include it, jump to closest valid day.
+  const target = dayKeys && dayKeys.length
+    ? (dayKeys.includes(TODAY_KEY) ? TODAY_KEY : (TODAY_KEY < dayKeys[0] ? dayKeys[0] : dayKeys[dayKeys.length - 1]))
+    : TODAY_KEY;
+
+  selectedKey = target;
+  weekOffset = computeWeekOffsetForKey(selectedKey);
+  renderWeek();
+  scrollToDay(selectedKey, true);
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -740,16 +896,23 @@ function renderWeek() {
     </div>`;
   }
   document.getElementById('weekStrip').innerHTML = html;
-  renderDayCards(selectedKey);
+  updateSelectedDaySection();
 }
 
-function selectDay(key) { selectedKey = key; renderWeek(); }
+function selectDay(key) {
+  selectedKey = key;
+  selectedKey = clampSelectedKey();
+  renderWeek();
+  scrollToDay(selectedKey, true);
+}
 function shiftWeek(dir) {
   weekOffset += dir;
   const d = new Date(selectedKey + 'T12:00:00');
   d.setDate(d.getDate() + dir * 7);
   selectedKey = toKey(d);
+  selectedKey = clampSelectedKey();
   renderWeek();
+  scrollToDay(selectedKey, true);
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -1050,7 +1213,13 @@ async function triggerRefresh() {
 
     ingestLessons(data.lessons);
     saveScheduleCache(data.lessons);
-    renderWeek();
+    renderDayList();
+    if (!hasFocusedInitialDay) focusInitialDay();
+    if (hasFocusedInitialDay) {
+      // focusInitialDay already called renderWeek()
+    } else {
+      renderWeek();
+    }
     buildStats();
 
     if (data.instructorName) {
@@ -1135,9 +1304,12 @@ window.addEventListener('load', () => {
 
   if (cache && cache.length) {
     ingestLessons(cache);
-    renderWeek();
+    renderDayList();
+    if (!hasFocusedInitialDay) focusInitialDay();
+    if (!hasFocusedInitialDay) renderWeek();
     buildStats();
   } else {
+    renderDayList();
     renderWeek();
     buildStats();
     if (!creds.passNumber) setTimeout(openProfile, 600);
