@@ -1,0 +1,30 @@
+{
+  "name": "WhiSchedule",
+  "short_name": "WhiSchedule",
+  "description": "Schedule viewer for Whistler Blackcomb instructors.",
+  "id": "/",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#060d1a",
+  "theme_color": "#060d1a",
+  "lang": "en",
+  "icons": [
+    {
+      "src": "/icons/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    },
+    {
+      "src": "/icons/maskable.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "maskable"
+    }
+  ],
+  "orientation": "portrait",
+  "categories": ["productivity", "utilities"],
+  "prefer_related_applications": false
+}
+

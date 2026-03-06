@@ -1,0 +1,28 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#060d1a" />
+    <title>Offline — WhiSchedule</title>
+    <style>
+      :root { --bg:#060d1a; --card:#111f35; --border:rgba(255,255,255,0.07); --snow:#e8f0ff; --muted:#4a6080; }
+      html,body { height:100%; margin:0; font-family: system-ui, -apple-system, Segoe UI, Roboto, Inter, sans-serif; background:var(--bg); color:var(--snow); }
+      .wrap { height:100%; display:flex; align-items:center; justify-content:center; padding:24px; }
+      .card { max-width:520px; width:100%; background:var(--card); border:1px solid var(--border); border-radius:16px; padding:18px 18px 16px; }
+      h1 { margin:0 0 8px; font-size:18px; }
+      p { margin:0 0 12px; color:var(--muted); line-height:1.5; }
+      button { appearance:none; border:1px solid var(--border); background:transparent; color:var(--snow); padding:10px 12px; border-radius:12px; font-weight:600; cursor:pointer; }
+    </style>
+  </head>
+  <body>
+    <div class="wrap">
+      <div class="card">
+        <h1>You’re offline</h1>
+        <p>WhiSchedule can open from your home screen, but it needs a connection to refresh from the portal.</p>
+        <button onclick="location.reload()">Try again</button>
+      </div>
+    </div>
+  </body>
+</html>
+
