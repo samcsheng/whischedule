@@ -656,21 +656,21 @@ function buildDayView(key) {
       });
     });
 
-    // TODAY ONLY: fill gaps with Sched-for placeholders for unassigned programs.
-    // Once the supervisor assigns, the paid row appears and the placeholder is suppressed.
+    // TODAY ONLY: fill gaps with Sched-for placeholders for unassigned programs
     if (isToday) {
       const seenSchedTitles = new Set();
       raw.forEach(l => {
         if (!isSched(l.raw)) return;
-        const prog = getProgram(l.raw);
-        if (NON_WORK_PROGS.has(prog)) return;
-        if (paidPrograms.has(prog)) return; // real assignment exists — skip placeholder
+        const { program: schedProg } = classifyRow(l.raw, l.assignment);
+        if (!schedProg || ['off','end','sick','private_admin','admin'].includes(schedProg)) return;
+        if (paidPrograms.has(schedProg)) return; // real assignment exists — skip
         const title = cleanTitle(l.raw);
         if (seenSchedTitles.has(title)) return;
         seenSchedTitles.add(title);
+        const displayProg = { daily_kids:'daily', teens_daily:'teens', adult_alpine:'adult_alpine', adult_base:'adult_base', never_ever:'never_ever', womens_camps:'womens_camps' }[schedProg] || schedProg;
         cards.push({
           title,
-          program: prog,
+          program: displayProg,
           discipline: getDiscipline(l.raw),
           location: getLocation(l.raw),
           isSched: true,
