@@ -41,7 +41,15 @@ def login(session, pass_number, password):
         })
         soup = BeautifulSoup(resp.text, "html.parser")
         if soup.find("a", string=lambda t: t and "Logout" in t):
-            return
+            # Scrape instructor name — it's in a <td> near the photo
+            name = ""
+            for td in soup.find_all("td"):
+                txt = td.get_text(strip=True)
+                if "Instructor:" in txt:
+                    # text looks like "Instructor: Chengmin ( Sam )  Sheng"
+                    name = txt.replace("Instructor:", "").split("POD:")[0].strip()
+                    break
+            return name
         err = soup.find(class_="crErrorMessage")
         raise ValueError(err.get_text(strip=True) if err else "Login failed")
 
@@ -86,7 +94,7 @@ def fetch_window(session, start_dt):
 def scrape_season(pass_number, password):
     session = requests.Session()
     session.headers.update(HEADERS)
-    login(session, pass_number, password)
+    instructor_name = login(session, pass_number, password) or ""
     all_lessons = {}
     cur = SEASON_START
     while cur <= SEASON_END:
@@ -98,7 +106,7 @@ def scrape_season(pass_number, password):
         except Exception:
             pass
         cur += timedelta(days=WINDOW_DAYS)
-    return sorted(all_lessons.values(), key=lambda l: l["date"])
+    return sorted(all_lessons.values(), key=lambda l: l["date"]), instructor_name
 
 
 class handler(BaseHTTPRequestHandler):
@@ -130,8 +138,8 @@ class handler(BaseHTTPRequestHandler):
             return self._send(400, {"error": "passNumber and password required"})
 
         try:
-            lessons = scrape_season(pn, pw)
-            self._send(200, {"lessons": lessons})
+            lessons, name = scrape_season(pn, pw)
+            self._send(200, {"lessons": lessons, "instructorName": name})
         except ValueError as e:
             self._send(401, {"error": str(e)})
         except Exception as e:

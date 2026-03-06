@@ -1132,6 +1132,12 @@ async function triggerRefresh() {
     renderWeek();
     buildStats();
 
+    // Save and display instructor name
+    if (data.instructorName) {
+      localStorage.setItem('wb_instructorName', data.instructorName);
+      updateChipName(data.instructorName);
+    }
+
     // Flash fab green briefly
     fab.style.background = 'var(--green)';
     setTimeout(() => { fab.style.background = ''; }, 1200);
@@ -1172,13 +1178,24 @@ function ingestLessons(lessons) {
   });
 }
 
-// On load: show credential prompt if nothing saved yet
+function updateChipName(name) {
+  // Format: "Chengmin ( Sam ) Sheng" → prefer nickname "Sam Sheng"
+  let display = name;
+  const nick = name.match(/\(\s*([^)]+?)\s*\)/);
+  const last  = name.split(/\s+/).pop();
+  if (nick) display = nick[1].trim() + ' ' + last;
+  document.getElementById('chipName').textContent = display;
+}
+
+// On load: show saved name or pass number, prompt if nothing saved
 window.addEventListener('load', () => {
   const creds = loadCredentials();
-  if (creds.passNumber) {
+  const savedName = localStorage.getItem('wb_instructorName');
+  if (savedName) {
+    updateChipName(savedName);
+  } else if (creds.passNumber) {
     document.getElementById('chipName').textContent = creds.passNumber;
   } else {
-    // Prompt on first open
     setTimeout(openProfile, 600);
   }
 });
