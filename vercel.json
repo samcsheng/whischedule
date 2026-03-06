@@ -1,7 +1,7 @@
 {
   "version": 2,
   "builds": [
-    { "src": "public/index.html", "use": "@vercel/static" },
+    { "src": "public/**", "use": "@vercel/static" },
     { "src": "api/scrape.py", "use": "@vercel/python" }
   ],
   "headers": [
