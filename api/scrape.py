@@ -41,13 +41,19 @@ def login(session, pass_number, password):
         })
         soup = BeautifulSoup(resp.text, "html.parser")
         if soup.find("a", string=lambda t: t and "Logout" in t):
-            # Scrape instructor name — it's in a <td> near the photo
+            # Scrape instructor name — it lives in a <td> that contains a <b>Instructor:</b> tag
             name = ""
             for td in soup.find_all("td"):
-                txt = td.get_text(strip=True)
-                if "Instructor:" in txt:
-                    # text looks like "Instructor: Chengmin ( Sam )  Sheng"
-                    name = txt.replace("Instructor:", "").split("POD:")[0].strip()
+                b_tag = td.find("b")
+                if b_tag and "Instructor:" in b_tag.get_text():
+                    # Get all text after the <b> tag
+                    full_text = td.get_text(separator=" ", strip=True)
+                    # Remove the "Instructor:" prefix
+                    name = full_text.replace("Instructor:", "").strip()
+                    # Strip any trailing metadata like "POD: ..." or "Level: ..."
+                    for stop in ["POD:", "Level:", "Discipline:", "Cert:"]:
+                        if stop in name:
+                            name = name[:name.index(stop)].strip()
                     break
             return name
         err = soup.find(class_="crErrorMessage")

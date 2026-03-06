@@ -105,7 +105,6 @@ body::after { content:''; position:fixed; inset:0; pointer-events:none; z-index:
 .lcard.type-sick::before     { background:var(--red); }
 .lcard.type-other::before    { background:var(--muted); }
 
-/* future sched cards: same style as historic, just no hours */
 .lcard.is-off   { opacity:0.35; }
 
 .lcard-top { display:flex; justify-content:space-between; align-items:flex-start; gap:8px; }
@@ -252,7 +251,6 @@ body::after { content:''; position:fixed; inset:0; pointer-events:none; z-index:
 .instructor-chip { cursor:pointer; transition: border-color 0.2s; }
 .instructor-chip:hover { border-color:rgba(59,139,255,0.4); }
 
-
 /* ── EMPTY STATES ── */
 .empty-state {
   text-align:center; padding:56px 28px 40px;
@@ -285,7 +283,6 @@ body::after { content:''; position:fixed; inset:0; pointer-events:none; z-index:
 /* stat placeholder tiles */
 .bstat-empty { opacity:0.3; }
 .bstat-empty .bstat-val { font-size:28px; letter-spacing:0.1em; }
-
 </style>
 </head>
 <body>
@@ -298,7 +295,7 @@ body::after { content:''; position:fixed; inset:0; pointer-events:none; z-index:
         <div class="sched-title">My Schedule</div>
       </div>
       <div class="instructor-chip" onclick="openProfile()">
-        <div class="chip-avatar">S</div>
+        <div class="chip-avatar" id="chipAvatar">S</div>
         <div class="chip-name" id="chipName">Sam Sheng</div>
       </div>
     </div>
@@ -322,11 +319,11 @@ body::after { content:''; position:fixed; inset:0; pointer-events:none; z-index:
     <div class="stats-title fade-in">Season Stats</div>
     <div class="stats-sub fade-in d1" id="statsSubtitle"></div>
     <div class="big-stats fade-in d2" id="bigStats"></div>
-    <div class="section-title fade-in d3">Hours by Program</div>
-    <div class="breakdown fade-in d4" id="breakdown"></div>
-    <div class="section-title fade-in d4">Season Heatmap</div>
-    <div class="heatmap-wrap fade-in d5"><div class="heatmap-months" id="heatmap"></div></div>
-    <div id="heatmapLegend" class="fade-in d5"></div>
+    <div class="section-title fade-in d3">Season Heatmap</div>
+    <div class="heatmap-wrap fade-in d4"><div class="heatmap-months" id="heatmap"></div></div>
+    <div id="heatmapLegend" class="fade-in d4"></div>
+    <div class="section-title fade-in d4">Hours by Program</div>
+    <div class="breakdown fade-in d5" id="breakdown"></div>
     <div class="section-title fade-in d5">Private Clients</div>
     <div class="client-list" id="clientList"></div>
   </div>
@@ -353,12 +350,10 @@ const TODAY_KEY    = new Date().toISOString().slice(0, 10);
 
 function toKey(d) { return d.toISOString().slice(0,10); }
 
-// Strip "WB:" prefix
 function cleanTitle(raw) {
   return raw.replace(/^WB:\s*/i,'').replace(/^Sched\s+for\s+/i,'').trim();
 }
 
-// Detect location from activity string
 function getLocation(raw) {
   if (/\(B2\)/i.test(raw))       return 'B2';
   if (/\(B\)/i.test(raw))        return 'Blackcomb';
@@ -368,7 +363,6 @@ function getLocation(raw) {
   return null;
 }
 
-// Detect private lesson duration
 function getPrivateDuration(raw) {
   if (/\bFD\b/.test(raw)) return 'Full Day';
   if (/\bHD\b/.test(raw)) return 'Half Day';
@@ -376,11 +370,9 @@ function getPrivateDuration(raw) {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// V3 CLASSIFICATION ENGINE
-// Validated against Sam Sheng, John Holms, Brydie Bailey — zero unclassified
+// CLASSIFICATION ENGINE
 // ─────────────────────────────────────────────────────────────────────────────
 
-// 4 paid assignment types observed across all instructors
 function isPaid(assignment) {
   return assignment === 'Assignment' ||
          assignment === 'Continuing Assignment' ||
@@ -390,12 +382,10 @@ function isPaid(assignment) {
 // "Sched for …" placeholder row (future schedule intent)
 function isSched(raw) { return /sched\s+for/i.test(raw); }
 
-// Returns { category, program, discipline, paid }
 function classifyRow(raw, assignment) {
   const al  = raw.toLowerCase();
   const paid = isPaid(assignment);
 
-  // ── Structural / meta ──────────────────────────────────────────────────────
   if (/sched\s+for/i.test(raw))                         return { category:'SCHED',       paid:false };
   if (/^WB:\s*Sched\b/i.test(raw) && /private/i.test(raw)) return { category:'SCHED',  paid:false };
   if (/thank you for the great season/i.test(raw))      return { category:'SEASON_END',  paid:false };
@@ -406,20 +396,13 @@ function classifyRow(raw, assignment) {
   if (/keen to work|morning off|afternoon off|\bam hold\b/i.test(raw))
                                                         return { category:'AVAIL_META',  paid:false };
   if (/term process/i.test(al))                         return { category:'ADMIN',       paid, program:'admin' };
-
-  // ── Training ───────────────────────────────────────────────────────────────
   if (/training/i.test(al))
     return { category:'TRAINING', paid, program:'training', discipline:getDiscipline(al) };
-
-  // ── Private overhead (meetings, end-of-day, standby wrappers) ─────────────
   if (/fd private meeting|pm private meeting|am private meeting|private meeting|private end of day|private standby|private start of day/i.test(al))
     return { category:'PRIVATE_ADMIN', paid, program:'private_admin' };
-
-  // ── Private lesson (main lesson rows) ─────────────────────────────────────
   if (/private|manual/i.test(al))
     return { category:'PRIVATE_LESSON', paid, program:'private', discipline:getDiscipline(al) };
 
-  // ── Group lesson programs (WB lesson product registry) ────────────────────
   const prog = detectProgram(al);
   return { category:'LESSON', paid, program:prog, discipline:getDiscipline(al) };
 }
@@ -447,7 +430,6 @@ function getDiscipline(al) {
   return null;
 }
 
-// getProgram() — legacy shim mapping classifyRow output to UI program keys
 function getProgram(raw) {
   const { category, program } = classifyRow(raw, 'Assignment');
   if (category === 'SEASON_END')     return 'end';
@@ -473,65 +455,77 @@ function getProgram(raw) {
 // SCHEDULE DATA
 // ─────────────────────────────────────────────────────────────────────────────
 let SEASON_END_KEY = null;
-const byDate = {};  // dateKey → [lessons]
+const byDate = {};
 
 // ─────────────────────────────────────────────────────────────────────────────
-// RENDER A DAY: build card objects from raw lessons
+// BUILD DAY VIEW
 // ─────────────────────────────────────────────────────────────────────────────
 
 function buildDayView(key) {
   const raw = byDate[key] || [];
-  const isPast = key < TODAY_KEY;
+  const isPast   = key < TODAY_KEY;
   const isFuture = key > TODAY_KEY;
   const isAfterEnd = SEASON_END_KEY && key > SEASON_END_KEY;
 
   if (!raw.length) return [];
-
-  // If after season end, just show nothing meaningful
   if (isAfterEnd) return [];
 
   const cards = [];
 
   if (isFuture) {
-    // Future: use "Sched for..." items as the schedule indicators (deduplicated by program)
-    // Ignore hours — just show what's planned
-    const seen = new Set();
+    // ── FUTURE DAYS ──────────────────────────────────────────────────────────
+    // Show any row that represents real work:
+    //   (a) rows with a paid assignment (Assignment / Continuing / Private Request)
+    //   (b) "Sched for …" placeholder rows that aren't off/end
+    // Exclude pure meta rows (Day Off, Time Off, Called Off, Sick, Season End,
+    // Keen-to-work, Private overhead admin rows)
+    const NON_WORK_PROGS = new Set(['off','end','sick','private_admin']);
+    const seenTitles = new Set();
+
     raw.forEach(l => {
-      if (!isSched(l.raw)) return; // only sched-for items for future
       const prog = getProgram(l.raw);
-      if (prog === 'off' || prog === 'end') return;
+      if (NON_WORK_PROGS.has(prog)) return;
+
+      const isSchedRow = isSched(l.raw);
+      const isAssigned = isPaid(l.assignment);
+
+      // Only include if it's a sched-for placeholder OR has a real assignment
+      if (!isSchedRow && !isAssigned) return;
+
+      // Deduplicate by clean title to avoid e.g. multiple sched rows for same program
       const title = cleanTitle(l.raw);
-      if (seen.has(title)) return;
-      seen.add(title);
+      if (seenTitles.has(title)) return;
+      seenTitles.add(title);
+
       cards.push({
         title,
         program: prog,
         discipline: getDiscipline(l.raw),
         location: getLocation(l.raw),
-        isSched: true,
-        hours: null,
-        assignment: null,
-        client: null,
-        duration: null,
+        isSched: isSchedRow && !isAssigned,
+        hours: null,   // don't show hours for future (may be 0 placeholders)
+        assignment: isAssigned ? l.assignment : null,
+        client: l.client || null,
+        duration: getPrivateDuration(l.raw),
       });
     });
-    // If no sched-for items but has off markers
+
+    // Fall back: show Day Off if truly nothing work-related
     if (!cards.length) {
       const hasOff = raw.some(l => /regular day off/i.test(l.raw));
       if (hasOff) cards.push({ title: 'Day Off', program: 'off', isSched: false, hours: null });
     }
+
   } else {
-    // Past / today: only show paid items (Assignment / Continuing Assignment)
-    // Group private lessons into one card per session
+    // ── PAST / TODAY ─────────────────────────────────────────────────────────
     const privateGroups = {};
     raw.forEach(l => {
       if (!isPaid(l.assignment)) return;
       const prog = getProgram(l.raw);
-      if (prog === 'end') return;
-      if (prog === 'private_admin') return; // overhead rows excluded from lesson cards
+      if (['off','end'].includes(prog)) return;
+      if (prog === 'private_admin') return;
 
       if (prog === 'private') {
-        // Group by client (or by date if no client)
         const groupKey = l.client || 'private_' + key;
         if (!privateGroups[groupKey]) privateGroups[groupKey] = { hours: 0, client: l.client, raws: [], assignment: l.assignment };
         privateGroups[groupKey].hours += l.hours;
@@ -551,9 +545,7 @@ function buildDayView(key) {
       }
     });
 
-    // Add private groups as single cards
     Object.values(privateGroups).forEach(g => {
-      // Pick best title from raws (prefer the main lesson line, not admin lines)
       const mainRaw = g.raws.find(r => !/meeting|end of day|standby|sched/i.test(r)) || g.raws[0];
       cards.push({
         title: cleanTitle(mainRaw),
@@ -568,7 +560,6 @@ function buildDayView(key) {
       });
     });
 
-    // Show off/sick even for past days if that's all there is
     if (!cards.length) {
       const sickRow = raw.find(l => /sick/i.test(l.raw));
       const offRow  = raw.find(l => /regular day off|called off|time off/i.test(l.raw));
@@ -580,7 +571,7 @@ function buildDayView(key) {
   return cards;
 }
 
-// Program → display config (v3 — full WB lesson product registry)
+// Program → display config
 const PROG_CONFIG = {
   schools:      { label:'Schools',         color:'var(--blue)',   textColor:'#7ab8ff' },
   daily:        { label:'Kids Daily',      color:'var(--teal)',   textColor:'var(--teal)' },
@@ -637,7 +628,6 @@ function renderDayCards(key) {
     const cfg = PROG_CONFIG[c.program] || PROG_CONFIG.other;
     const cls = ['lcard', `type-${c.program}`, c.program === 'off' ? 'is-off' : ''].filter(Boolean).join(' ');
 
-    // Pills
     let pills = '';
     if (c.isSched) {
       pills += `<span class="pill pill-sched">Scheduled</span>`;
@@ -700,11 +690,19 @@ function renderWeek() {
     const isPast   = key < TODAY_KEY;
     const isAfterEnd = SEASON_END_KEY && key > SEASON_END_KEY;
 
-    // Determine dot presence
     let hasWork = false;
     if (!isAfterEnd) {
-      if (isFuture) hasWork = lessons.some(l => isSched(l.raw) && !/day off/i.test(l.raw));
-      else hasWork = lessons.some(l => isPaid(l.assignment) && !['off','end','private_admin'].includes(getProgram(l.raw)));
+      if (isFuture) {
+        // Has work dot if there are any assigned or sched-for non-off rows
+        const NON_WORK_PROGS = new Set(['off','end','sick','private_admin']);
+        hasWork = lessons.some(l => {
+          const prog = getProgram(l.raw);
+          if (NON_WORK_PROGS.has(prog)) return false;
+          return isPaid(l.assignment) || isSched(l.raw);
+        });
+      } else {
+        hasWork = lessons.some(l => isPaid(l.assignment) && !['off','end','private_admin'].includes(getProgram(l.raw)));
+      }
     }
 
     const cls = ['wd',
@@ -737,7 +735,6 @@ function shiftWeek(dir) {
 // STATS
 // ─────────────────────────────────────────────────────────────────────────────
 function buildStats() {
-  // No data yet — show rich placeholder
   if (!Object.keys(byDate).length) {
     document.getElementById('statsSubtitle').textContent = 'Nov 2025 — Apr 2026';
     document.getElementById('bigStats').innerHTML = `
@@ -763,18 +760,12 @@ function buildStats() {
     return;
   }
 
-  // Only count dates before season end
   const validKeys = Object.keys(byDate).filter(k => !SEASON_END_KEY || k < SEASON_END_KEY);
 
-  // Paid work days: days with at least one paid non-off item
   const workDayKeys = validKeys.filter(k =>
     byDate[k].some(l => isPaid(l.assignment) && !['off','end','sick','other'].includes(getProgram(l.raw)) && getProgram(l.raw) !== 'private_admin')
   );
 
-  // Sick days
-  const sickDays = validKeys.filter(k => byDate[k].some(l => /sick/i.test(l.raw))).length;
-
-  // Paid hours by program (v3 — private_admin tracked separately, admin excluded)
   const progHours = {};
   let adminOverheadHrs = 0;
   validKeys.forEach(k => {
@@ -783,19 +774,16 @@ function buildStats() {
       const prog = getProgram(l.raw);
       if (['off','end'].includes(prog)) return;
       if (prog === 'private_admin') { adminOverheadHrs += l.hours; return; }
-      if (prog === 'other' && /term process/i.test(l.raw)) return; // skip payroll admin rows
+      if (prog === 'other' && /term process/i.test(l.raw)) return;
       progHours[prog] = (progHours[prog]||0) + l.hours;
     });
   });
   const lessonHrs = Object.values(progHours).reduce((a,b)=>a+b,0);
-  const totalHrs  = lessonHrs + adminOverheadHrs;
 
-  // Private sessions (unique days with private paid items)
   const privateDayKeys = new Set(
     validKeys.filter(k => byDate[k].some(l => isPaid(l.assignment) && getProgram(l.raw)==='private'))
   );
 
-  // Clients
   const clients = {};
   validKeys.forEach(k => {
     byDate[k].forEach(l => {
@@ -806,7 +794,6 @@ function buildStats() {
     });
   });
 
-  // Season dates
   const allKeys = Object.keys(byDate).sort();
   const seasonStart = allKeys[0];
   const seasonEndDisplay = SEASON_END_KEY || allKeys[allKeys.length-1];
@@ -814,7 +801,6 @@ function buildStats() {
   document.getElementById('statsSubtitle').textContent =
     `${MONTHS_SHORT[s.getMonth()]} ${s.getDate()}, ${s.getFullYear()} — ${MONTHS_SHORT[e.getMonth()]} ${e.getDate()}, ${e.getFullYear()}`;
 
-  // Big stats
   document.getElementById('bigStats').innerHTML = `
     <div class="bstat"><div class="bstat-val c-blue">${workDayKeys.length}</div><div class="bstat-label">Work Days</div></div>
     <div class="bstat"><div class="bstat-val c-orange">${Math.round(lessonHrs)}</div><div class="bstat-label">Lesson Hours</div></div>
@@ -822,7 +808,7 @@ function buildStats() {
     <div class="bstat"><div class="bstat-val c-purple">${Object.keys(clients).length}</div><div class="bstat-label">Clients</div></div>
   `;
 
-  // Breakdown bars — all v3 programs, always show any non-zero bucket
+  // Breakdown bars — sorted by hours descending
   const programs = [
     { key:'schools',      label:'Schools',          color:'var(--blue)'   },
     { key:'wvsbc',        label:'WVSBC',             color:'#6eb5ff'       },
@@ -839,17 +825,21 @@ function buildStats() {
     { key:'training',     label:'Training',          color:'var(--green)'  },
     { key:'other',        label:'Other',             color:'var(--muted)'  },
   ];
-  // Add private admin overhead as its own row
   if (adminOverheadHrs > 0) {
     programs.push({ key:'_admin_overhead', label:'Priv Overhead', color:'#ff9f43' });
     progHours['_admin_overhead'] = adminOverheadHrs;
   }
-  const maxH = Math.max(...programs.map(p => progHours[p.key]||0), 1);
+
+  // Filter to non-zero, then sort descending by hours
+  const activePrograms = programs
+    .filter(p => (progHours[p.key] || 0) > 0)
+    .sort((a, b) => (progHours[b.key] || 0) - (progHours[a.key] || 0));
+
+  const maxH = activePrograms.length ? (progHours[activePrograms[0].key] || 1) : 1;
   let bHtml = '';
-  programs.forEach(p => {
-    const h = progHours[p.key]||0;
-    if (!h) return;  // skip empty — but OTHER always shows if non-zero
-    const pct = Math.round((h/maxH)*100);
+  activePrograms.forEach(p => {
+    const h = progHours[p.key];
+    const pct = Math.round((h / maxH) * 100);
     bHtml += `<div class="brow">
       <div class="brow-top">
         <span class="brow-label"><span class="brow-dot" style="background:${p.color}"></span>${p.label}</span>
@@ -871,8 +861,8 @@ function buildStats() {
     for (let d=1;d<=days;d++) {
       const key = toKey(new Date(y,m,d));
       const ls  = byDate[key]||[];
-      const isSeasonEndDay = key === SEASON_END_KEY;          // only first end day
-      const afterEnd = SEASON_END_KEY && key > SEASON_END_KEY; // blank after
+      const isSeasonEndDay = key === SEASON_END_KEY;
+      const afterEnd = SEASON_END_KEY && key > SEASON_END_KEY;
       let cls = 'hm-cell ';
       if (afterEnd)       { cls += 'hm-empty'; }
       else if (isSeasonEndDay) { cls += 'hm-end'; }
@@ -882,7 +872,10 @@ function buildStats() {
         const paid  = ls.filter(l=>isPaid(l.assignment));
         const hasSick = progs.includes('sick');
         const isTimeOff = ls.some(l => /time off/i.test(l.raw));
-        const hasFutureSched = !isTimeOff && key > TODAY_KEY && ls.some(l=>isSched(l.raw) && !['off','end'].includes(getProgram(l.raw)));
+        const hasFutureSched = !isTimeOff && key > TODAY_KEY && ls.some(l=>{
+          const prog = getProgram(l.raw);
+          return !['off','end','sick','private_admin'].includes(prog) && (isPaid(l.assignment) || isSched(l.raw));
+        });
         if (isTimeOff) cls += 'hm-off';
         else if (hasSick) cls += 'hm-sick';
         else if (hasFutureSched) cls += 'hm-sched';
@@ -899,7 +892,6 @@ function buildStats() {
     hmHtml += `<div><div class="hm-month-label">${MONTHS_SHORT[m]} ${y===2025?'25':'26'}</div><div class="hm-grid">${cells}</div></div>`;
   });
 
-  // Legend
   const legendItems = [
     { cls:'hm-full',    label:'Work day' },
     { cls:'hm-sched',   label:'Scheduled' },
@@ -951,10 +943,8 @@ function switchTab(tab) {
   document.getElementById('tab-'+tab).classList.add('active');
 }
 
-// Schedule init is handled by the 'load' event listener above
-
 // ─────────────────────────────────────────────────────────────────────────────
-// CREDENTIALS (localStorage) + PROFILE MODAL
+// CREDENTIALS + PROFILE MODAL
 // ─────────────────────────────────────────────────────────────────────────────
 function loadCredentials() {
   return {
@@ -999,7 +989,7 @@ function setModalStatus(msg, type) {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// REFRESH — calls /api/scrape with saved credentials
+// REFRESH
 // ─────────────────────────────────────────────────────────────────────────────
 async function triggerRefresh() {
   const creds = loadCredentials();
@@ -1032,19 +1022,16 @@ async function triggerRefresh() {
       return;
     }
 
-    // Ingest new lesson data into byDate
     ingestLessons(data.lessons);
     saveScheduleCache(data.lessons);
     renderWeek();
     buildStats();
 
-    // Save and display instructor name
     if (data.instructorName) {
       localStorage.setItem('wb_instructorName', data.instructorName);
       updateChipName(data.instructorName);
     }
 
-    // Flash fab green briefly
     fab.style.background = 'var(--green)';
     setTimeout(() => { fab.style.background = ''; }, 1200);
 
@@ -1056,9 +1043,7 @@ async function triggerRefresh() {
   }
 }
 
-// Parse new lessons from API and rebuild byDate
 function ingestLessons(lessons) {
-  // Clear and rebuild
   Object.keys(byDate).forEach(k => delete byDate[k]);
   SEASON_END_KEY = null;
 
@@ -1076,7 +1061,6 @@ function ingestLessons(lessons) {
     });
   });
 
-  // Re-detect season end
   Object.keys(byDate).sort().forEach(key => {
     if (!SEASON_END_KEY && byDate[key].some(l => getProgram(l.raw) === 'end')) {
       SEASON_END_KEY = key;
@@ -1085,15 +1069,21 @@ function ingestLessons(lessons) {
 }
 
 function updateChipName(name) {
-  // Format: "Chengmin ( Sam ) Sheng" → prefer nickname "Sam Sheng"
-  let display = name;
-  const nick = name.match(/\(\s*([^)]+?)\s*\)/);
-  const last  = name.split(/\s+/).pop();
-  if (nick) display = nick[1].trim() + ' ' + last;
+  // Format: "Chengmin ( Sam ) Sheng" → prefer nickname e.g. "Sam Sheng"
+  let display = name.trim();
+  const nick = display.match(/\(\s*([^)]+?)\s*\)/);
+  if (nick) {
+    // Extract last word of the full name as the surname
+    const parts = display.replace(/\(.*?\)/, '').trim().split(/\s+/);
+    const last = parts[parts.length - 1] || '';
+    display = nick[1].trim() + (last ? ' ' + last : '');
+  }
+  // Update chip avatar initial
+  const initial = display.charAt(0).toUpperCase();
+  document.getElementById('chipAvatar').textContent = initial;
   document.getElementById('chipName').textContent = display;
 }
 
-// ── Persist schedule to localStorage & restore on load ────────────────────────
 function saveScheduleCache(lessons) {
   try { localStorage.setItem('wb_schedule_cache', JSON.stringify(lessons)); } catch(e) {}
 }
@@ -1105,7 +1095,6 @@ function loadScheduleCache() {
   } catch(e) { return null; }
 }
 
-// On load: restore cache + name, or prompt for credentials
 window.addEventListener('load', () => {
   const creds     = loadCredentials();
   const savedName = localStorage.getItem('wb_instructorName');
@@ -1119,12 +1108,11 @@ window.addEventListener('load', () => {
     renderWeek();
     buildStats();
   } else {
-    renderWeek();   // shows empty state
+    renderWeek();
     buildStats();
     if (!creds.passNumber) setTimeout(openProfile, 600);
   }
 });
-
 </script>
 
 <!-- ── FLOATING REFRESH ── -->
