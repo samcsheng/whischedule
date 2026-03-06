@@ -525,7 +525,6 @@ function getProgram(raw, assignment = 'Assignment') {
   if (category === 'PRIVATE_ADMIN')  return 'private_admin';
   if (category === 'PRIVATE_LESSON') return 'private';
   if (category === 'ADMIN')          return 'other';
-  if (category === 'SCHED')          return 'off';
   const MAP = {
     schools:'schools', wvsbc:'wvsbc', wcb:'club', club:'club',
     adaptive:'adaptive', never_ever:'never_ever', womens_camps:'womens_camps',
@@ -563,12 +562,13 @@ function buildDayView(key) {
     const seenTitles = new Set();
 
     raw.forEach(l => {
-      const prog = getProgram(l.raw);
-      if (NON_WORK_PROGS.has(prog)) return;
-
       const isSchedRow = isSched(l.raw);
       const isAssigned = isPaid(l.assignment);
       if (!isSchedRow && !isAssigned) return;
+
+      const { program: rawProg } = classifyRow(l.raw, l.assignment);
+      if (!rawProg || ['off','end','sick','private_admin','admin'].includes(rawProg)) return;
+      const prog = { daily_kids:'daily', teens_daily:'teens', adult_alpine:'adult_alpine', adult_base:'adult_base', never_ever:'never_ever', womens_camps:'womens_camps' }[rawProg] || rawProg;
 
       const title = cleanTitle(l.raw);
       if (seenTitles.has(title)) return;
