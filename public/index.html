@@ -49,7 +49,24 @@ body::after { content:''; position:fixed; inset:0; pointer-events:none; z-index:
 .page { display:none; min-height:100vh; padding-bottom:90px; }
 .page.active { display:block; }
 
-/* SCHEDULE PAGE */
+/* SCHEDULE PAGE — header, month-nav, week-strip anchored; only day-detail scrolls */
+#page-schedule.active {
+  display:flex;
+  flex-direction:column;
+  height:calc(100vh - 90px);
+  min-height:0;
+  overflow:hidden;
+  padding-bottom:0;
+}
+#page-schedule .sched-header,
+#page-schedule .month-nav,
+#page-schedule .week-strip { flex-shrink:0; }
+#page-schedule .day-detail {
+  flex:1;
+  min-height:0;
+  overflow-y:auto;
+}
+
 .sched-header { padding:52px 20px 20px;
   background:linear-gradient(180deg,rgba(59,139,255,0.08) 0%,transparent 100%);
   border-bottom:1px solid var(--border); }
@@ -109,7 +126,7 @@ body::after { content:''; position:fixed; inset:0; pointer-events:none; z-index:
 /* MULTI-DAY LIST */
 .day-list { display:flex; flex-direction:column; gap:12px; }
 .day-section {
-  scroll-margin-top: 120px; /* accounts for header/month/week-strip */
+  scroll-margin-top: 8px; /* align section near top of scroll area */
 }
 .day-section-header {
   position:sticky; top:0;
