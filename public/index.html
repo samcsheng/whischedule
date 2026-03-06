@@ -1,0 +1,1216 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Sam's Schedule — Whistler Blackcomb</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=Syne+Mono&family=Inter:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+:root {
+  --bg:      #060d1a;
+  --surface: #0c1829;
+  --card:    #111f35;
+  --border:  rgba(255,255,255,0.07);
+  --snow:    #e8f0ff;
+  --muted:   #4a6080;
+  --dim:     #1e3050;
+  --blue:    #3b8bff;
+  --orange:  #ff7c42;
+  --green:   #2dcc8a;
+  --purple:  #9b7dff;
+  --yellow:  #ffc542;
+  --red:     #ff4d6d;
+  --teal:    #2dccc4;
+}
+html, body { height: 100%; background: var(--bg); color: var(--snow); font-family: 'Inter', sans-serif; overflow-x: hidden; }
+body::after { content:''; position:fixed; inset:0; pointer-events:none; z-index:9999; opacity:0.025;
+  background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  background-size:150px; }
+
+/* TABS */
+.tabs { display:flex; position:fixed; bottom:0; left:0; right:0; z-index:100;
+  background:rgba(6,13,26,0.95); backdrop-filter:blur(20px);
+  border-top:1px solid var(--border); padding-bottom:env(safe-area-inset-bottom,10px); }
+.tab { flex:1; display:flex; flex-direction:column; align-items:center; gap:4px; padding:12px 4px 8px;
+  cursor:pointer; color:var(--muted); font-size:10px; font-weight:500; letter-spacing:0.05em;
+  text-transform:uppercase; transition:color 0.2s; }
+.tab svg { width:20px; height:20px; stroke:currentColor; fill:none; stroke-width:1.8; }
+.tab.active { color:var(--blue); }
+.page { display:none; min-height:100vh; padding-bottom:90px; }
+.page.active { display:block; }
+
+/* SCHEDULE PAGE */
+.sched-header { padding:52px 20px 20px;
+  background:linear-gradient(180deg,rgba(59,139,255,0.08) 0%,transparent 100%);
+  border-bottom:1px solid var(--border); }
+.sched-header-top { display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:0; }
+.greeting { font-size:11px; color:var(--muted); letter-spacing:0.1em; text-transform:uppercase; margin-bottom:4px; }
+.sched-title { font-family:'Syne',sans-serif; font-size:30px; font-weight:800; line-height:1; }
+.instructor-chip { display:flex; align-items:center; gap:8px;
+  background:var(--card); border:1px solid var(--border); border-radius:30px; padding:6px 12px 6px 6px; }
+.chip-avatar { width:28px; height:28px; border-radius:50%;
+  background:linear-gradient(135deg,var(--blue),var(--purple));
+  display:flex; align-items:center; justify-content:center;
+  font-family:'Syne',sans-serif; font-size:12px; font-weight:700; }
+.chip-name { font-size:11px; font-weight:500; white-space:nowrap; }
+
+/* MONTH NAV */
+.month-nav { display:flex; align-items:center; justify-content:space-between; padding:16px 20px 0; }
+.month-label { font-family:'Syne',sans-serif; font-size:20px; font-weight:700; }
+.nav-arrows { display:flex; gap:4px; }
+.nav-btn { width:32px; height:32px; border-radius:8px; background:var(--card);
+  border:1px solid var(--border); color:var(--snow); cursor:pointer;
+  display:flex; align-items:center; justify-content:center; font-size:16px; transition:background 0.15s; }
+.nav-btn:hover { background:var(--dim); }
+
+/* WEEK STRIP */
+.week-strip { display:flex; gap:6px; padding:14px 20px 0; overflow-x:auto; scrollbar-width:none; }
+.week-strip::-webkit-scrollbar { display:none; }
+.wd { flex-shrink:0; width:44px; display:flex; flex-direction:column; align-items:center;
+  gap:5px; padding:8px 4px; border-radius:12px; cursor:pointer; transition:all 0.15s; }
+.wd-label { font-size:9px; font-weight:600; letter-spacing:0.1em; text-transform:uppercase; color:var(--muted); }
+.wd-num { font-family:'Syne',sans-serif; font-size:18px; font-weight:700; line-height:1; color:var(--snow); }
+.wd-dot { width:5px; height:5px; border-radius:50%; background:transparent; }
+.wd.has-work .wd-dot { background:var(--blue); }
+.wd.is-off { opacity:0.3; }
+.wd.selected { background:var(--blue); }
+.wd.selected .wd-label,.wd.selected .wd-num { color:white; }
+.wd.selected .wd-dot { background:rgba(255,255,255,0.6); }
+.wd.today-ring .wd-num { color:var(--blue); }
+.wd.past-day { opacity:0.6; }
+
+/* DAY CARDS */
+.day-detail { padding:16px 20px; }
+.day-detail-header { font-family:'Syne',sans-serif; font-size:14px; font-weight:600;
+  color:var(--muted); margin-bottom:12px; letter-spacing:0.05em; text-transform:uppercase; }
+.no-lessons { text-align:center; padding:32px; color:var(--muted); font-size:14px; }
+
+.day-summary-bar { display:flex; gap:8px; margin-bottom:12px; flex-wrap:wrap; }
+.dsb-item { font-size:11px; font-weight:600; padding:4px 10px; border-radius:20px; letter-spacing:0.03em; }
+
+/* LESSON CARD */
+.lcard { background:var(--card); border:1px solid var(--border); border-radius:16px;
+  padding:14px 16px; margin-bottom:8px; position:relative; overflow:hidden; }
+.lcard::before { content:''; position:absolute; left:0; top:0; bottom:0; width:3px; border-radius:3px 0 0 3px; }
+
+/* type colours */
+.lcard.type-schools::before  { background:var(--blue); }
+.lcard.type-daily::before    { background:var(--teal); }
+.lcard.type-club::before     { background:var(--purple); }
+.lcard.type-alpine::before   { background:var(--green); }
+.lcard.type-private::before  { background:var(--yellow); }
+.lcard.type-training::before { background:var(--green); }
+.lcard.type-off::before      { background:var(--dim); }
+.lcard.type-sick::before     { background:var(--red); }
+.lcard.type-other::before    { background:var(--muted); }
+
+/* future sched cards: same style as historic, just no hours */
+.lcard.is-off   { opacity:0.35; }
+
+.lcard-top { display:flex; justify-content:space-between; align-items:flex-start; gap:8px; }
+.lcard-left { flex:1; }
+.lcard-activity { font-size:14px; font-weight:600; color:var(--snow); line-height:1.3; }
+.lcard-sub { font-size:11px; color:var(--muted); margin-top:3px; }
+.lcard-hours { font-family:'Syne Mono',monospace; font-size:22px; color:var(--blue); flex-shrink:0; line-height:1; text-align:right; }
+.lcard-hours small { font-family:'Inter',sans-serif; font-size:9px; color:var(--muted); display:block; }
+.lcard.type-private .lcard-hours { color:var(--yellow); }
+.lcard.type-daily   .lcard-hours { color:var(--teal); }
+.lcard.type-club    .lcard-hours { color:var(--purple); }
+
+.lcard-meta { display:flex; gap:6px; flex-wrap:wrap; margin-top:8px; }
+.pill { font-size:10px; font-weight:500; padding:3px 9px; border-radius:20px; letter-spacing:0.02em; }
+.pill-assigned   { background:rgba(59,139,255,0.15); color:var(--blue);   border:1px solid rgba(59,139,255,0.25); }
+.pill-continuing { background:rgba(155,125,255,0.15); color:var(--purple); border:1px solid rgba(155,125,255,0.25); }
+.pill-sched      { background:rgba(74,96,128,0.2);   color:var(--muted);  border:1px solid rgba(74,96,128,0.2); }
+.pill-client     { background:rgba(255,197,66,0.12); color:var(--yellow); border:1px solid rgba(255,197,66,0.25); }
+.pill-loc        { background:rgba(255,255,255,0.05); color:var(--muted);  border:1px solid var(--border); }
+.pill-ski        { background:rgba(59,139,255,0.08); color:#7ab8ff;       border:1px solid rgba(59,139,255,0.15); }
+.pill-sb         { background:rgba(255,124,66,0.08); color:#ffaa7a;       border:1px solid rgba(255,124,66,0.15); }
+.pill-fd         { background:rgba(255,197,66,0.1); color:var(--yellow);  border:1px solid rgba(255,197,66,0.2); }
+.pill-hd         { background:rgba(255,197,66,0.06); color:#c9a030;       border:1px solid rgba(255,197,66,0.12); }
+.pill-sick       { background:rgba(255,77,109,0.12); color:var(--red);    border:1px solid rgba(255,77,109,0.2); }
+.pill-off        { background:rgba(255,255,255,0.04); color:var(--muted); border:1px solid var(--border); }
+
+/* STATS PAGE */
+.stats-page { padding:52px 20px 24px; }
+.stats-title { font-family:'Syne',sans-serif; font-size:28px; font-weight:800; margin-bottom:4px; }
+.stats-sub { font-size:12px; color:var(--muted); margin-bottom:24px; }
+.section-title { font-family:'Syne',sans-serif; font-size:15px; font-weight:700; margin:20px 0 10px; }
+
+.big-stats { display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:4px; }
+.bstat { background:var(--card); border:1px solid var(--border); border-radius:16px; padding:18px 16px; }
+.bstat-val { font-family:'Syne',sans-serif; font-size:36px; font-weight:800; line-height:1; }
+.bstat-val.c-blue   { color:var(--blue); }
+.bstat-val.c-orange { color:var(--orange); }
+.bstat-val.c-green  { color:var(--green); }
+.bstat-val.c-yellow { color:var(--yellow); }
+.bstat-val.c-purple { color:var(--purple); }
+.bstat-val.c-teal   { color:var(--teal); }
+.bstat-label { font-size:10px; color:var(--muted); margin-top:5px; font-weight:500; letter-spacing:0.06em; text-transform:uppercase; }
+
+.breakdown { background:var(--card); border:1px solid var(--border); border-radius:16px; padding:16px; }
+.brow { margin-bottom:14px; }
+.brow:last-child { margin-bottom:0; }
+.brow-top { display:flex; justify-content:space-between; margin-bottom:6px; align-items:center; }
+.brow-label { font-size:12px; font-weight:500; display:flex; align-items:center; gap:6px; }
+.brow-dot { width:7px; height:7px; border-radius:50%; flex-shrink:0; }
+.brow-vals { font-family:'Syne Mono',monospace; font-size:11px; color:var(--muted); }
+.brow-bar { height:4px; background:rgba(255,255,255,0.06); border-radius:2px; overflow:hidden; }
+.brow-fill { height:100%; border-radius:2px; transition:width 1.2s cubic-bezier(0.16,1,0.3,1); }
+
+.heatmap-wrap { background:var(--card); border:1px solid var(--border); border-radius:16px; padding:16px; overflow-x:auto; }
+.heatmap-months { display:flex; gap:14px; min-width:max-content; }
+.hm-month-label { font-size:10px; color:var(--muted); font-weight:600; letter-spacing:0.08em; text-transform:uppercase; margin-bottom:6px; }
+.hm-grid { display:grid; grid-template-columns:repeat(7,16px); gap:3px; }
+.hm-cell { width:16px; height:16px; border-radius:3px; }
+.hm-empty    { background:transparent; }
+.hm-off      { background:rgba(255,255,255,0.05); }
+.hm-light    { background:rgba(59,139,255,0.3); }
+.hm-med      { background:rgba(59,139,255,0.6); }
+.hm-full     { background:var(--blue); }
+.hm-private  { background:var(--yellow); opacity:0.85; }
+.hm-training { background:var(--green); opacity:0.7; }
+.hm-sick     { background:var(--red); opacity:0.8; }
+.hm-sched    { background: repeating-linear-gradient(45deg, rgba(59,139,255,0.5) 0px, rgba(59,139,255,0.5) 3px, rgba(59,139,255,0.15) 3px, rgba(59,139,255,0.15) 6px); }
+.hm-end      { background:rgba(255,77,109,0.5); border:1px solid rgba(255,77,109,0.7); }
+.hm-legend { display:flex; flex-wrap:wrap; gap:10px; margin-top:10px; padding:12px 16px; background:var(--card); border:1px solid var(--border); border-radius:16px; }
+.hm-leg-item { display:flex; align-items:center; gap:5px; font-size:10px; color:var(--muted); font-weight:500; }
+.hm-leg-swatch { width:12px; height:12px; border-radius:2px; flex-shrink:0; }
+
+.client-list { background:var(--card); border:1px solid var(--border); border-radius:16px; overflow:hidden; }
+.client-row { display:flex; align-items:center; gap:10px; padding:12px 16px; border-bottom:1px solid var(--border); }
+.client-row:last-child { border-bottom:none; }
+.client-avatar { width:30px; height:30px; border-radius:50%; background:linear-gradient(135deg,rgba(255,197,66,0.3),rgba(255,124,66,0.3)); border:1px solid rgba(255,197,66,0.2); display:flex; align-items:center; justify-content:center; font-size:11px; font-weight:700; color:var(--yellow); flex-shrink:0; }
+.client-name { font-size:13px; font-weight:600; flex:1; }
+.client-meta { font-size:10px; color:var(--muted); }
+.client-days { font-family:'Syne Mono',monospace; font-size:13px; color:var(--yellow); }
+
+.fade-in { animation:fi 0.4s ease both; }
+@keyframes fi { from{opacity:0;transform:translateY(8px)} to{opacity:1;transform:translateY(0)} }
+.d1{animation-delay:.05s}.d2{animation-delay:.1s}.d3{animation-delay:.15s}.d4{animation-delay:.2s}.d5{animation-delay:.25s}
+
+/* ── FLOATING REFRESH BUTTON ── */
+.fab-refresh {
+  position: fixed; bottom: 90px; right: 20px; z-index: 200;
+  width: 52px; height: 52px; border-radius: 50%;
+  background: var(--blue); border: none; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  box-shadow: 0 4px 20px rgba(59,139,255,0.4);
+  transition: transform 0.2s, box-shadow 0.2s, background 0.2s;
+  color: white;
+}
+.fab-refresh:hover { transform: scale(1.08); box-shadow: 0 6px 28px rgba(59,139,255,0.55); }
+.fab-refresh:active { transform: scale(0.95); }
+.fab-refresh.spinning svg { animation: spin 0.8s linear infinite; }
+.fab-refresh svg { width: 22px; height: 22px; stroke: white; fill: none; stroke-width: 2.2; transition: opacity 0.2s; }
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* ── PROFILE MODAL ── */
+.modal-overlay {
+  position: fixed; inset: 0; z-index: 500;
+  background: rgba(6,13,26,0.85); backdrop-filter: blur(8px);
+  display: flex; align-items: flex-end; justify-content: center;
+  opacity: 0; pointer-events: none; transition: opacity 0.25s;
+}
+.modal-overlay.open { opacity: 1; pointer-events: all; }
+.modal-sheet {
+  width: 100%; max-width: 480px;
+  background: var(--surface); border-radius: 24px 24px 0 0;
+  border: 1px solid var(--border); border-bottom: none;
+  padding: 12px 20px 40px;
+  transform: translateY(100%); transition: transform 0.3s cubic-bezier(0.16,1,0.3,1);
+}
+.modal-overlay.open .modal-sheet { transform: translateY(0); }
+.modal-handle { width: 36px; height: 4px; border-radius: 2px; background: var(--dim); margin: 0 auto 20px; }
+.modal-title { font-family:'Syne',sans-serif; font-size:20px; font-weight:800; margin-bottom:4px; }
+.modal-sub { font-size:12px; color:var(--muted); margin-bottom:24px; }
+.modal-field { margin-bottom:16px; }
+.modal-field label { display:block; font-size:11px; font-weight:600; letter-spacing:0.08em; text-transform:uppercase; color:var(--muted); margin-bottom:6px; }
+.modal-field input {
+  width:100%; padding:12px 14px; border-radius:12px;
+  background:var(--card); border:1px solid var(--border);
+  color:var(--snow); font-size:15px; font-family:'Inter',sans-serif;
+  outline:none; transition:border-color 0.2s;
+}
+.modal-field input:focus { border-color:var(--blue); }
+.modal-field input::placeholder { color:var(--muted); }
+.modal-actions { display:flex; gap:10px; margin-top:20px; }
+.modal-btn {
+  flex:1; padding:14px; border-radius:14px; border:none;
+  font-family:'Syne',sans-serif; font-size:16px; font-weight:700;
+  cursor:pointer; letter-spacing:0.05em; transition:opacity 0.2s, transform 0.15s;
+}
+.modal-btn:active { transform:scale(0.97); }
+.modal-btn-save { background:var(--blue); color:white; }
+.modal-btn-cancel { background:var(--card); color:var(--muted); border:1px solid var(--border); }
+.modal-status { margin-top:12px; font-size:12px; text-align:center; min-height:18px; }
+.modal-status.ok  { color:var(--green); }
+.modal-status.err { color:var(--red); }
+
+/* chip becomes a button */
+.instructor-chip { cursor:pointer; transition: border-color 0.2s; }
+.instructor-chip:hover { border-color:rgba(59,139,255,0.4); }
+
+</style>
+</head>
+<body>
+
+<div class="page active" id="page-schedule">
+  <div class="sched-header">
+    <div class="sched-header-top">
+      <div>
+        <div class="greeting">Whistler Blackcomb · 2025/26</div>
+        <div class="sched-title">My Schedule</div>
+      </div>
+      <div class="instructor-chip" onclick="openProfile()">
+        <div class="chip-avatar">S</div>
+        <div class="chip-name" id="chipName">Sam Sheng</div>
+      </div>
+    </div>
+  </div>
+  <div class="month-nav">
+    <div class="month-label" id="monthLabel">—</div>
+    <div class="nav-arrows">
+      <button class="nav-btn" onclick="shiftWeek(-1)">‹</button>
+      <button class="nav-btn" onclick="shiftWeek(1)">›</button>
+    </div>
+  </div>
+  <div class="week-strip" id="weekStrip"></div>
+  <div class="day-detail">
+    <div class="day-detail-header" id="dayDetailHeader">Today</div>
+    <div id="dayCards"></div>
+  </div>
+</div>
+
+<div class="page" id="page-stats">
+  <div class="stats-page">
+    <div class="stats-title fade-in">Season Stats</div>
+    <div class="stats-sub fade-in d1" id="statsSubtitle"></div>
+    <div class="big-stats fade-in d2" id="bigStats"></div>
+    <div class="section-title fade-in d3">Hours by Program</div>
+    <div class="breakdown fade-in d4" id="breakdown"></div>
+    <div class="section-title fade-in d4">Season Heatmap</div>
+    <div class="heatmap-wrap fade-in d5"><div class="heatmap-months" id="heatmap"></div></div>
+    <div id="heatmapLegend" class="fade-in d5"></div>
+    <div class="section-title fade-in d5">Private Clients</div>
+    <div class="client-list" id="clientList"></div>
+  </div>
+</div>
+
+<nav class="tabs">
+  <div class="tab active" onclick="switchTab('schedule')" id="tab-schedule">
+    <svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+    Schedule
+  </div>
+  <div class="tab" onclick="switchTab('stats')" id="tab-stats">
+    <svg viewBox="0 0 24 24"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+    Stats
+  </div>
+</nav>
+
+<script>
+// ─────────────────────────────────────────────────────────────────────────────
+// RAW CSV DATA
+// ─────────────────────────────────────────────────────────────────────────────
+const RAW_LINES = `Friday, April 10, 2026|8|WB: Sched for Schools Board|Not Checked Out|
+Friday, April 17, 2026|12|WB: Thank you for the Great Season|Not Checked Out|
+Friday, April 3, 2026|8|WB: Sched for Riders Daily|Not Checked Out|
+Friday, December 12, 2025|8|WB: Regular Day Off|Not Checked Out|
+Friday, December 19, 2025|7.27|WB: Schools (B2)|Assignment|
+Friday, December 19, 2025|0.9|WB: Sched for Schools Board|Not Checked Out|
+Friday, December 26, 2025|7.77|WB: Daily SB 5-12 (W)|Assignment|
+Friday, December 26, 2025|0.4|WB: Sched for Riders Daily|Not Checked Out|
+Friday, December 5, 2025|8|WB: Regular Day Off|Not Checked Out|
+Friday, February 13, 2026|7.27|WB: Schools (B2)|Assignment|
+Friday, February 13, 2026|0.9|WB: Sched for Schools Board|Not Checked Out|
+Friday, February 20, 2026|0.33|WB: Sched Private Ski Blackcomb|Not Checked Out|
+Friday, February 20, 2026|0.67|WB: FD Private Meeting (B)|Assignment|
+Friday, February 20, 2026|6|WB: Kids (B) Private Ski FD|Continuing Assignment|Joyce Park
+Friday, February 20, 2026|0.17|WB: Private End of Day (B)|Assignment|
+Friday, February 27, 2026|4.27|WB: Schools Standby (B2)|Assignment|
+Friday, February 27, 2026|0.4|WB: Sched for Schools Board|Not Checked Out|
+Friday, February 27, 2026|3.12|WB: Adult Base Ski PM (W)|Assignment|
+Friday, February 6, 2026|7.27|WB: Schools (B2)|Assignment|
+Friday, February 6, 2026|0.9|WB: Sched for Schools Ski|Not Checked Out|
+Friday, January 16, 2026|8|WB: Called in Sick|Not Checked Out|
+Friday, January 2, 2026|2|WB: Daily Ski 5-12 Standby (W)|Assignment|
+Friday, January 2, 2026|2|WB: Sched Private SB Whistler|Not Checked Out|
+Friday, January 2, 2026|0.5|WB: PM Private Meeting (W)|Assignment|
+Friday, January 2, 2026|3|WB: Adult (W) Private SB HD PM|Assignment|Franklin Wirtz
+Friday, January 2, 2026|0.17|WB: Private End of Day PM (W)|Assignment|
+Friday, January 23, 2026|7.27|WB: Schools (B2)|Assignment|
+Friday, January 23, 2026|0.9|WB: Sched for Schools Ski|Not Checked Out|
+Friday, January 30, 2026|7.27|WB: Schools (B2)|Assignment|
+Friday, January 30, 2026|0.9|WB: Sched for Schools Ski|Not Checked Out|
+Friday, January 9, 2026|8|WB: Called Off|Not Checked Out|
+Friday, March 13, 2026|8|WB: Sched for Schools Ski|Not Checked Out|
+Friday, March 20, 2026|8|WB: Sched for Riders Daily|Not Checked Out|
+Friday, March 27, 2026|8|WB: Sched for Schools Board|Not Checked Out|
+Friday, March 6, 2026|8|WB: Sched for Schools Ski|Not Checked Out|
+Friday, November 21, 2025|8|WB: Regular Day Off|Not Checked Out|
+Friday, November 28, 2025|8|WB: Regular Day Off|Not Checked Out|
+Monday, April 13, 2026|12|WB: Thank you for the Great Season|Not Checked Out|
+Monday, April 6, 2026|8|WB: Regular Day Off|Not Checked Out|
+Monday, December 1, 2025|8|WB: Regular Day Off|Not Checked Out|
+Monday, December 15, 2025|1|WB: Regular Day Off|Not Checked Out|
+Monday, December 15, 2025|2.5|WB: Training (NewHire) W2W|Assignment|
+Monday, December 15, 2025|0.5|WB: Sched for Mandatory Training|Not Checked Out|
+Monday, December 15, 2025|2|WB: Training (NewHire) SSO|Assignment|
+Monday, December 22, 2025|7.77|WB: Daily SB 5-12 (W)|Assignment|
+Monday, December 22, 2025|0.4|WB: Sched for Riders Daily|Not Checked Out|
+Monday, December 29, 2025|7.77|WB: Daily Ski 5-12 (W)|Assignment|
+Monday, December 29, 2025|0.4|WB: Sched for Daily Ski 5-12 (Village)|Not Checked Out|
+Monday, December 8, 2025|8|WB: Regular Day Off|Not Checked Out|
+Monday, February 16, 2026|0.33|WB: Sched Private Ski Whistler|Not Checked Out|
+Monday, February 16, 2026|0.67|WB: FD Private Meeting (W)|Assignment|
+Monday, February 16, 2026|6|WB: Family (W) Private Ski FD|Assignment|Shing Hung
+Monday, February 16, 2026|0.17|WB: Private End of Day (W)|Assignment|
+Monday, February 2, 2026|8|WB: Regular Day Off|Not Checked Out|
+Monday, February 23, 2026|8|WB: Regular Day Off|Not Checked Out|
+Monday, February 9, 2026|8|WB: Regular Day Off|Not Checked Out|
+Monday, January 12, 2026|8|WB: Regular Day Off|Not Checked Out|
+Monday, January 19, 2026|8|WB: Regular Day Off|Not Checked Out|
+Monday, January 26, 2026|8|WB: Regular Day Off|Not Checked Out|
+Monday, January 5, 2026|8|WB: Regular Day Off|Not Checked Out|
+Monday, March 16, 2026|8|WB: Regular Day Off|Not Checked Out|
+Monday, March 2, 2026|8|WB: Regular Day Off|Not Checked Out|
+Monday, March 23, 2026|8|WB: Regular Day Off|Not Checked Out|
+Monday, March 30, 2026|8|WB: Regular Day Off|Not Checked Out|
+Monday, March 9, 2026|8|WB: Regular Day Off|Not Checked Out|
+Monday, November 24, 2025|8|WB: Regular Day Off|Not Checked Out|
+Saturday, April 11, 2026|8|WB: Sched for Alpine Club|Not Checked Out|
+Saturday, April 18, 2026|12|WB: Thank you for the Great Season|Not Checked Out|
+Saturday, April 4, 2026|8|WB: Sched for Alpine Club|Not Checked Out|
+Saturday, December 13, 2025|8|WB: Regular Day Off|Not Checked Out|
+Saturday, December 13, 2025|2|WB: Training (Return) Kids Pre Season|Assignment|
+Saturday, December 20, 2025|7.77|WB: Daily SB 5-12 (W)|Assignment|
+Saturday, December 20, 2025|0.4|WB: Sched for Riders Daily|Not Checked Out|
+Saturday, December 27, 2025|7.77|WB: Daily SB 5-12 (W)|Assignment|
+Saturday, December 27, 2025|0.4|WB: Sched for Riders Daily|Not Checked Out|
+Saturday, December 6, 2025|8|WB: Regular Day Off|Not Checked Out|
+Saturday, February 14, 2026|7.52|WB: Roundhouse Club|Assignment|
+Saturday, February 14, 2026|0.9|WB: Sched for Alpine Club|Not Checked Out|
+Saturday, February 21, 2026|7.52|WB: Roundhouse Club|Assignment|
+Saturday, February 21, 2026|0.9|WB: Sched for Alpine Club|Not Checked Out|
+Saturday, February 28, 2026|7.52|WB: Roundhouse Club|Assignment|
+Saturday, February 28, 2026|0.9|WB: Sched for Alpine Club|Not Checked Out|
+Saturday, February 7, 2026|7.52|WB: Roundhouse Club|Assignment|
+Saturday, February 7, 2026|0.9|WB: Sched for Alpine Club|Not Checked Out|
+Saturday, January 10, 2026|7.52|WB: Roundhouse Club|Assignment|
+Saturday, January 10, 2026|0.9|WB: Sched for Alpine Club|Not Checked Out|
+Saturday, January 17, 2026|7.52|WB: Roundhouse Club|Assignment|
+Saturday, January 17, 2026|0.9|WB: Sched for Alpine Club|Not Checked Out|
+Saturday, January 24, 2026|7.52|WB: Roundhouse Club|Assignment|
+Saturday, January 24, 2026|0.9|WB: Sched for Alpine Club|Not Checked Out|
+Saturday, January 3, 2026|7.77|WB: Daily Ski 5-12 (W)|Assignment|
+Saturday, January 3, 2026|0.4|WB: Sched for Daily Ski 5-12 (Village)|Not Checked Out|
+Saturday, January 31, 2026|7.52|WB: Roundhouse Club|Assignment|
+Saturday, January 31, 2026|0.9|WB: Sched for Alpine Club|Not Checked Out|
+Saturday, March 14, 2026|8|WB: Sched for Alpine Club|Not Checked Out|
+Saturday, March 21, 2026|8|WB: Sched for Alpine Club|Not Checked Out|
+Saturday, March 28, 2026|8|WB: Sched for Alpine Club|Not Checked Out|
+Saturday, March 7, 2026|8|WB: Sched for Alpine Club|Not Checked Out|
+Saturday, November 22, 2025|8|WB: Regular Day Off|Not Checked Out|
+Saturday, November 29, 2025|8|WB: Regular Day Off|Not Checked Out|
+Sunday, April 12, 2026|8|WB: Sched for Club Ski (B2)|Not Checked Out|
+Sunday, April 19, 2026|12|WB: Thank you for the Great Season|Not Checked Out|
+Sunday, April 5, 2026|8|WB: Sched for Club Ski (B2)|Not Checked Out|
+Sunday, December 14, 2025|8|WB: Regular Day Off|Not Checked Out|
+Sunday, December 21, 2025|0.1|Term Process Payroll|Assignment|
+Sunday, December 21, 2025|7.77|WB: Daily SB 5-12 (W)|Assignment|
+Sunday, December 21, 2025|0.4|WB: Sched for Riders Daily|Not Checked Out|
+Sunday, December 28, 2025|7.77|WB: Daily Ski 5-12 (W)|Assignment|
+Sunday, December 28, 2025|0.4|WB: Sched for Daily Ski 5-12 (Village)|Not Checked Out|
+Sunday, December 7, 2025|8|WB: Regular Day Off|Not Checked Out|
+Sunday, February 1, 2026|7.27|WB: Club (B)|Assignment|
+Sunday, February 1, 2026|0.9|WB: Sched for Club Ski (B2)|Not Checked Out|
+Sunday, February 15, 2026|7.27|WB: Club (B)|Assignment|
+Sunday, February 15, 2026|0.9|WB: Sched for Club Ski (B2)|Not Checked Out|
+Sunday, February 22, 2026|7.27|WB: Club (B)|Assignment|
+Sunday, February 22, 2026|0.9|WB: Sched for Club Ski (B2)|Not Checked Out|
+Sunday, February 8, 2026|7.27|WB: Club (B)|Assignment|
+Sunday, February 8, 2026|0.9|WB: Sched for Club Ski (B2)|Not Checked Out|
+Sunday, January 11, 2026|7.45|WB: Club (B)|Assignment|
+Sunday, January 11, 2026|0.88|WB: Sched for Club Ski (B2)|Not Checked Out|
+Sunday, January 18, 2026|7.27|WB: Club (B)|Assignment|
+Sunday, January 18, 2026|0.9|WB: Sched for Club Ski (B2)|Not Checked Out|
+Sunday, January 25, 2026|7.27|WB: Club (B)|Assignment|
+Sunday, January 25, 2026|0.9|WB: Sched for Club Ski (B2)|Not Checked Out|
+Sunday, January 4, 2026|7.77|WB: Daily SB 5-12 (W)|Assignment|
+Sunday, January 4, 2026|0.4|WB: Sched for Riders Daily|Not Checked Out|
+Sunday, March 1, 2026|7.27|WB: Club (B)|Assignment|
+Sunday, March 1, 2026|0.9|WB: Sched for Club Ski (B2)|Not Checked Out|
+Sunday, March 15, 2026|8|WB: Sched for Club Ski (B2)|Not Checked Out|
+Sunday, March 22, 2026|8|WB: Sched for Club Ski (B2)|Not Checked Out|
+Sunday, March 29, 2026|8|WB: Sched for Club Ski (B2)|Not Checked Out|
+Sunday, March 8, 2026|8|WB: Sched for Club Ski (B2)|Not Checked Out|
+Sunday, November 23, 2025|8|WB: Regular Day Off|Not Checked Out|
+Sunday, November 30, 2025|8|WB: Regular Day Off|Not Checked Out|
+Thursday, April 16, 2026|12|WB: Thank you for the Great Season|Not Checked Out|
+Thursday, April 2, 2026|8|WB: Sched for Schools Board|Not Checked Out|
+Thursday, April 9, 2026|8|WB: Sched for Schools Board|Not Checked Out|
+Thursday, December 11, 2025|8|WB: Regular Day Off|Not Checked Out|
+Thursday, December 18, 2025|7.27|WB: Schools (B2)|Assignment|
+Thursday, December 18, 2025|0.9|WB: Sched for Schools Board|Not Checked Out|
+Thursday, December 25, 2025|7.77|WB: Daily SB 5-12 (W)|Assignment|
+Thursday, December 25, 2025|0.4|WB: Sched for Riders Daily|Not Checked Out|
+Thursday, December 4, 2025|8|WB: Regular Day Off|Not Checked Out|
+Thursday, February 12, 2026|7.27|WB: Schools (B2)|Assignment|
+Thursday, February 12, 2026|0.9|WB: Sched for Schools Board|Not Checked Out|
+Thursday, February 19, 2026|0.33|WB: Sched Private Ski Blackcomb|Not Checked Out|
+Thursday, February 19, 2026|0.67|WB: FD Private Meeting (B)|Assignment|
+Thursday, February 19, 2026|6|WB: Kids (B) Private Ski FD|Continuing Assignment|Joyce Park
+Thursday, February 19, 2026|0.17|WB: Private End of Day (B)|Assignment|
+Thursday, February 26, 2026|7.27|WB: Schools (B2)|Assignment|
+Thursday, February 26, 2026|0.9|WB: Sched for Schools Ski|Not Checked Out|
+Thursday, February 5, 2026|7.27|WB: Schools (B2)|Assignment|
+Thursday, February 5, 2026|0.9|WB: Sched for Schools Board|Not Checked Out|
+Thursday, January 1, 2026|7.77|WB: Daily SB 5-12 (W)|Assignment|
+Thursday, January 1, 2026|0.4|WB: Sched for Daily Ski 5-12 (Village)|Not Checked Out|
+Thursday, January 15, 2026|1|WB: Sched for Mandatory Training|Not Checked Out|
+Thursday, January 15, 2026|6.5|WB: Training (Return) Teaching Steeps|Assignment|
+Thursday, January 22, 2026|7.27|WB: Schools (B2)|Assignment|
+Thursday, January 22, 2026|0.9|WB: Sched for Schools Ski|Not Checked Out|
+Thursday, January 29, 2026|7.27|WB: Schools (B2)|Assignment|
+Thursday, January 29, 2026|0.9|WB: Sched for Schools Board|Not Checked Out|
+Thursday, January 8, 2026|0.33|WB: Sched Private Ski Whistler|Not Checked Out|
+Thursday, January 8, 2026|0.67|WB: FD Private Meeting (W)|Assignment|
+Thursday, January 8, 2026|6|WB: Kids (W) Private Ski FD|Assignment|Paul Polly
+Thursday, January 8, 2026|0.17|WB: Private End of Day (W)|Assignment|
+Thursday, March 12, 2026|8|WB: Sched for Schools Board|Not Checked Out|
+Thursday, March 19, 2026|8|WB: Sched for Riders Daily|Not Checked Out|
+Thursday, March 26, 2026|8|WB: Sched for Schools Board|Not Checked Out|
+Thursday, March 5, 2026|7.27|WB: Schools (B2)|Assignment|
+Thursday, March 5, 2026|0.9|WB: Sched for Schools Board|Not Checked Out|
+Thursday, November 27, 2025|8|WB: Regular Day Off|Not Checked Out|
+Tuesday, April 14, 2026|12|WB: Thank you for the Great Season|Not Checked Out|
+Tuesday, April 7, 2026|8|WB: Regular Day Off|Not Checked Out|
+Tuesday, December 16, 2025|6|WB: Training (NewHire) Kids Pre Season|Assignment|
+Tuesday, December 16, 2025|2|WB: Regular Day Off|Not Checked Out|
+Tuesday, December 2, 2025|8|WB: Regular Day Off|Not Checked Out|
+Tuesday, December 23, 2025|8|WB: Regular Day Off|Not Checked Out|
+Tuesday, December 30, 2025|8|WB: Regular Day Off|Not Checked Out|
+Tuesday, December 9, 2025|8|WB: Regular Day Off|Not Checked Out|
+Tuesday, February 10, 2026|8|WB: Regular Day Off|Not Checked Out|
+Tuesday, February 17, 2026|7.77|WB: Daily Ski 5-12 (W)|Assignment|
+Tuesday, February 17, 2026|0.4|WB: Sched for Daily Ski 5-12 (Village)|Not Checked Out|
+Tuesday, February 24, 2026|8|WB: Regular Day Off|Not Checked Out|
+Tuesday, February 3, 2026|8|WB: Regular Day Off|Not Checked Out|
+Tuesday, January 13, 2026|8|WB: Regular Day Off|Not Checked Out|
+Tuesday, January 20, 2026|8|WB: Regular Day Off|Not Checked Out|
+Tuesday, January 27, 2026|8|WB: Regular Day Off|Not Checked Out|
+Tuesday, January 6, 2026|0.33|WB: Sched Private Ski Whistler|Not Checked Out|
+Tuesday, January 6, 2026|0.67|WB: FD Private Meeting (W)|Assignment|
+Tuesday, January 6, 2026|6|WB: Family (W) Private Ski FD|Assignment|Sara Bolger
+Tuesday, January 6, 2026|0.17|WB: Private End of Day (W)|Assignment|
+Tuesday, March 10, 2026|8|WB: Regular Day Off|Not Checked Out|
+Tuesday, March 17, 2026|8|WB: Regular Day Off|Not Checked Out|
+Tuesday, March 24, 2026|8|WB: Regular Day Off|Not Checked Out|
+Tuesday, March 3, 2026|8|WB: Regular Day Off|Not Checked Out|
+Tuesday, March 31, 2026|8|WB: Regular Day Off|Not Checked Out|
+Tuesday, November 25, 2025|8|WB: Regular Day Off|Not Checked Out|
+Wednesday, April 1, 2026|8|WB: Sched for Schools Board|Not Checked Out|
+Wednesday, April 15, 2026|12|WB: Thank you for the Great Season|Not Checked Out|
+Wednesday, April 8, 2026|8|WB: Sched for Schools Board|Not Checked Out|
+Wednesday, December 10, 2025|8|WB: Regular Day Off|Not Checked Out|
+Wednesday, December 17, 2025|6|WB: Training (NewHire) Kids Pre Season|Assignment|
+Wednesday, December 17, 2025|2|WB: Regular Day Off|Not Checked Out|
+Wednesday, December 17, 2025|1.82|WB: Training (Virtual LIFT - Req) Return|Assignment|
+Wednesday, December 24, 2025|7.77|WB: Daily SB 5-12 (W)|Assignment|
+Wednesday, December 24, 2025|0.4|WB: Sched for Riders Daily|Not Checked Out|
+Wednesday, December 3, 2025|8|WB: Regular Day Off|Not Checked Out|
+Wednesday, December 31, 2025|7.77|WB: Daily Ski 5-12 (W)|Assignment|
+Wednesday, December 31, 2025|0.4|WB: Sched for Daily Ski 5-12 (Village)|Not Checked Out|
+Wednesday, February 11, 2026|7.27|WB: Schools (B2)|Assignment|
+Wednesday, February 11, 2026|0.9|WB: Sched for Schools Ski|Not Checked Out|
+Wednesday, February 18, 2026|0.33|WB: Sched Private Ski Whistler|Not Checked Out|
+Wednesday, February 18, 2026|0.67|WB: FD Private Meeting (W)|Assignment|
+Wednesday, February 18, 2026|6|WB: Family (W) Private Ski FD|Assignment|Tzu-Li Kang
+Wednesday, February 18, 2026|0.17|WB: Private End of Day (W)|Assignment|
+Wednesday, February 25, 2026|3.72|WB: Private Standby Return for PM (W)|Assignment|
+Wednesday, February 25, 2026|0.28|WB: Sched Private SB Whistler|Not Checked Out|
+Wednesday, February 25, 2026|0.5|WB: PM Private Meeting (W)|Assignment|
+Wednesday, February 25, 2026|3|WB: Adult (W) Private SB HD PM|Assignment|David Jimenez
+Wednesday, February 25, 2026|0.17|WB: Private End of Day PM (W)|Assignment|
+Wednesday, February 4, 2026|7.27|WB: Schools Race League|Assignment|
+Wednesday, February 4, 2026|0.9|WB: Sched for Schools Ski|Not Checked Out|
+Wednesday, January 14, 2026|7.27|WB: Schools (B2)|Assignment|
+Wednesday, January 14, 2026|0.9|WB: Sched for Schools Ski|Not Checked Out|
+Wednesday, January 21, 2026|7.27|WB: Schools (B2)|Assignment|
+Wednesday, January 21, 2026|0.9|WB: Sched for Schools Board|Not Checked Out|
+Wednesday, January 28, 2026|7.27|WB: Schools (B2)|Assignment|
+Wednesday, January 28, 2026|0.9|WB: Sched for Schools Board|Not Checked Out|
+Wednesday, January 7, 2026|0.33|WB: Sched Private Ski Whistler|Not Checked Out|
+Wednesday, January 7, 2026|0.67|WB: FD Private Meeting (W)|Assignment|
+Wednesday, January 7, 2026|6|WB: Manual (W) Private FD|Assignment|
+Wednesday, January 7, 2026|0.17|WB: Private End of Day (W)|Assignment|
+Wednesday, March 11, 2026|8|WB: Sched for Schools Ski|Not Checked Out|
+Wednesday, March 18, 2026|8|WB: Sched for Riders Daily|Not Checked Out|
+Wednesday, March 25, 2026|8|WB: Sched for Riders Daily|Not Checked Out|
+Wednesday, March 4, 2026|7.27|WB: Schools (B2)|Assignment|
+Wednesday, March 4, 2026|0.9|WB: Sched for Schools Ski|Not Checked Out|
+Wednesday, November 26, 2025|8|WB: Regular Day Off|Not Checked Out|`.trim().split('\n');
+
+// ─────────────────────────────────────────────────────────────────────────────
+// PARSING & CLASSIFICATION LOGIC
+// ─────────────────────────────────────────────────────────────────────────────
+const MONTHS_SHORT = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+const DAYS_SHORT   = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+
+function toKey(d) { return d.toISOString().slice(0,10); }
+function parseDate(s) { return new Date(s.replace(/^[A-Za-z]+,\s*/,'')); }
+
+// Is this a "Sched for..." placeholder row?
+function isSched(raw) { return /sched\s+for/i.test(raw); }
+
+// Is this a confirmed paid row?
+function isPaid(assignment) { return assignment === 'Assignment' || assignment === 'Continuing Assignment'; }
+
+// Strip "WB:" prefix and "Sched for" prefix
+function cleanTitle(raw) {
+  return raw.replace(/^WB:\s*/i,'').replace(/^Sched\s+for\s+/i,'').trim();
+}
+
+// Detect discipline: ski | snowboard
+function getDiscipline(raw) {
+  const s = raw.toLowerCase();
+  // Alpine Club and Roundhouse Club are always ski
+  if (/alpine|roundhouse/i.test(s)) return 'ski';
+  const isSB  = /\bsb\b|snowboard|rider|board/i.test(s);
+  const isSki = /\bski\b|skiing/i.test(s);
+  if (isSB && !isSki) return 'snowboard';
+  if (isSki && !isSB) return 'ski';
+  return null;
+}
+
+// Detect location: W | B | B2
+function getLocation(raw) {
+  if (/\(B2\)/i.test(raw)) return 'B2';
+  if (/\(B\)/i.test(raw))  return 'Blackcomb';
+  if (/\(W\)/i.test(raw))  return 'Whistler';
+  if (/Blackcomb/i.test(raw)) return 'Blackcomb';
+  if (/Whistler/i.test(raw))  return 'Whistler';
+  return null;
+}
+
+// Private duration
+function getPrivateDuration(raw) {
+  if (/\bFD\b/.test(raw)) return 'Full Day';
+  if (/\bHD\b/.test(raw)) return 'Half Day';
+  return null;
+}
+
+// Classify into a program group
+function getProgram(raw) {
+  const s = raw.toLowerCase();
+  if (/thank you for the great season/i.test(raw)) return 'end';
+  if (/regular day off|called off/i.test(raw))     return 'off';
+  if (/called in sick|sick/i.test(raw))             return 'sick';
+  if (/training/i.test(s))                          return 'training';
+  if (/private|manual.*private|fd private|pm private|standby.*pm|private standby/i.test(s)) return 'private';
+  if (/schools|race league/i.test(s))               return 'schools';
+  // Daily kids: Daily SB 5-12 / Daily Ski 5-12 / Riders Daily / Sched for Riders Daily / Sched for Daily Ski
+  if (/daily\s+(sb|ski|snowboard)|riders?\s+daily|daily.*5[-–]12/i.test(s)) return 'daily';
+  // Alpine Club and Roundhouse Club are the same ski product — group as 'club'
+  if (/club|roundhouse|alpine/i.test(s))            return 'club';
+  return 'other';
+}
+
+// Find season end date (first date with "Thank you for the Great Season")
+let SEASON_END_KEY = null;
+
+// Build lesson map
+const byDate = {};
+RAW_LINES.forEach(line => {
+  const parts = line.split('|');
+  if (parts.length < 4) return;
+  const [dateStr, hoursStr, rawActivity, assignment, client=''] = parts;
+  const d = parseDate(dateStr.trim());
+  if (isNaN(d)) return;
+  const key = toKey(d);
+  if (!byDate[key]) byDate[key] = [];
+  byDate[key].push({
+    date: d,
+    key,
+    hours: parseFloat(hoursStr) || 0,
+    raw: rawActivity.trim(),
+    assignment: assignment.trim(),
+    client: client.trim(),
+  });
+});
+
+// Determine season end key
+Object.keys(byDate).sort().forEach(key => {
+  if (!SEASON_END_KEY) {
+    const hasEnd = byDate[key].some(l => getProgram(l.raw) === 'end');
+    if (hasEnd) SEASON_END_KEY = key;
+  }
+});
+
+// ─────────────────────────────────────────────────────────────────────────────
+// RENDER A DAY: build card objects from raw lessons
+// ─────────────────────────────────────────────────────────────────────────────
+const TODAY_KEY = '2026-03-05';
+
+function buildDayView(key) {
+  const raw = byDate[key] || [];
+  const isPast = key < TODAY_KEY;
+  const isFuture = key > TODAY_KEY;
+  const isAfterEnd = SEASON_END_KEY && key > SEASON_END_KEY;
+
+  if (!raw.length) return [];
+
+  // If after season end, just show nothing meaningful
+  if (isAfterEnd) return [];
+
+  const cards = [];
+
+  if (isFuture) {
+    // Future: use "Sched for..." items as the schedule indicators (deduplicated by program)
+    // Ignore hours — just show what's planned
+    const seen = new Set();
+    raw.forEach(l => {
+      if (!isSched(l.raw)) return; // only sched-for items for future
+      const prog = getProgram(l.raw);
+      if (prog === 'off' || prog === 'end') return;
+      const title = cleanTitle(l.raw);
+      if (seen.has(title)) return;
+      seen.add(title);
+      cards.push({
+        title,
+        program: prog,
+        discipline: getDiscipline(l.raw),
+        location: getLocation(l.raw),
+        isSched: true,
+        hours: null,
+        assignment: null,
+        client: null,
+        duration: null,
+      });
+    });
+    // If no sched-for items but has off markers
+    if (!cards.length) {
+      const hasOff = raw.some(l => /regular day off/i.test(l.raw));
+      if (hasOff) cards.push({ title: 'Day Off', program: 'off', isSched: false, hours: null });
+    }
+  } else {
+    // Past / today: only show paid items (Assignment / Continuing Assignment)
+    // Group private lessons into one card per session
+    const privateGroups = {};
+    raw.forEach(l => {
+      if (!isPaid(l.assignment)) return;
+      const prog = getProgram(l.raw);
+      if (prog === 'end') return;
+
+      if (prog === 'private') {
+        // Group by client (or by date if no client)
+        const groupKey = l.client || 'private_' + key;
+        if (!privateGroups[groupKey]) privateGroups[groupKey] = { hours: 0, client: l.client, raws: [], assignment: l.assignment };
+        privateGroups[groupKey].hours += l.hours;
+        privateGroups[groupKey].raws.push(l.raw);
+      } else {
+        cards.push({
+          title: cleanTitle(l.raw),
+          program: prog,
+          discipline: getDiscipline(l.raw),
+          location: getLocation(l.raw),
+          isSched: false,
+          hours: l.hours,
+          assignment: l.assignment,
+          client: l.client || null,
+          duration: getPrivateDuration(l.raw),
+        });
+      }
+    });
+
+    // Add private groups as single cards
+    Object.values(privateGroups).forEach(g => {
+      // Pick best title from raws (prefer the main lesson line, not admin lines)
+      const mainRaw = g.raws.find(r => !/meeting|end of day|standby|sched/i.test(r)) || g.raws[0];
+      cards.push({
+        title: cleanTitle(mainRaw),
+        program: 'private',
+        discipline: getDiscipline(mainRaw),
+        location: getLocation(mainRaw),
+        isSched: false,
+        hours: parseFloat(g.hours.toFixed(2)),
+        assignment: g.assignment,
+        client: g.client || null,
+        duration: getPrivateDuration(mainRaw),
+      });
+    });
+
+    // Show off/sick even for past days if that's all there is
+    if (!cards.length) {
+      const sickRow = raw.find(l => /sick/i.test(l.raw));
+      const offRow  = raw.find(l => /regular day off|called off/i.test(l.raw));
+      if (sickRow) cards.push({ title: 'Called in Sick', program: 'sick', isSched: false, hours: null });
+      else if (offRow) cards.push({ title: 'Day Off', program: 'off', isSched: false, hours: null });
+    }
+  }
+
+  return cards;
+}
+
+// Program → display config
+const PROG_CONFIG = {
+  schools:  { label:'Schools',       color:'var(--blue)',   textColor:'#7ab8ff' },
+  daily:    { label:'Kids Daily',    color:'var(--teal)',   textColor:'var(--teal)' },
+  club:     { label:'Club',          color:'var(--purple)', textColor:'var(--purple)' },
+  alpine:   { label:'Alpine Club',   color:'var(--green)',  textColor:'var(--green)' },
+  private:  { label:'Private',       color:'var(--yellow)', textColor:'var(--yellow)' },
+  training: { label:'Training',      color:'var(--green)',  textColor:'var(--green)' },
+  off:      { label:'Day Off',       color:'var(--dim)',    textColor:'var(--muted)' },
+  sick:     { label:'Sick',          color:'var(--red)',    textColor:'var(--red)' },
+  other:    { label:'Other',         color:'var(--muted)',  textColor:'var(--muted)' },
+};
+
+function renderDayCards(key) {
+  const d = new Date(key + 'T12:00:00');
+  const dayStr = DAYS_SHORT[d.getDay()] + ', ' + MONTHS_SHORT[d.getMonth()] + ' ' + d.getDate();
+  document.getElementById('dayDetailHeader').textContent = dayStr;
+
+  const cards = buildDayView(key);
+
+  if (!cards.length) {
+    document.getElementById('dayCards').innerHTML = `<div class="no-lessons">No schedule data</div>`;
+    return;
+  }
+
+  let html = '';
+  cards.forEach(c => {
+    const cfg = PROG_CONFIG[c.program] || PROG_CONFIG.other;
+    const cls = ['lcard', `type-${c.program}`, c.program === 'off' ? 'is-off' : ''].filter(Boolean).join(' ');
+
+    // Pills
+    let pills = '';
+    if (c.isSched) {
+      pills += `<span class="pill pill-sched">Scheduled</span>`;
+    } else if (c.assignment === 'Continuing Assignment') {
+      pills += `<span class="pill pill-continuing">↻ Continuing</span>`;
+    } else if (c.assignment === 'Assignment') {
+      pills += `<span class="pill pill-assigned">✓ Assigned</span>`;
+    }
+    if (c.discipline === 'ski')        pills += `<span class="pill pill-ski">⛷ Ski</span>`;
+    if (c.discipline === 'snowboard')  pills += `<span class="pill pill-sb">🏂 Snowboard</span>`;
+    if (c.location)                    pills += `<span class="pill pill-loc">📍 ${c.location}</span>`;
+    if (c.duration === 'Full Day')     pills += `<span class="pill pill-fd">Full Day</span>`;
+    if (c.duration === 'Half Day')     pills += `<span class="pill pill-hd">Half Day</span>`;
+    if (c.client)                      pills += `<span class="pill pill-client">👤 ${c.client}</span>`;
+    if (c.program === 'sick')          pills += `<span class="pill pill-sick">Sick Day</span>`;
+    if (c.program === 'off' && !c.isSched) pills += `<span class="pill pill-off">Day Off</span>`;
+
+    const hoursHtml = (c.hours && c.hours > 0 && !c.isSched)
+      ? `<div class="lcard-hours" style="color:${cfg.textColor}">${c.hours}<small>hrs</small></div>` : '';
+
+    html += `<div class="${cls}">
+      <div class="lcard-top">
+        <div class="lcard-left">
+          <div class="lcard-activity">${c.title}</div>
+        </div>
+        ${hoursHtml}
+      </div>
+      ${pills ? `<div class="lcard-meta">${pills}</div>` : ''}
+    </div>`;
+  });
+
+  document.getElementById('dayCards').innerHTML = html;
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// WEEK STRIP & NAVIGATION
+// ─────────────────────────────────────────────────────────────────────────────
+let weekOffset = 0;
+let selectedKey = TODAY_KEY;
+
+function getWeekStart() {
+  const base = new Date(TODAY_KEY + 'T12:00:00');
+  const s = new Date(base);
+  s.setDate(base.getDate() - base.getDay() + weekOffset * 7);
+  return s;
+}
+
+function renderWeek() {
+  const ws = getWeekStart();
+  document.getElementById('monthLabel').textContent = MONTHS_SHORT[ws.getMonth()] + ' ' + ws.getFullYear();
+
+  let html = '';
+  for (let i = 0; i < 7; i++) {
+    const d = new Date(ws); d.setDate(ws.getDate() + i);
+    const key = toKey(d);
+    const lessons = byDate[key] || [];
+    const isFuture = key > TODAY_KEY;
+    const isPast   = key < TODAY_KEY;
+    const isAfterEnd = SEASON_END_KEY && key > SEASON_END_KEY;
+
+    // Determine dot presence
+    let hasWork = false;
+    if (!isAfterEnd) {
+      if (isFuture) hasWork = lessons.some(l => isSched(l.raw) && !/day off/i.test(l.raw));
+      else hasWork = lessons.some(l => isPaid(l.assignment) && getProgram(l.raw) !== 'off' && getProgram(l.raw) !== 'end');
+    }
+
+    const cls = ['wd',
+      key === selectedKey ? 'selected' : '',
+      key === TODAY_KEY && key !== selectedKey ? 'today-ring' : '',
+      hasWork ? 'has-work' : 'is-off',
+      isPast && key !== selectedKey ? 'past-day' : '',
+    ].filter(Boolean).join(' ');
+
+    html += `<div class="${cls}" onclick="selectDay('${key}')">
+      <span class="wd-label">${DAYS_SHORT[d.getDay()]}</span>
+      <span class="wd-num">${d.getDate()}</span>
+      <span class="wd-dot"></span>
+    </div>`;
+  }
+  document.getElementById('weekStrip').innerHTML = html;
+  renderDayCards(selectedKey);
+}
+
+function selectDay(key) { selectedKey = key; renderWeek(); }
+function shiftWeek(dir) {
+  weekOffset += dir;
+  const d = new Date(selectedKey + 'T12:00:00');
+  d.setDate(d.getDate() + dir * 7);
+  selectedKey = toKey(d);
+  renderWeek();
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// STATS
+// ─────────────────────────────────────────────────────────────────────────────
+function buildStats() {
+  // Only count dates before season end
+  const validKeys = Object.keys(byDate).filter(k => !SEASON_END_KEY || k < SEASON_END_KEY);
+
+  // Paid work days: days with at least one paid non-off item
+  const workDayKeys = validKeys.filter(k =>
+    byDate[k].some(l => isPaid(l.assignment) && !['off','end','sick'].includes(getProgram(l.raw)))
+  );
+
+  // Sick days
+  const sickDays = validKeys.filter(k => byDate[k].some(l => /sick/i.test(l.raw))).length;
+
+  // Paid hours by program
+  const progHours = {};
+  validKeys.forEach(k => {
+    byDate[k].forEach(l => {
+      if (!isPaid(l.assignment)) return;
+      const prog = getProgram(l.raw);
+      if (['off','end'].includes(prog)) return;
+      progHours[prog] = (progHours[prog]||0) + l.hours;
+    });
+  });
+  const totalHrs = Object.values(progHours).reduce((a,b)=>a+b,0);
+
+  // Private sessions (unique days with private paid items)
+  const privateDayKeys = new Set(
+    validKeys.filter(k => byDate[k].some(l => isPaid(l.assignment) && getProgram(l.raw)==='private'))
+  );
+
+  // Clients
+  const clients = {};
+  validKeys.forEach(k => {
+    byDate[k].forEach(l => {
+      if (!l.client || !isPaid(l.assignment)) return;
+      if (!clients[l.client]) clients[l.client] = { name:l.client, days:new Set(), raws:[] };
+      clients[l.client].days.add(k);
+      clients[l.client].raws.push(l.raw);
+    });
+  });
+
+  // Season dates
+  const allKeys = Object.keys(byDate).sort();
+  const seasonStart = allKeys[0];
+  const seasonEndDisplay = SEASON_END_KEY || allKeys[allKeys.length-1];
+  const s = new Date(seasonStart+'T12:00:00'), e = new Date(seasonEndDisplay+'T12:00:00');
+  document.getElementById('statsSubtitle').textContent =
+    `${MONTHS_SHORT[s.getMonth()]} ${s.getDate()}, ${s.getFullYear()} — ${MONTHS_SHORT[e.getMonth()]} ${e.getDate()}, ${e.getFullYear()}`;
+
+  // Big stats
+  document.getElementById('bigStats').innerHTML = `
+    <div class="bstat"><div class="bstat-val c-blue">${workDayKeys.length}</div><div class="bstat-label">Work Days</div></div>
+    <div class="bstat"><div class="bstat-val c-orange">${Math.round(totalHrs)}</div><div class="bstat-label">Paid Hours</div></div>
+    <div class="bstat"><div class="bstat-val c-yellow">${privateDayKeys.size}</div><div class="bstat-label">Private Days</div></div>
+    <div class="bstat"><div class="bstat-val c-purple">${Object.keys(clients).length}</div><div class="bstat-label">Clients</div></div>
+  `;
+
+  // Breakdown bars
+  const programs = [
+    { key:'schools',  label:'Schools',          color:'var(--blue)'   },
+    { key:'club',     label:'Club & Roundhouse', color:'var(--purple)' },
+    { key:'daily',    label:'Kids Daily (5–12)', color:'var(--teal)'   },
+    { key:'private',  label:'Private Lessons',  color:'var(--yellow)' },
+    { key:'alpine',   label:'Alpine Club',       color:'var(--green)'  },
+    { key:'training', label:'Training',          color:'#5dbb8a'       },
+  ];
+  const maxH = Math.max(...programs.map(p => progHours[p.key]||0), 1);
+  let bHtml = '';
+  programs.forEach(p => {
+    const h = progHours[p.key]||0;
+    if (!h) return;
+    const pct = Math.round((h/maxH)*100);
+    bHtml += `<div class="brow">
+      <div class="brow-top">
+        <span class="brow-label"><span class="brow-dot" style="background:${p.color}"></span>${p.label}</span>
+        <span class="brow-vals">${h.toFixed(1)}h</span>
+      </div>
+      <div class="brow-bar"><div class="brow-fill" style="width:${pct}%;background:${p.color}"></div></div>
+    </div>`;
+  });
+  document.getElementById('breakdown').innerHTML = bHtml;
+
+  // Heatmap
+  const hmMonths = [{y:2025,m:10},{y:2025,m:11},{y:2026,m:0},{y:2026,m:1},{y:2026,m:2},{y:2026,m:3}];
+  let hmHtml = '';
+  hmMonths.forEach(({y,m}) => {
+    const first = new Date(y,m,1);
+    const days  = new Date(y,m+1,0).getDate();
+    let cells = '';
+    for (let p=0;p<first.getDay();p++) cells += `<div class="hm-cell hm-empty"></div>`;
+    for (let d=1;d<=days;d++) {
+      const key = toKey(new Date(y,m,d));
+      const ls  = byDate[key]||[];
+      const isSeasonEndDay = key === SEASON_END_KEY;          // only first end day
+      const afterEnd = SEASON_END_KEY && key > SEASON_END_KEY; // blank after
+      let cls = 'hm-cell ';
+      if (afterEnd)       { cls += 'hm-empty'; }
+      else if (isSeasonEndDay) { cls += 'hm-end'; }
+      else if (!ls.length) { cls += 'hm-off'; }
+      else {
+        const progs = ls.map(l=>getProgram(l.raw));
+        const paid  = ls.filter(l=>isPaid(l.assignment));
+        const hasSick = progs.includes('sick');
+        const hasFutureSched = key > TODAY_KEY && ls.some(l=>isSched(l.raw) && !['off','end'].includes(getProgram(l.raw)));
+        if (hasSick) cls += 'hm-sick';
+        else if (hasFutureSched) cls += 'hm-sched';
+        else if (progs.includes('private') && paid.length) cls += 'hm-private';
+        else if (progs.includes('training') && paid.length) cls += 'hm-training';
+        else if (progs.every(p=>p==='off')) cls += 'hm-off';
+        else {
+          const h = paid.reduce((s,l)=>s+l.hours,0);
+          if (h>=7) cls+='hm-full'; else if (h>=4) cls+='hm-med'; else if (h>0) cls+='hm-light'; else cls+='hm-off';
+        }
+      }
+      cells += `<div class="${cls}" title="${key}"></div>`;
+    }
+    hmHtml += `<div><div class="hm-month-label">${MONTHS_SHORT[m]} ${y===2025?'25':'26'}</div><div class="hm-grid">${cells}</div></div>`;
+  });
+
+  // Legend
+  const legendItems = [
+    { cls:'hm-full',    label:'Work day' },
+    { cls:'hm-sched',   label:'Scheduled' },
+    { cls:'hm-private', label:'Private' },
+    { cls:'hm-training',label:'Training' },
+    { cls:'hm-sick',    label:'Sick day' },
+    { cls:'hm-end',     label:'Season end' },
+    { cls:'hm-off',     label:'Day off' },
+  ];
+  const legendHtml = '<div class="hm-legend">' + legendItems.map(it =>
+    `<div class="hm-leg-item"><div class="hm-leg-swatch hm-cell ${it.cls}" style="width:12px;height:12px;border-radius:2px"></div>${it.label}</div>`
+  ).join('') + '</div>';
+
+  document.getElementById('heatmap').innerHTML = hmHtml;
+  document.getElementById('heatmapLegend').innerHTML = legendHtml;
+
+  // Clients list
+  const clientArr = Object.values(clients).sort((a,b)=>b.days.size-a.days.size);
+  let cHtml = '';
+  clientArr.forEach(c => {
+    const initials = c.name.split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase();
+    const mainRaw = c.raws.find(r=>!/meeting|end of day/i.test(r))||c.raws[0];
+    const disc = getDiscipline(mainRaw);
+    const loc  = getLocation(mainRaw);
+    const dur  = getPrivateDuration(mainRaw);
+    const meta = [disc==='ski'?'Ski':disc==='snowboard'?'Snowboard':null, loc, dur].filter(Boolean).join(' · ');
+    cHtml += `<div class="client-row">
+      <div class="client-avatar">${initials}</div>
+      <div>
+        <div class="client-name">${c.name}</div>
+        <div class="client-meta">${meta||'Private Lesson'}</div>
+      </div>
+      <div class="client-days">${c.days.size}d</div>
+    </div>`;
+  });
+  document.getElementById('clientList').innerHTML = cHtml || `<div style="padding:16px;color:var(--muted);font-size:13px">No named clients</div>`;
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+function switchTab(tab) {
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  document.getElementById('page-'+tab).classList.add('active');
+  document.getElementById('tab-'+tab).classList.add('active');
+}
+
+renderWeek();
+buildStats();
+
+// ─────────────────────────────────────────────────────────────────────────────
+// CREDENTIALS (localStorage) + PROFILE MODAL
+// ─────────────────────────────────────────────────────────────────────────────
+function loadCredentials() {
+  return {
+    passNumber: localStorage.getItem('wb_passNumber') || '',
+    password:   localStorage.getItem('wb_password')   || '',
+  };
+}
+
+function openProfile() {
+  const creds = loadCredentials();
+  document.getElementById('inputPassNumber').value = creds.passNumber;
+  document.getElementById('inputPassword').value   = creds.password;
+  document.getElementById('modalStatus').textContent = '';
+  document.getElementById('profileModal').classList.add('open');
+}
+
+function closeProfile() {
+  document.getElementById('profileModal').classList.remove('open');
+}
+
+function handleOverlayClick(e) {
+  if (e.target === document.getElementById('profileModal')) closeProfile();
+}
+
+function saveCredentials() {
+  const pn = document.getElementById('inputPassNumber').value.trim();
+  const pw = document.getElementById('inputPassword').value.trim();
+  if (!pn || !pw) {
+    setModalStatus('Please fill in both fields.', 'err');
+    return;
+  }
+  localStorage.setItem('wb_passNumber', pn);
+  localStorage.setItem('wb_password',   pw);
+  setModalStatus('✓ Saved!', 'ok');
+  setTimeout(closeProfile, 800);
+}
+
+function setModalStatus(msg, type) {
+  const el = document.getElementById('modalStatus');
+  el.textContent = msg;
+  el.className = 'modal-status ' + (type || '');
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// REFRESH — calls /api/scrape with saved credentials
+// ─────────────────────────────────────────────────────────────────────────────
+async function triggerRefresh() {
+  const creds = loadCredentials();
+  if (!creds.passNumber || !creds.password) {
+    openProfile();
+    setModalStatus('Enter your credentials first, then hit Refresh.', 'err');
+    return;
+  }
+
+  const fab = document.getElementById('fabRefresh');
+  fab.classList.add('spinning');
+  fab.disabled = true;
+
+  try {
+    const resp = await fetch('/api/scrape', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ passNumber: creds.passNumber, password: creds.password }),
+    });
+
+    const data = await resp.json();
+
+    if (!resp.ok) {
+      if (resp.status === 401) {
+        openProfile();
+        setModalStatus('❌ ' + (data.error || 'Invalid credentials.'), 'err');
+      } else {
+        alert('Refresh failed: ' + (data.error || 'Unknown error'));
+      }
+      return;
+    }
+
+    // Ingest new lesson data into byDate
+    ingestLessons(data.lessons);
+    renderWeek();
+    buildStats();
+
+    // Flash fab green briefly
+    fab.style.background = 'var(--green)';
+    setTimeout(() => { fab.style.background = ''; }, 1200);
+
+  } catch (err) {
+    alert('Network error — are you connected? ' + err.message);
+  } finally {
+    fab.classList.remove('spinning');
+    fab.disabled = false;
+  }
+}
+
+// Parse new lessons from API and rebuild byDate
+function ingestLessons(lessons) {
+  // Clear and rebuild
+  Object.keys(byDate).forEach(k => delete byDate[k]);
+  SEASON_END_KEY = null;
+
+  lessons.forEach(l => {
+    const d = new Date(l.date.replace(/^[A-Za-z]+,\s*/, ''));
+    if (isNaN(d)) return;
+    const key = toKey(d);
+    if (!byDate[key]) byDate[key] = [];
+    byDate[key].push({
+      date: d, key,
+      hours: parseFloat(l.hours) || 0,
+      raw: (l.activity || '').trim(),
+      assignment: (l.assignment || '').trim(),
+      client: (l.client || '').trim(),
+    });
+  });
+
+  // Re-detect season end
+  Object.keys(byDate).sort().forEach(key => {
+    if (!SEASON_END_KEY && byDate[key].some(l => getProgram(l.raw) === 'end')) {
+      SEASON_END_KEY = key;
+    }
+  });
+}
+
+// On load: show credential prompt if nothing saved yet
+window.addEventListener('load', () => {
+  const creds = loadCredentials();
+  if (creds.passNumber) {
+    document.getElementById('chipName').textContent = creds.passNumber;
+  } else {
+    // Prompt on first open
+    setTimeout(openProfile, 600);
+  }
+});
+
+</script>
+
+<!-- ── FLOATING REFRESH ── -->
+<button class="fab-refresh" id="fabRefresh" onclick="triggerRefresh()" title="Refresh schedule">
+  <svg viewBox="0 0 24 24"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
+</button>
+
+<!-- ── PROFILE MODAL ── -->
+<div class="modal-overlay" id="profileModal" onclick="handleOverlayClick(event)">
+  <div class="modal-sheet">
+    <div class="modal-handle"></div>
+    <div class="modal-title">Profile & Credentials</div>
+    <div class="modal-sub">Saved locally on your device — never sent anywhere except the portal.</div>
+    <div class="modal-field">
+      <label>Pass Number</label>
+      <input type="text" id="inputPassNumber" placeholder="e.g. 110104517880" inputmode="numeric" />
+    </div>
+    <div class="modal-field">
+      <label>Password</label>
+      <input type="password" id="inputPassword" placeholder="Your portal password" />
+    </div>
+    <div class="modal-actions">
+      <button class="modal-btn modal-btn-cancel" onclick="closeProfile()">Cancel</button>
+      <button class="modal-btn modal-btn-save" onclick="saveCredentials()">Save</button>
+    </div>
+    <div class="modal-status" id="modalStatus"></div>
+  </div>
+</div>
+
+</body>
+</html>
