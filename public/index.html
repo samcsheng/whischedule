@@ -299,8 +299,8 @@ body::after { content:''; position:fixed; inset:0; pointer-events:none; z-index:
         <div class="sched-title">My Schedule</div>
       </div>
       <div class="instructor-chip" onclick="openProfile()">
-        <div class="chip-avatar" id="chipAvatar">S</div>
-        <div class="chip-name" id="chipName">Sam Sheng</div>
+        <div class="chip-avatar" id="chipAvatar">L</div>
+        <div class="chip-name" id="chipName">log in</div>
       </div>
     </div>
   </div>
@@ -965,9 +965,15 @@ function loadCredentials() {
   };
 }
 
+function setChipLoggedOut() {
+  document.getElementById('chipAvatar').textContent = 'L';
+  document.getElementById('chipName').textContent = 'log in';
+}
+
 function openProfile() {
   const creds = loadCredentials();
-  document.getElementById('inputPassNumber').value = creds.passNumber;
+  // Avoid revealing a previously-saved pass number by default.
+  document.getElementById('inputPassNumber').value = '';
   document.getElementById('inputPassword').value   = creds.password;
   document.getElementById('modalStatus').textContent = '';
   document.getElementById('profileModal').classList.add('open');
@@ -1083,6 +1089,10 @@ function ingestLessons(lessons) {
 function updateChipName(name) {
   // Format: "Chengmin ( Sam ) Sheng" → prefer nickname e.g. "Sam Sheng"
   let display = name.trim();
+  if (!display) {
+    setChipLoggedOut();
+    return;
+  }
   const nick = display.match(/\(\s*([^)]+?)\s*\)/);
   if (nick) {
     // Extract last word of the full name as the surname
@@ -1113,7 +1123,7 @@ window.addEventListener('load', () => {
   const cache     = loadScheduleCache();
 
   if (savedName) updateChipName(savedName);
-  else if (creds.passNumber) document.getElementById('chipName').textContent = creds.passNumber;
+  else setChipLoggedOut();
 
   if (cache && cache.length) {
     ingestLessons(cache);
@@ -1140,7 +1150,7 @@ window.addEventListener('load', () => {
     <div class="modal-sub">Saved locally on your device — never sent anywhere except the portal.</div>
     <div class="modal-field">
       <label>Pass Number</label>
-      <input type="text" id="inputPassNumber" placeholder="e.g. 110104517880" inputmode="numeric" />
+      <input type="text" id="inputPassNumber" placeholder="e.g. 110101234567" inputmode="numeric" />
     </div>
     <div class="modal-field">
       <label>Password</label>
