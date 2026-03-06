@@ -355,7 +355,10 @@ const TODAY_KEY    = new Date().toISOString().slice(0, 10);
 function toKey(d) { return d.toISOString().slice(0,10); }
 
 function cleanTitle(raw) {
-  return raw.replace(/^WB:\s*/i,'').replace(/^Sched\s+for\s+/i,'').trim();
+  return raw
+    .replace(/^WB:\s*/i,'')
+    .replace(/^Sched\s+(?:for\s+)?/i,'')
+    .trim();
 }
 
 function getLocation(raw) {
@@ -384,14 +387,19 @@ function isPaid(assignment) {
 }
 
 // "Sched for …" placeholder row (future schedule intent)
-function isSched(raw) { return /sched\s+for/i.test(raw); }
+function isSched(raw) { return /^\s*(?:WB:\s*)?Sched\b/i.test(raw); }
 
 function classifyRow(raw, assignment) {
   const al  = raw.toLowerCase();
   const paid = isPaid(assignment);
 
-  if (/sched\s+for/i.test(raw))                         return { category:'SCHED',       paid:false };
-  if (/^WB:\s*Sched\b/i.test(raw) && /private/i.test(raw)) return { category:'SCHED',  paid:false };
+  if (isSched(raw)) {
+    let program = detectProgram(al);
+    if (/training/i.test(al)) program = 'training';
+    if (/private.*(meeting|standby|start of day|end of day)/i.test(al)) program = 'private_admin';
+    else if (/private/i.test(al)) program = 'private';
+    return { category:'SCHED', paid:false, program, discipline:getDiscipline(al) };
+  }
   if (/thank you for the great season/i.test(raw))      return { category:'SEASON_END',  paid:false };
   if (/regular day off/i.test(raw))                     return { category:'DAY_OFF',     paid:false };
   if (/time off/i.test(raw))                            return { category:'TIME_OFF',    paid:false };
@@ -434,8 +442,8 @@ function getDiscipline(al) {
   return null;
 }
 
-function getProgram(raw) {
-  const { category, program } = classifyRow(raw, 'Assignment');
+function getProgram(raw, assignment = 'Assignment') {
+  const { category, program } = classifyRow(raw, assignment);
   if (category === 'SEASON_END')     return 'end';
   if (category === 'DAY_OFF' || category === 'TIME_OFF' ||
       category === 'CALLED_OFF')     return 'off';
@@ -445,12 +453,12 @@ function getProgram(raw) {
   if (category === 'PRIVATE_ADMIN')  return 'private_admin';
   if (category === 'PRIVATE_LESSON') return 'private';
   if (category === 'ADMIN')          return 'other';
-  if (category === 'SCHED')          return 'off';
   const MAP = {
     schools:'schools', wvsbc:'wvsbc', wcb:'club', club:'club',
     adaptive:'adaptive', never_ever:'never_ever', womens_camps:'womens_camps',
     daily_kids:'daily', teens_daily:'teens', adult_alpine:'adult_alpine',
     adult_base:'adult_base', other:'other',
+    private:'private', private_admin:'private_admin', training:'training',
   };
   return MAP[program] || 'other';
 }
