@@ -1,5 +1,11 @@
 {
-  "rewrites": [
-    { "source": "/api/(.*)", "destination": "/api/$1" }
+  "version": 2,
+  "builds": [
+    { "src": "public/index.html", "use": "@vercel/static" },
+    { "src": "api/scrape.py", "use": "@vercel/python" }
+  ],
+  "routes": [
+    { "src": "/api/scrape", "dest": "/api/scrape.py" },
+    { "src": "/(.*)", "dest": "/public/$1" }
   ]
 }
