@@ -8,6 +8,7 @@ import requests
 from bs4 import BeautifulSoup
 from datetime import date, timedelta
 from http.server import BaseHTTPRequestHandler
+import re
 
 BASE_URL  = "https://instructor.snow.com"
 LOGIN_URL = f"{BASE_URL}/snow/instructorTools.asp"
@@ -41,20 +42,57 @@ def login(session, pass_number, password):
         })
         soup = BeautifulSoup(resp.text, "html.parser")
         if soup.find("a", string=lambda t: t and "Logout" in t):
-            # Scrape instructor name — it lives in a <td> that contains a <b>Instructor:</b> tag
+            # Scrape instructor name — take the text immediately following the "Instructor:" label.
+            # The page uses <br> separators and other <b> labels ("POD:", etc), so avoid
+            # flattening the entire <td> which can leak metadata into the name.
+            def _norm(s: str) -> str:
+                return re.sub(r"\s+", " ", (s or "").replace("\xa0", " ")).strip()
+
+            def _is_label(s: str) -> bool:
+                # Labels are typically like "POD:" / "Level:" etc (sometimes with extra spaces)
+                t = _norm(s).lower()
+                if not t:
+                    return False
+                if t.endswith(":"):
+                    return True
+                return t in {"pod", "level", "discipline", "cert", "start date", "pass", "pass number"}
+
             name = ""
             for td in soup.find_all("td"):
-                b_tag = td.find("b")
-                if b_tag and "Instructor:" in b_tag.get_text():
-                    # Get all text after the <b> tag
-                    full_text = td.get_text(separator=" ", strip=True)
-                    # Remove the "Instructor:" prefix
-                    name = full_text.replace("Instructor:", "").strip()
-                    # Strip any trailing metadata like "POD: ..." or "Level: ..."
-                    for stop in ["POD:", "Level:", "Discipline:", "Cert:"]:
-                        if stop in name:
-                            name = name[:name.index(stop)].strip()
+                strings = [_norm(s) for s in td.stripped_strings]
+                if not strings:
+                    continue
+
+                # Find the "Instructor" label in this cell.
+                start_idx = None
+                for i, s in enumerate(strings):
+                    if re.match(r"^instructor\s*:?\s*$", s, flags=re.I):
+                        start_idx = i + 1
+                        break
+                    if re.match(r"^instructor\s*:\s*.+$", s, flags=re.I):
+                        # Sometimes the label and the value can be in the same string.
+                        candidate = _norm(re.sub(r"^instructor\s*:\s*", "", s, flags=re.I))
+                        if candidate:
+                            name = candidate
+                            start_idx = None
+                        break
+
+                if name:
                     break
+                if start_idx is None:
+                    continue
+
+                # Collect subsequent strings until the next label ("POD:", etc).
+                parts = []
+                for s in strings[start_idx:]:
+                    if _is_label(s):
+                        break
+                    parts.append(s)
+                candidate = _norm(" ".join(parts))
+                if candidate:
+                    name = candidate
+                    break
+
             return name
         err = soup.find(class_="crErrorMessage")
         raise ValueError(err.get_text(strip=True) if err else "Login failed")
