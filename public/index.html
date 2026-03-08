@@ -49,103 +49,214 @@ body::after { content:''; position:fixed; inset:0; pointer-events:none; z-index:
 .page { display:none; min-height:100vh; padding-bottom:90px; }
 .page.active { display:block; }
 
-/* SCHEDULE PAGE — header, month-nav, week-strip anchored; only day-detail scrolls */
+/* SCHEDULE PAGE */
+:root { --topbar-h: 52px; }
 #page-schedule.active {
   display:flex;
   flex-direction:column;
   height:calc(100vh - 90px);
   min-height:0;
   overflow:hidden;
-  padding-bottom:0;
+  padding:var(--topbar-h) 0 0;
 }
-#page-schedule .sched-header,
-#page-schedule .month-nav,
-#page-schedule .week-strip { flex-shrink:0; }
+#page-schedule .picker-shell,
+#page-schedule .day-detail { flex-shrink:0; }
 #page-schedule .day-detail {
   flex:1;
   min-height:0;
   overflow-y:auto;
 }
 
-.sched-header { padding:52px 20px 20px;
-  background:linear-gradient(180deg,rgba(59,139,255,0.08) 0%,transparent 100%);
-  border-bottom:1px solid var(--border); }
-.sched-header-top { display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:0; }
-.greeting { font-size:11px; color:var(--muted); letter-spacing:0.1em; text-transform:uppercase; margin-bottom:4px; }
-.sched-title { font-family:'Syne',sans-serif; font-size:30px; font-weight:800; line-height:1; }
-.instructor-chip { display:flex; align-items:center; gap:8px;
-  background:var(--card); border:1px solid var(--border); border-radius:30px; padding:6px 12px 6px 6px; }
-.chip-avatar { width:28px; height:28px; border-radius:50%;
+.top-bar {
+  position:fixed;
+  top:0;
+  left:0;
+  right:0;
+  height:var(--topbar-h);
+  z-index:120;
+  background:var(--surface);
+  border-bottom:1px solid var(--border);
+  display:grid;
+  grid-template-columns:56px 1fr 56px;
+  align-items:center;
+}
+.top-brand {
+  text-align:center;
+  font-family:'Syne',sans-serif;
+  font-size:19px;
+  font-weight:600;
+  letter-spacing:0.02em;
+}
+.top-btn {
+  width:36px;
+  height:36px;
+  border-radius:50%;
+  border:1px solid transparent;
+  background:transparent;
+  color:var(--snow);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  margin:0 auto;
+}
+.top-btn.search {
+  border-color:var(--border);
+  color:var(--muted);
+}
+.top-btn.search svg {
+  width:17px;
+  height:17px;
+  stroke:currentColor;
+  fill:none;
+  stroke-width:1.8;
+}
+.top-btn.search:disabled {
+  opacity:0.9;
+  cursor:default;
+}
+.chip-avatar {
+  width:30px;
+  height:30px;
+  border-radius:50%;
   background:linear-gradient(135deg,var(--blue),var(--purple));
-  display:flex; align-items:center; justify-content:center;
-  font-family:'Syne',sans-serif; font-size:12px; font-weight:700; }
-.chip-name { font-size:11px; font-weight:500; white-space:nowrap; }
-
-/* MONTH NAV */
-.month-nav { display:flex; align-items:center; justify-content:space-between; padding:16px 20px 0; }
-.month-label { font-family:'Syne',sans-serif; font-size:20px; font-weight:700; }
-.nav-arrows { display:flex; gap:4px; }
-.nav-btn { width:32px; height:32px; border-radius:8px; background:var(--card);
-  border:1px solid var(--border); color:var(--snow); cursor:pointer;
-  display:flex; align-items:center; justify-content:center; font-size:16px; transition:background 0.15s; }
-.nav-btn:hover { background:var(--dim); }
-.today-btn {
-  width:auto;
-  padding:0 10px;
-  font-size:11px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-family:'Syne',sans-serif;
+  font-size:12px;
   font-weight:700;
-  letter-spacing:0.05em;
+}
+
+.picker-shell {
+  background:var(--bg);
+  border-bottom:1px solid var(--border);
+  padding:8px 14px 0;
+  max-height:84px;
+  transition:max-height 380ms cubic-bezier(0.2, 1, 0.32, 1), box-shadow 250ms ease;
+  overflow:hidden;
+}
+.picker-shell.expanded {
+  max-height:268px;
+  box-shadow:0 10px 26px rgba(0,0,0,0.24);
+}
+.month-label {
+  height:18px;
+  line-height:18px;
+  font-family:'Syne',sans-serif;
+  font-size:14px;
+  font-weight:600;
+  color:var(--snow);
+  margin:0 4px 6px;
+}
+.week-strip {
+  display:grid;
+  grid-template-columns:repeat(7,minmax(0,1fr));
+  gap:4px;
+}
+.picker-day {
+  min-width:0;
+  height:42px;
+  border-radius:9px;
+  background:transparent;
+  border:1px solid transparent;
+  color:var(--snow);
+  display:flex;
+  flex-direction:column;
+  justify-content:center;
+  align-items:center;
+  gap:2px;
+  cursor:pointer;
+}
+.picker-day-label {
+  font-size:9px;
+  font-weight:600;
+  letter-spacing:0.08em;
   text-transform:uppercase;
-  background:rgba(59,139,255,0.12);
-  border-color:rgba(59,139,255,0.22);
+  color:var(--muted);
 }
-.today-btn:hover { background:rgba(59,139,255,0.18); }
-
-/* WEEK STRIP */
-.week-strip { display:flex; gap:6px; padding:14px 20px 0; overflow-x:auto; scrollbar-width:none; }
-.week-strip::-webkit-scrollbar { display:none; }
-.wd { flex-shrink:0; width:44px; display:flex; flex-direction:column; align-items:center;
-  gap:5px; padding:8px 4px; border-radius:12px; cursor:pointer; transition:all 0.15s; }
-.wd-label { font-size:9px; font-weight:600; letter-spacing:0.1em; text-transform:uppercase; color:var(--muted); }
-.wd-num { font-family:'Syne',sans-serif; font-size:18px; font-weight:700; line-height:1; color:var(--snow); }
-.wd-dot { width:5px; height:5px; border-radius:50%; background:transparent; }
-.wd.has-work .wd-dot { background:var(--blue); }
-.wd.is-off { opacity:0.3; }
-.wd.selected { background:var(--blue); }
-.wd.selected .wd-label,.wd.selected .wd-num { color:white; }
-.wd.selected .wd-dot { background:rgba(255,255,255,0.6); }
-.wd.today-ring .wd-num { color:var(--blue); }
-.wd.past-day { opacity:0.6; }
-
-/* DAY CARDS */
-.day-detail { padding:16px 20px; }
-.day-detail-header { font-family:'Syne',sans-serif; font-size:14px; font-weight:600;
-  color:var(--muted); margin-bottom:12px; letter-spacing:0.05em; text-transform:uppercase; }
-.no-lessons { text-align:center; padding:32px; color:var(--muted); font-size:14px; }
-
-/* MULTI-DAY LIST */
-.day-list { display:flex; flex-direction:column; gap:12px; }
-.day-section {
-  scroll-margin-top: 8px;
+.picker-day-num {
+  font-family:'Syne',sans-serif;
+  font-size:15px;
+  line-height:1;
 }
+.picker-day-dot {
+  width:5px;
+  height:5px;
+  border-radius:50%;
+  background:transparent;
+}
+.picker-day.has-work .picker-day-dot { background:var(--blue); }
+.picker-day.is-off { opacity:0.35; }
+.picker-day.selected {
+  background:rgba(59,139,255,0.22);
+  border-color:rgba(59,139,255,0.38);
+}
+.picker-day.selected .picker-day-label,
+.picker-day.selected .picker-day-num { color:#fff; }
+.picker-day.today .picker-day-num { color:var(--blue); }
+
+.month-grid-wrap {
+  max-height:0;
+  opacity:0;
+  transform:translateY(-8px);
+  pointer-events:none;
+  transition:max-height 320ms ease, opacity 220ms ease, transform 220ms ease;
+}
+.picker-shell.expanded .month-grid-wrap {
+  max-height:184px;
+  opacity:1;
+  transform:translateY(0);
+  pointer-events:auto;
+}
+.month-grid {
+  margin-top:8px;
+  display:grid;
+  grid-template-columns:repeat(7,minmax(0,1fr));
+  gap:4px;
+}
+.month-grid .picker-day { height:30px; gap:1px; }
+.month-grid .picker-day-label { display:none; }
+.month-grid .picker-day-num { font-size:13px; }
+.month-grid .picker-day.outside-month { opacity:0.45; }
+
+.picker-handle {
+  width:100%;
+  height:22px;
+  margin-top:2px;
+  background:transparent;
+  border:none;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+}
+.picker-handle span {
+  width:34px;
+  height:4px;
+  border-radius:4px;
+  background:var(--dim);
+}
+
+/* DAY LIST */
+.day-detail { padding:0 0 12px; }
+.day-list { display:flex; flex-direction:column; gap:0; }
+.day-section { scroll-margin-top:10px; }
 .day-section-header {
-  position:sticky; top:0;
+  position:sticky;
+  top:0;
   z-index:5;
-  padding:10px 12px;
-  margin:0 0 10px 0;
-  background:rgba(6,13,26,0.92);
-  backdrop-filter: blur(10px);
-  border:1px solid var(--border);
-  border-radius:14px;
+  height:32px;
   display:flex;
   align-items:center;
   justify-content:space-between;
-  gap:10px;
+  gap:8px;
+  padding:0 14px;
+  background:rgba(6,13,26,0.96);
+  border-bottom:1px solid var(--border);
 }
 .day-section-title {
   font-family:'Syne',sans-serif;
-  font-size:12px;
-  font-weight:800;
+  font-size:11px;
+  font-weight:700;
   letter-spacing:0.08em;
   text-transform:uppercase;
   color:var(--muted);
@@ -153,18 +264,23 @@ body::after { content:''; position:fixed; inset:0; pointer-events:none; z-index:
 .day-section-title.is-today { color:var(--blue); }
 .day-section-meta {
   font-family:'Syne Mono',monospace;
-  font-size:11px;
+  font-size:10px;
   color:var(--muted);
 }
-.day-section.selected .day-section-header {
-  border-color:rgba(59,139,255,0.35);
-  box-shadow:0 6px 20px rgba(59,139,255,0.08);
-}
 
-/* LESSON CARD */
-.lcard { background:var(--card); border:1px solid var(--border); border-radius:16px;
-  padding:14px 16px; margin-bottom:8px; position:relative; overflow:hidden; }
-.lcard::before { content:''; position:absolute; left:0; top:0; bottom:0; width:3px; border-radius:3px 0 0 3px; }
+.lcard {
+  position:relative;
+  height:44px;
+  margin:0;
+  padding:0 12px 0 10px;
+  display:flex;
+  align-items:center;
+  border-bottom:1px solid var(--border);
+  background:transparent;
+  border-radius:0;
+  overflow:hidden;
+}
+.lcard::before { content:''; position:absolute; left:0; top:0; bottom:0; width:3px; }
 
 .lcard.type-schools::before    { background:var(--blue); }
 .lcard.type-daily::before      { background:var(--teal); }
@@ -182,19 +298,19 @@ body::after { content:''; position:fixed; inset:0; pointer-events:none; z-index:
 .lcard.type-sick::before       { background:var(--red); }
 .lcard.type-other::before      { background:var(--muted); }
 
-.lcard.is-off { opacity:0.35; }
+.lcard.is-off { opacity:0.55; }
 
-.lcard-top { display:flex; justify-content:space-between; align-items:flex-start; gap:8px; }
-.lcard-left { flex:1; }
-.lcard-activity { font-size:14px; font-weight:600; color:var(--snow); line-height:1.3; }
-.lcard-hours { font-family:'Syne Mono',monospace; font-size:22px; color:var(--blue); flex-shrink:0; line-height:1; text-align:right; }
-.lcard-hours small { font-family:'Inter',sans-serif; font-size:9px; color:var(--muted); display:block; }
+.lcard-top { width:100%; display:flex; justify-content:space-between; align-items:center; gap:8px; }
+.lcard-left { flex:1; min-width:0; display:flex; align-items:center; gap:8px; overflow:hidden; }
+.lcard-activity { font-size:13px; font-weight:600; color:var(--snow); line-height:1.1; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.lcard-hours { font-family:'Syne Mono',monospace; font-size:12px; color:var(--snow); flex-shrink:0; line-height:1; text-align:right; }
+.lcard-hours small { display:none; }
 .lcard.type-private .lcard-hours { color:var(--yellow); }
 .lcard.type-daily   .lcard-hours { color:var(--teal); }
 .lcard.type-club    .lcard-hours { color:var(--purple); }
 
-.lcard-meta { display:flex; gap:6px; flex-wrap:wrap; margin-top:8px; }
-.pill { font-size:10px; font-weight:500; padding:3px 9px; border-radius:20px; letter-spacing:0.02em; }
+.lcard-meta { display:flex; gap:4px; flex-wrap:nowrap; overflow:hidden; }
+.pill { font-size:9px; font-weight:500; padding:2px 6px; border-radius:10px; letter-spacing:0.02em; white-space:nowrap; }
 .pill-assigned   { background:rgba(59,139,255,0.15); color:var(--blue);   border:1px solid rgba(59,139,255,0.25); }
 .pill-continuing { background:rgba(155,125,255,0.15); color:var(--purple); border:1px solid rgba(155,125,255,0.25); }
 .pill-sched      { background:rgba(74,96,128,0.2);   color:var(--muted);  border:1px solid rgba(74,96,128,0.2); }
@@ -206,6 +322,14 @@ body::after { content:''; position:fixed; inset:0; pointer-events:none; z-index:
 .pill-hd         { background:rgba(255,197,66,0.06); color:#c9a030;       border:1px solid rgba(255,197,66,0.12); }
 .pill-sick       { background:rgba(255,77,109,0.12); color:var(--red);    border:1px solid rgba(255,77,109,0.2); }
 .pill-off        { background:rgba(255,255,255,0.04); color:var(--muted); border:1px solid var(--border); }
+.no-lessons {
+  height:44px;
+  line-height:44px;
+  padding:0 16px;
+  color:var(--muted);
+  font-size:14px;
+  border-bottom:1px solid var(--border);
+}
 
 /* STATS PAGE */
 .stats-page { padding:52px 20px 24px; }
@@ -323,9 +447,6 @@ body::after { content:''; position:fixed; inset:0; pointer-events:none; z-index:
 .modal-status.ok  { color:var(--green); }
 .modal-status.err { color:var(--red); }
 
-.instructor-chip { cursor:pointer; transition: border-color 0.2s; }
-.instructor-chip:hover { border-color:rgba(59,139,255,0.4); }
-
 /* ── EMPTY STATES ── */
 .empty-state {
   text-align:center; padding:56px 28px 40px;
@@ -365,28 +486,24 @@ body::after { content:''; position:fixed; inset:0; pointer-events:none; z-index:
 <body>
 
 <div class="page active" id="page-schedule">
-  <div class="sched-header">
-    <div class="sched-header-top">
-      <div>
-        <div class="greeting">Whistler Blackcomb · 2025/26</div>
-        <div class="sched-title">My Schedule</div>
-      </div>
-      <div class="instructor-chip" onclick="openProfile()">
-        <div class="chip-avatar" id="chipAvatar">L</div>
-        <div class="chip-name" id="chipName">log in</div>
-      </div>
-    </div>
+  <div class="top-bar">
+    <button class="top-btn" onclick="openProfile()" aria-label="Open profile">
+      <span class="chip-avatar" id="chipAvatar">L</span>
+    </button>
+    <div class="top-brand">WhisSchedule</div>
+    <button class="top-btn search" aria-label="Search (coming soon)" disabled>
+      <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"></circle><line x1="16.65" y1="16.65" x2="21" y2="21"></line></svg>
+    </button>
   </div>
-  <div class="month-nav">
+  <div class="picker-shell" id="pickerShell">
     <div class="month-label" id="monthLabel">—</div>
-    <div class="nav-arrows">
-      <button class="nav-btn today-btn" onclick="goToToday()">Today</button>
-      <button class="nav-btn" onclick="shiftWeek(-1)">‹</button>
-      <button class="nav-btn" onclick="shiftWeek(1)">›</button>
+    <div class="week-strip" id="weekStrip"></div>
+    <div class="month-grid-wrap" id="monthGridWrap">
+      <div class="month-grid" id="monthGrid"></div>
     </div>
+    <button class="picker-handle" onclick="togglePicker()" aria-label="Toggle calendar picker"><span></span></button>
   </div>
-  <div class="week-strip" id="weekStrip"></div>
-  <div class="day-detail">
+  <div class="day-detail" id="dayDetail">
     <div id="dayList" class="day-list"></div>
   </div>
 </div>
@@ -730,26 +847,12 @@ function buildCardsHtml(cards) {
     const cls = ['lcard', `type-${c.program}`, c.program === 'off' ? 'is-off' : ''].filter(Boolean).join(' ');
 
     let pills = '';
-    if (c.isSched) {
-      pills += `<span class="pill pill-sched">Scheduled</span>`;
-    } else if (c.assignment === 'Continuing Assignment') {
-      pills += `<span class="pill pill-continuing">↻ Continuing</span>`;
-    } else if (c.assignment === 'Assignment') {
-      pills += `<span class="pill pill-assigned">✓ Assigned</span>`;
-    } else if (c.assignment === 'Private Request') {
-      pills += `<span class="pill pill-continuing">★ Requested</span>`;
-    }
-    if (c.discipline === 'ski')        pills += `<span class="pill pill-ski">⛷ Ski</span>`;
-    if (c.discipline === 'snowboard')  pills += `<span class="pill pill-sb">🏂 Snowboard</span>`;
-    if (c.location)                    pills += `<span class="pill pill-loc">📍 ${c.location}</span>`;
-    if (c.duration === 'Full Day')     pills += `<span class="pill pill-fd">Full Day</span>`;
-    if (c.duration === 'Half Day')     pills += `<span class="pill pill-hd">Half Day</span>`;
-    if (c.client)                      pills += `<span class="pill pill-client">👤 ${c.client}</span>`;
-    if (c.program === 'sick')          pills += `<span class="pill pill-sick">Sick Day</span>`;
-    if (c.program === 'off' && !c.isSched) pills += `<span class="pill pill-off">Day Off</span>`;
+    if (c.discipline === 'ski')        pills += `<span class="pill pill-ski">Ski</span>`;
+    if (c.discipline === 'snowboard')  pills += `<span class="pill pill-sb">SB</span>`;
+    if (c.location)                    pills += `<span class="pill pill-loc">${c.location}</span>`;
 
     const hoursHtml = (c.hours && c.hours > 0 && !c.isSched)
-      ? `<div class="lcard-hours" style="color:${cfg.textColor}">${c.hours}<small>hrs</small></div>` : '';
+      ? `<div class="lcard-hours" style="color:${cfg.textColor}">${c.hours}h</div>` : '';
 
     html += `<div class="${cls}">
       <div class="lcard-top">
@@ -787,14 +890,14 @@ function renderDaySection(key) {
   const isFuture = key > TODAY_KEY;
 
   const cards    = buildDayView(key);
-  const metaText = cards.length ? `${cards.length} item${cards.length === 1 ? '' : 's'}` : (isFuture ? 'No schedule yet' : 'Day off');
+  const metaText = cards.length ? `${cards.length}` : (isFuture ? 'open' : 'off');
 
   const headerCls  = ['day-section-title', isToday ? 'is-today' : ''].filter(Boolean).join(' ');
   const sectionCls = ['day-section', key === selectedKey ? 'selected' : ''].filter(Boolean).join(' ');
 
   const cardsHtml = cards.length
     ? buildCardsHtml(cards)
-    : `<div class="no-lessons">${metaText}</div>`;
+    : `<div class="no-lessons">—</div>`;
 
   return `<section class="${sectionCls}" data-key="${key}">
     <div class="day-section-header">
@@ -822,11 +925,14 @@ function renderDayList() {
       <div class="skel-card" style="opacity:0.55"><div class="skel-line skel-title" style="width:45%"></div><div class="skel-line skel-sub" style="width:28%"></div><div class="skel-line skel-hrs"></div></div>
       <div class="skel-card" style="opacity:0.3"><div class="skel-line skel-title" style="width:70%"></div><div class="skel-line skel-sub" style="width:40%"></div><div class="skel-line skel-hrs"></div></div>`;
     dayKeys = [];
+    setupDayScrollSync();
     return;
   }
 
   dayKeys = computeDayKeys();
+  selectedKey = clampSelectedKey();
   el.innerHTML = dayKeys.map(k => renderDaySection(k)).join('');
+  setupDayScrollSync();
 }
 
 function updateSelectedDaySection() {
@@ -846,8 +952,7 @@ function focusInitialDay() {
     : (TODAY_KEY < dayKeys[0] ? dayKeys[0] : dayKeys[dayKeys.length - 1]);
 
   selectedKey = clampSelectedKey();
-  weekOffset  = computeWeekOffsetForKey(selectedKey);
-  renderWeek();
+  renderPicker(true);
   scrollToDay(selectedKey, false);
   hasFocusedInitialDay = true;
 }
@@ -865,20 +970,8 @@ function scrollToDay(key, smooth = true) {
   if (!el) return;
   const sec = el.querySelector(`.day-section[data-key="${key}"]`);
   if (!sec) return;
+  suppressScrollSyncTemporarily();
   sec.scrollIntoView({ behavior: smooth ? 'smooth' : 'auto', block: 'start' });
-}
-
-function computeWeekOffsetForKey(key) {
-  const base = new Date(TODAY_KEY + 'T12:00:00');
-  const baseSunday = new Date(base);
-  baseSunday.setDate(base.getDate() - base.getDay());
-
-  const target = new Date(key + 'T12:00:00');
-  const targetSunday = new Date(target);
-  targetSunday.setDate(target.getDate() - target.getDay());
-
-  const diffDays = Math.round((targetSunday - baseSunday) / (24 * 60 * 60 * 1000));
-  return Math.round(diffDays / 7);
 }
 
 function goToToday() {
@@ -886,93 +979,182 @@ function goToToday() {
     ? (dayKeys.includes(TODAY_KEY) ? TODAY_KEY : (TODAY_KEY < dayKeys[0] ? dayKeys[0] : dayKeys[dayKeys.length - 1]))
     : TODAY_KEY;
 
-  selectedKey = target;
-  weekOffset  = computeWeekOffsetForKey(selectedKey);
-  renderWeek();
-  scrollToDay(selectedKey, true);
+  selectDay(target, { smooth: true, scroll: true, collapse: true });
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// WEEK STRIP & NAVIGATION
+// PICKER + SCROLL SYNC
 // ─────────────────────────────────────────────────────────────────────────────
-let weekOffset  = 0;
 let selectedKey = TODAY_KEY;
+let pickerExpanded = false;
+let pickerMonthCursor = new Date(TODAY_KEY + 'T12:00:00');
+pickerMonthCursor.setDate(1);
+let daySectionObserver = null;
+let suppressScrollSync = false;
+let scrollSyncTimeout = null;
 
-function getWeekStart() {
-  const base = new Date(TODAY_KEY + 'T12:00:00');
-  const s    = new Date(base);
-  s.setDate(base.getDate() - base.getDay() + weekOffset * 7);
+function startOfWeek(date) {
+  const s = new Date(date);
+  s.setDate(date.getDate() - date.getDay());
   return s;
 }
 
-function renderWeek() {
-  const ws = getWeekStart();
-  document.getElementById('monthLabel').textContent = MONTHS_SHORT[ws.getMonth()] + ' ' + ws.getFullYear();
+function hasWorkForKey(key) {
+  const lessons = byDate[key] || [];
+  const isFuture = key > TODAY_KEY;
+  const isAfterEnd = SEASON_END_KEY && key > SEASON_END_KEY;
+  if (isAfterEnd) return false;
 
+  const NON_WORK = new Set(['off','end','sick','private_admin']);
+  if (isFuture || key === TODAY_KEY) {
+    return lessons.some(l => {
+      const prog = getProgram(l.raw);
+      if (NON_WORK.has(prog)) return false;
+      return isPaid(l.assignment) || isSched(l.raw);
+    });
+  }
+  return lessons.some(l => isPaid(l.assignment) && !NON_WORK.has(getProgram(l.raw)));
+}
+
+function buildPickerDayHtml(d, context, inMonth = true) {
+  const key = toKey(d);
+  const cls = ['picker-day',
+    key === selectedKey ? 'selected' : '',
+    key === TODAY_KEY && key !== selectedKey ? 'today' : '',
+    hasWorkForKey(key) ? 'has-work' : 'is-off',
+    inMonth ? '' : 'outside-month',
+  ].filter(Boolean).join(' ');
+
+  return `<button class="${cls}" onclick="selectDay('${key}', { smooth: true, scroll: true, collapse: ${context === 'month'} })">
+    <span class="picker-day-label">${DAYS_SHORT[d.getDay()].slice(0,1)}</span>
+    <span class="picker-day-num">${d.getDate()}</span>
+    <span class="picker-day-dot"></span>
+  </button>`;
+}
+
+function renderWeekStrip() {
+  const selectedDate = new Date(selectedKey + 'T12:00:00');
+  const ws = startOfWeek(selectedDate);
   let html = '';
   for (let i = 0; i < 7; i++) {
-    const d   = new Date(ws); d.setDate(ws.getDate() + i);
-    const key = toKey(d);
-    const lessons    = byDate[key] || [];
-    const isFuture   = key > TODAY_KEY;
-    const isPast     = key < TODAY_KEY;
-    const isAfterEnd = SEASON_END_KEY && key > SEASON_END_KEY;
-
-    let hasWork = false;
-    if (!isAfterEnd) {
-      const NON_WORK = new Set(['off','end','sick','private_admin']);
-      if (isFuture) {
-        // Future: dot if any real work is scheduled or assigned
-        hasWork = lessons.some(l => {
-          const prog = getProgram(l.raw);
-          if (NON_WORK.has(prog)) return false;
-          return isPaid(l.assignment) || isSched(l.raw);
-        });
-      } else if (key === TODAY_KEY) {
-        // Today: dot if paid row OR sched-for exists (handles pre-assignment window)
-        hasWork = lessons.some(l => {
-          const prog = getProgram(l.raw);
-          if (NON_WORK.has(prog)) return false;
-          return isPaid(l.assignment) || isSched(l.raw);
-        });
-      } else {
-        // Past: only paid rows count
-        hasWork = lessons.some(l => isPaid(l.assignment) && !NON_WORK.has(getProgram(l.raw)));
-      }
-    }
-
-    const cls = ['wd',
-      key === selectedKey     ? 'selected'   : '',
-      key === TODAY_KEY && key !== selectedKey ? 'today-ring' : '',
-      hasWork ? 'has-work' : 'is-off',
-      isPast && key !== selectedKey ? 'past-day' : '',
-    ].filter(Boolean).join(' ');
-
-    html += `<div class="${cls}" onclick="selectDay('${key}')">
-      <span class="wd-label">${DAYS_SHORT[d.getDay()]}</span>
-      <span class="wd-num">${d.getDate()}</span>
-      <span class="wd-dot"></span>
-    </div>`;
+    const d = new Date(ws);
+    d.setDate(ws.getDate() + i);
+    html += buildPickerDayHtml(d, 'week', true);
   }
   document.getElementById('weekStrip').innerHTML = html;
+}
+
+function renderMonthGrid() {
+  const first = new Date(pickerMonthCursor);
+  const gridStart = startOfWeek(first);
+  let html = '';
+  for (let i = 0; i < 35; i++) {
+    const d = new Date(gridStart);
+    d.setDate(gridStart.getDate() + i);
+    html += buildPickerDayHtml(d, 'month', d.getMonth() === first.getMonth());
+  }
+  document.getElementById('monthGrid').innerHTML = html;
+}
+
+function renderPicker(syncCursor = true) {
+  if (syncCursor) {
+    pickerMonthCursor = new Date(selectedKey + 'T12:00:00');
+    pickerMonthCursor.setDate(1);
+  }
+
+  const labelDate = pickerExpanded ? pickerMonthCursor : new Date(selectedKey + 'T12:00:00');
+  document.getElementById('monthLabel').textContent = MONTHS_SHORT[labelDate.getMonth()] + ' ' + labelDate.getFullYear();
+  renderWeekStrip();
+  renderMonthGrid();
   updateSelectedDaySection();
 }
 
-function selectDay(key) {
-  selectedKey = key;
-  selectedKey = clampSelectedKey();
-  renderWeek();
-  scrollToDay(selectedKey, true);
+function setPickerExpanded(expanded) {
+  pickerExpanded = expanded;
+  const shell = document.getElementById('pickerShell');
+  if (!shell) return;
+  shell.classList.toggle('expanded', pickerExpanded);
+  renderPicker(false);
 }
 
-function shiftWeek(dir) {
-  weekOffset += dir;
-  const d = new Date(selectedKey + 'T12:00:00');
-  d.setDate(d.getDate() + dir * 7);
-  selectedKey = toKey(d);
+function togglePicker() {
+  setPickerExpanded(!pickerExpanded);
+}
+
+function selectDay(key, opts = {}) {
+  const smooth = opts.smooth !== false;
+  const shouldScroll = opts.scroll !== false;
+  const collapse = opts.collapse === true;
+
+  selectedKey = key;
   selectedKey = clampSelectedKey();
-  renderWeek();
-  scrollToDay(selectedKey, true);
+  renderPicker(true);
+
+  if (collapse) setPickerExpanded(false);
+  if (shouldScroll) scrollToDay(selectedKey, smooth);
+}
+
+function shiftPickerMonth(dir) {
+  pickerMonthCursor = new Date(pickerMonthCursor.getFullYear(), pickerMonthCursor.getMonth() + dir, 1);
+  renderPicker(false);
+}
+
+function setupPickerSwipe() {
+  const target = document.getElementById('monthGridWrap');
+  if (!target) return;
+
+  let startX = 0;
+  target.addEventListener('touchstart', e => {
+    if (!pickerExpanded) return;
+    startX = e.changedTouches[0].clientX;
+  }, { passive: true });
+
+  target.addEventListener('touchend', e => {
+    if (!pickerExpanded) return;
+    const dx = e.changedTouches[0].clientX - startX;
+    if (Math.abs(dx) < 40) return;
+    shiftPickerMonth(dx > 0 ? -1 : 1);
+  }, { passive: true });
+}
+
+function setupDayScrollSync() {
+  if (daySectionObserver) daySectionObserver.disconnect();
+
+  const root = document.getElementById('dayDetail');
+  const sections = Array.from(document.querySelectorAll('#dayList .day-section'));
+  if (!root || !sections.length) return;
+
+  daySectionObserver = new IntersectionObserver(() => {
+    if (suppressScrollSync) return;
+
+    const rootTop = root.getBoundingClientRect().top + 32;
+    let candidate = null;
+    let candidateDist = Infinity;
+    sections.forEach(sec => {
+      const r = sec.getBoundingClientRect();
+      if (r.bottom <= rootTop) return;
+      const dist = Math.abs(r.top - rootTop);
+      if (dist < candidateDist) {
+        candidate = sec;
+        candidateDist = dist;
+      }
+    });
+
+    if (!candidate) return;
+    const key = candidate.dataset.key;
+    if (!key || key === selectedKey) return;
+
+    selectedKey = key;
+    renderPicker(true);
+  }, { root, threshold: [0, 0.1, 0.5, 1] });
+
+  sections.forEach(sec => daySectionObserver.observe(sec));
+}
+
+function suppressScrollSyncTemporarily() {
+  suppressScrollSync = true;
+  clearTimeout(scrollSyncTimeout);
+  scrollSyncTimeout = setTimeout(() => { suppressScrollSync = false; }, 700);
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -1207,7 +1389,6 @@ function loadCredentials() {
 
 function setChipLoggedOut() {
   document.getElementById('chipAvatar').textContent = 'L';
-  document.getElementById('chipName').textContent   = 'log in';
 }
 
 function openProfile() {
@@ -1282,7 +1463,8 @@ async function triggerRefresh() {
     if (!hasFocusedInitialDay) {
       focusInitialDay();
     } else {
-      renderWeek();
+      selectedKey = clampSelectedKey();
+      renderPicker(true);
     }
     buildStats();
 
@@ -1338,7 +1520,6 @@ function updateChipName(name) {
     display     = nick[1].trim() + (last ? ' ' + last : '');
   }
   document.getElementById('chipAvatar').textContent = display.charAt(0).toUpperCase();
-  document.getElementById('chipName').textContent   = display;
 }
 
 function saveScheduleCache(lessons) {
@@ -1364,14 +1545,18 @@ window.addEventListener('load', () => {
     ingestLessons(cache);
     renderDayList();
     if (!hasFocusedInitialDay) focusInitialDay();
-    if (!hasFocusedInitialDay) renderWeek();
+    if (!hasFocusedInitialDay) {
+      selectedKey = clampSelectedKey();
+      renderPicker(true);
+    }
     buildStats();
   } else {
     renderDayList();
-    renderWeek();
+    renderPicker(true);
     buildStats();
     if (!creds.passNumber) setTimeout(openProfile, 600);
   }
+  setupPickerSwipe();
 });
 </script>
 
