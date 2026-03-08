@@ -1,6 +1,6 @@
 /* global self */
 
-const CACHE_NAME = 'whischedule-pwa-v1';
+const CACHE_NAME = 'whisschedule-pwa-v1';
 
 const PRECACHE_URLS = [
   '/',
