@@ -74,11 +74,11 @@ body::after { content:''; position:fixed; inset:0; pointer-events:none; z-index:
 .top-bar {
   display: flex;
   align-items: center;
-  padding: env(safe-area-inset-top, 44px) 16px 10px;
+  padding: calc(env(safe-area-inset-top, 0px) + 10px) 16px 10px;
   background: var(--surface);
   border-bottom: 1px solid var(--border);
   gap: 10px;
-  min-height: 88px;
+  min-height: 52px;
 }
 .top-bar-avatar {
   width: 32px; height: 32px; border-radius: 50%;
@@ -114,6 +114,7 @@ body::after { content:''; position:fixed; inset:0; pointer-events:none; z-index:
   border-bottom: 1px solid var(--border);
   position: relative;
   user-select: none;
+  padding-bottom: 16px; /* space between grid and handle */
 }
 
 /* Month row */
@@ -121,7 +122,7 @@ body::after { content:''; position:fixed; inset:0; pointer-events:none; z-index:
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 8px 16px 4px;
+  padding: 10px 16px 6px;
 }
 .picker-month-label {
   font-family: var(--f-head);
@@ -134,20 +135,11 @@ body::after { content:''; position:fixed; inset:0; pointer-events:none; z-index:
   align-items: center;
   gap: 2px;
 }
-.picker-nav-btn {
-  width: 28px; height: 28px; border-radius: 7px;
-  background: transparent; border: none; cursor: pointer;
-  display: flex; align-items: center; justify-content: center;
-  color: var(--muted); transition: color 0.15s, background 0.15s;
-}
-.picker-nav-btn:hover { color: var(--snow); background: rgba(255,255,255,0.06); }
-.picker-nav-btn svg { width: 16px; height: 16px; stroke: currentColor; fill: none; stroke-width: 2; }
 .picker-today-btn {
   font-size: 11px; font-weight: 600; letter-spacing: 0.04em;
   padding: 4px 10px; border-radius: 20px;
   background: rgba(59,139,255,0.12); border: 1px solid rgba(59,139,255,0.2);
   color: var(--blue); cursor: pointer; transition: background 0.15s;
-  margin-right: 4px;
 }
 .picker-today-btn:hover { background: rgba(59,139,255,0.2); }
 
@@ -155,7 +147,7 @@ body::after { content:''; position:fixed; inset:0; pointer-events:none; z-index:
 .picker-dow-row {
   display: grid;
   grid-template-columns: repeat(7, 1fr);
-  padding: 0 8px;
+  padding: 0 12px;
 }
 .picker-dow-cell {
   text-align: center;
@@ -167,35 +159,89 @@ body::after { content:''; position:fixed; inset:0; pointer-events:none; z-index:
   padding: 4px 0;
 }
 
-/* Week row (collapsed) */
+/* Week row (collapsed) — horizontally scrollable, snaps to Sunday-aligned pages */
 .picker-week-row {
-  display: grid;
-  grid-template-columns: repeat(7, 1fr);
-  padding: 2px 8px 6px;
+  display: flex;
+  overflow-x: auto;
+  overflow-y: hidden;
+  scrollbar-width: none;
+  padding: 4px 8px 2px;
+  gap: 2px;
+  scroll-snap-type: x mandatory;
+  -webkit-overflow-scrolling: touch;
+}
+.picker-week-row::-webkit-scrollbar { display: none; }
+/* Each week of 7 cells is a snap unit */
+.picker-week-snap {
+  display: flex;
+  flex-shrink: 0;
+  gap: 2px;
+  scroll-snap-align: start;
 }
 
-/* Month grid (expanded — hidden by default) */
+/* Month grid (expanded) — vertically scrollable, snaps per month block */
 .picker-month-grid {
+  display: none;
+  flex-direction: column;
+  overflow-y: auto;
+  overflow-x: hidden;
+  max-height: 0;
+  transition: max-height 0.38s cubic-bezier(0.16,1,0.3,1);
+  scrollbar-width: none;
+  padding: 4px 8px 2px;
+  scroll-snap-type: y mandatory;
+  -webkit-overflow-scrolling: touch;
+}
+.picker-month-grid::-webkit-scrollbar { display: none; }
+/* Each month block is a snap unit */
+.picker-month-block {
+  scroll-snap-align: start;
+  flex-shrink: 0;
+}
+.picker-month-week-row {
   display: grid;
   grid-template-columns: repeat(7, 1fr);
-  padding: 2px 8px 6px;
-  max-height: 0;
-  overflow: hidden;
-  transition: max-height 0.35s cubic-bezier(0.16,1,0.3,1);
+  margin-bottom: 4px;
 }
 .picker-area.expanded .picker-week-row { display: none; }
-.picker-area.expanded .picker-month-grid { max-height: 280px; }
+.picker-area.expanded .picker-month-grid { display: flex; max-height: 320px; }
 
-/* Day cell shared */
+/* Month label inside expanded grid — sits above first day cell row */
+.picker-grid-month-label {
+  font-family: var(--f-head);
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--blue);
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  padding: 12px 4px 4px;
+}
+
+/* Day cell shared — square */
 .picker-day {
-  display: flex; flex-direction: column; align-items: center;
-  gap: 3px; padding: 5px 2px; border-radius: 10px;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  gap: 4px;
+  aspect-ratio: 1;
+  min-width: 36px;
+  min-height: 36px;
+  flex-shrink: 0;
+  border-radius: 50%;
   cursor: pointer; transition: background 0.12s;
+}
+.picker-week-row .picker-day {
+  width: calc((100vw - 16px) / 7);
+  height: calc((100vw - 16px) / 7);
+  max-width: 54px;
+  max-height: 54px;
+}
+.picker-month-week-row .picker-day {
+  width: 100%;
+  height: auto;
 }
 .picker-day:active { background: rgba(255,255,255,0.06); }
 .picker-day-num {
   font-family: var(--f-head);
-  font-size: 16px; font-weight: 600; line-height: 1;
+  font-size: 17px; font-weight: 600; line-height: 1;
   color: var(--snow);
 }
 .picker-day-dot {
@@ -211,26 +257,24 @@ body::after { content:''; position:fixed; inset:0; pointer-events:none; z-index:
 .picker-day.selected .picker-day-num { color: white; }
 .picker-day.selected .picker-day-dot { background: rgba(255,255,255,0.55); }
 .picker-day.selected.today .picker-day-num { color: white; }
-.picker-day.faded { opacity: 0.18; }  /* other-month days in expanded */
+.picker-day.faded { opacity: 0.18; }
 
-/* ── PULL HANDLE BUBBLE ── */
+/* ── PULL HANDLE BUBBLE — inside picker, bottom-centred ── */
 .picker-handle {
-  position: absolute;
-  bottom: -12px;
-  left: 50%;
-  transform: translateX(-50%);
-  z-index: 10;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 8px auto 0;
   width: 48px; height: 22px;
   background: var(--card);
   border: 1px solid var(--border);
   border-radius: 30px;
-  display: flex; align-items: center; justify-content: center;
   cursor: pointer;
-  box-shadow: 0 3px 12px rgba(0,0,0,0.35);
+  box-shadow: 0 2px 8px rgba(0,0,0,0.25);
   transition: background 0.15s, transform 0.15s;
 }
 .picker-handle:hover { background: var(--dim); }
-.picker-handle:active { transform: translateX(-50%) scale(0.94); }
+.picker-handle:active { transform: scale(0.94); }
 .picker-handle svg {
   width: 14px; height: 14px;
   stroke: var(--muted); fill: none; stroke-width: 2.2;
@@ -240,25 +284,24 @@ body::after { content:''; position:fixed; inset:0; pointer-events:none; z-index:
 
 /* ── DAY SCROLL ── */
 .day-scroll {
-  padding-top: 18px; /* clearance for handle bubble */
+  padding-top: 0;
 }
 
 /* ── DAY LIST ── */
 .day-list { display: flex; flex-direction: column; }
 
 /* Day section */
-.day-section { scroll-margin-top: 18px; }
+.day-section { scroll-margin-top: 0; }
 
-/* Sticky day header — compact Outlook style */
+/* Sticky day header — compact, distinct background */
 .day-header {
   position: sticky;
   top: 0;
   z-index: 5;
   display: flex;
   align-items: center;
-  gap: 10px;
   padding: 6px 16px;
-  background: rgba(6,13,26,0.93);
+  background: rgba(12,24,41,0.97);
   backdrop-filter: blur(12px);
   border-bottom: 1px solid var(--border);
 }
@@ -269,28 +312,36 @@ body::after { content:''; position:fixed; inset:0; pointer-events:none; z-index:
   text-transform: uppercase;
   color: var(--muted);
   white-space: nowrap;
-  flex-shrink: 0;
 }
 .day-header-label.is-today { color: var(--blue); }
-.day-header-rule { flex: 1; height: 1px; background: var(--border); }
 
-/* Lesson row — compact single-line */
+/* Lesson row — compact with distinct background */
 .lesson-row {
   display: flex;
   align-items: stretch;
   gap: 0;
-  min-height: 46px;
+  min-height: 52px;
   border-bottom: 1px solid var(--border);
+  background: var(--card);
   cursor: pointer;
   transition: background 0.1s;
 }
 .lesson-row:last-child { border-bottom: none; }
-.lesson-row:active { background: rgba(255,255,255,0.025); }
+.lesson-row:active { background: rgba(255,255,255,0.04); }
 
+.lesson-bar-gutter {
+  width: 16px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: stretch;
+  justify-content: center;
+  padding: 10px 0;
+}
 .lesson-bar {
   width: 3px;
+  border-radius: 2px;
   flex-shrink: 0;
-  border-radius: 0;
+  align-self: stretch;
 }
 /* bar colours per program */
 .lesson-row.prog-schools    .lesson-bar { background: var(--blue); }
@@ -318,7 +369,7 @@ body::after { content:''; position:fixed; inset:0; pointer-events:none; z-index:
   display: flex;
   align-items: center;
   gap: 8px;
-  padding: 8px 12px 8px 10px;
+  padding: 10px 14px 10px 6px;
 }
 .lesson-main { flex: 1; min-width: 0; }
 .lesson-title {
@@ -582,12 +633,6 @@ body::after { content:''; position:fixed; inset:0; pointer-events:none; z-index:
       <div class="picker-month-label" id="pickerMonthLabel">—</div>
       <div class="picker-nav-row">
         <button class="picker-today-btn" onclick="goToToday()">Today</button>
-        <button class="picker-nav-btn" onclick="shiftWeek(-1)">
-          <svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>
-        </button>
-        <button class="picker-nav-btn" onclick="shiftWeek(1)">
-          <svg viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg>
-        </button>
       </div>
     </div>
 
@@ -902,7 +947,7 @@ function buildRowsHtml(cards) {
       ? `<div class="lesson-hours">${c.hours}<small>hrs</small></div>` : '';
 
     return `<div class="lesson-row ${progCls}${offCls}">
-      <div class="lesson-bar"></div>
+      <div class="lesson-bar-gutter"><div class="lesson-bar"></div></div>
       <div class="lesson-body">
         <div class="lesson-main">
           <div class="lesson-title">${c.title}</div>
@@ -951,7 +996,6 @@ function renderDaySection(key) {
   return `<section class="day-section" data-key="${key}">
     <div class="day-header">
       <div class="${labelCls}">${label}${isToday ? ' · Today' : ''}</div>
-      <div class="day-header-rule"></div>
     </div>
     ${bodyHtml}
   </section>`;
@@ -1002,6 +1046,28 @@ function getWeekStart(offset) {
 function renderPickerDow() {
   document.getElementById('pickerDowRow').innerHTML =
     DAYS_SHORT.map(d => `<div class="picker-dow-cell">${d}</div>`).join('');
+
+  // Month label updates as user swipes week row
+  const weekRow = document.getElementById('pickerWeekRow');
+  if (weekRow) {
+    weekRow.addEventListener('scroll', () => {
+      // Find the leftmost visible day cell
+      const cells = weekRow.querySelectorAll('.picker-day:not(.faded)');
+      for (const cell of cells) {
+        const rect = cell.getBoundingClientRect();
+        const wRect = weekRow.getBoundingClientRect();
+        if (rect.left >= wRect.left - 4) {
+          const key = cell.getAttribute('onclick')?.match(/'([^']+)'/)?.[1];
+          if (key) {
+            const d = new Date(key + 'T12:00:00');
+            document.getElementById('pickerMonthLabel').textContent =
+              MONTHS_LONG[d.getMonth()] + ' ' + d.getFullYear();
+          }
+          break;
+        }
+      }
+    }, { passive: true });
+  }
 }
 
 function dayCell(key, num, extraCls) {
@@ -1039,36 +1105,128 @@ function dayCell(key, num, extraCls) {
 }
 
 function renderPickerWeek() {
-  const ws   = getWeekStart();
-  const mo   = ws.getMonth();
-  let html   = '';
-  for (let i = 0; i < 7; i++) {
-    const d   = new Date(ws); d.setDate(ws.getDate() + i);
-    const key = toKey(d);
-    html += dayCell(key, d.getDate());
+  // Build all season weeks grouped by Sunday, so scroll-snap always snaps to Sunday
+  const allKeys = dayKeys.length ? dayKeys : computeFallbackKeys();
+  if (!allKeys.length) { document.getElementById('pickerWeekRow').innerHTML = ''; return; }
+
+  // Find the Sunday on or before the first key
+  const firstDate  = new Date(allKeys[0] + 'T12:00:00');
+  const startSun   = new Date(firstDate);
+  startSun.setDate(firstDate.getDate() - firstDate.getDay());
+
+  // Find the Saturday on or after the last key
+  const lastDate   = new Date(allKeys[allKeys.length - 1] + 'T12:00:00');
+  const endSat     = new Date(lastDate);
+  endSat.setDate(lastDate.getDate() + (6 - lastDate.getDay()));
+
+  let weekHtml = '';
+  let cur = new Date(startSun);
+  while (cur <= endSat) {
+    let weekCells = '';
+    for (let i = 0; i < 7; i++) {
+      const d   = new Date(cur); d.setDate(cur.getDate() + i);
+      const key = toKey(d);
+      const inSeason = allKeys.includes(key) || (key >= allKeys[0] && key <= allKeys[allKeys.length-1]);
+      if (inSeason) {
+        weekCells += dayCell(key, d.getDate());
+      } else {
+        weekCells += `<div class="picker-day faded"><span class="picker-day-num">${d.getDate()}</span><span class="picker-day-dot"></span></div>`;
+      }
+    }
+    weekHtml += `<div class="picker-week-snap">${weekCells}</div>`;
+    cur.setDate(cur.getDate() + 7);
   }
-  document.getElementById('pickerWeekRow').innerHTML = html;
+
+  const weekRow = document.getElementById('pickerWeekRow');
+  weekRow.innerHTML = weekHtml;
+
+  // Update month label to show month of selected week
+  const selD = new Date(selectedKey + 'T12:00:00');
   document.getElementById('pickerMonthLabel').textContent =
-    MONTHS_LONG[ws.getMonth()] + ' ' + ws.getFullYear();
+    MONTHS_LONG[selD.getMonth()] + ' ' + selD.getFullYear();
+
+  // Scroll the snap container to show the selected day's week
+  const selEl = weekRow.querySelector('.picker-day.selected');
+  if (selEl) {
+    const snapGroup = selEl.closest('.picker-week-snap');
+    if (snapGroup) weekRow.scrollLeft = snapGroup.offsetLeft;
+  }
+}
+
+function computeFallbackKeys() {
+  // Fallback: season range Nov 2025–Apr 2026
+  const out = [];
+  for (let d = new Date(2025,10,1), end = new Date(2026,3,30); d <= end; d.setDate(d.getDate()+1))
+    out.push(toKey(d));
+  return out;
 }
 
 function renderPickerMonth() {
-  // Show the month that contains the selectedKey
-  const ref   = new Date(selectedKey + 'T12:00:00');
-  const y     = ref.getFullYear();
-  const m     = ref.getMonth();
-  const first = new Date(y, m, 1);
-  const days  = new Date(y, m+1, 0).getDate();
-  let html    = '';
-  // blanks for offset
-  for (let p = 0; p < first.getDay(); p++)
-    html += `<div class="picker-day faded"><span class="picker-day-num"></span><span class="picker-day-dot"></span></div>`;
-  for (let d = 1; d <= days; d++) {
-    const key = toKey(new Date(y, m, d));
-    html += dayCell(key, d);
+  // Full season months stacked, each as a scroll-snap block
+  // Month label appears inline at the start of each month's first week row
+  const seasonMonths = [
+    {y:2025,m:10},{y:2025,m:11},
+    {y:2026,m:0},{y:2026,m:1},{y:2026,m:2},{y:2026,m:3},
+  ];
+  let html = '';
+  seasonMonths.forEach(({y, m}) => {
+    const first = new Date(y, m, 1);
+    const days  = new Date(y, m+1, 0).getDate();
+
+    // Build all cells for this month: blanks + day cells
+    let cells = [];
+    for (let p = 0; p < first.getDay(); p++)
+      cells.push(`<div class="picker-day faded"><span class="picker-day-num"></span><span class="picker-day-dot"></span></div>`);
+    for (let d = 1; d <= days; d++) {
+      const key = toKey(new Date(y, m, d));
+      cells.push(dayCell(key, d));
+    }
+
+    // Split into rows of 7, wrap each in picker-month-week-row
+    let rowsHtml = '';
+    for (let i = 0; i < cells.length; i += 7) {
+      const rowCells = cells.slice(i, i + 7);
+      // Pad last row to 7
+      while (rowCells.length < 7)
+        rowCells.push(`<div class="picker-day faded"><span class="picker-day-num"></span><span class="picker-day-dot"></span></div>`);
+      rowsHtml += `<div class="picker-month-week-row">${rowCells.join('')}</div>`;
+    }
+
+    html += `<div class="picker-month-block" data-month="${y}-${String(m+1).padStart(2,'0')}">
+      <div class="picker-grid-month-label">${MONTHS_LONG[m]} ${y}</div>
+      ${rowsHtml}
+    </div>`;
+  });
+
+  const grid = document.getElementById('pickerMonthGrid');
+  grid.innerHTML = html;
+
+  // Snap scroll to the block containing selected day
+  const selEl = grid.querySelector('.picker-day.selected');
+  if (selEl) {
+    const block = selEl.closest('.picker-month-block');
+    if (block) setTimeout(() => { grid.scrollTop = block.offsetTop; }, 10);
   }
-  document.getElementById('pickerMonthGrid').innerHTML = html;
-  document.getElementById('pickerMonthLabel').textContent = MONTHS_LONG[m] + ' ' + y;
+
+  // Update month label to selected month
+  const selD = new Date(selectedKey + 'T12:00:00');
+  document.getElementById('pickerMonthLabel').textContent =
+    MONTHS_LONG[selD.getMonth()] + ' ' + selD.getFullYear();
+
+  // Update label on scroll
+  grid.onscroll = () => {
+    const blocks = grid.querySelectorAll('.picker-month-block');
+    for (const block of blocks) {
+      const rect = block.getBoundingClientRect();
+      const gridRect = grid.getBoundingClientRect();
+      if (rect.top >= gridRect.top - 10) {
+        const [yr, mo] = block.dataset.month.split('-').map(Number);
+        document.getElementById('pickerMonthLabel').textContent =
+          MONTHS_LONG[mo-1] + ' ' + yr;
+        break;
+      }
+    }
+  };
 }
 
 function renderPicker() {
@@ -1081,28 +1239,22 @@ function renderPicker() {
 // ─────────────────────────────────────────────────────────────────────────────
 function selectDay(key) {
   selectedKey = clampSelectedKey(key);
-  if (!pickerExpanded) {
-    weekOffset = computeWeekOffsetForKey(selectedKey);
+  weekOffset  = computeWeekOffsetForKey(selectedKey);
+  if (pickerExpanded) {
+    pickerExpanded = false;
+    document.getElementById('pickerArea').classList.remove('expanded');
   }
-  renderPicker();
+  renderPickerWeek();
   scrollToDay(selectedKey, true);
 }
 
 function shiftWeek(dir) {
-  if (pickerExpanded) {
-    // shift month
-    const ref = new Date(selectedKey + 'T12:00:00');
-    ref.setMonth(ref.getMonth() + dir);
-    selectedKey = toKey(ref);
-    selectedKey = clampSelectedKey(selectedKey);
-    renderPickerMonth();
-  } else {
-    weekOffset += dir;
-    const d = new Date(selectedKey + 'T12:00:00');
-    d.setDate(d.getDate() + dir * 7);
-    selectedKey = clampSelectedKey(toKey(d));
-    renderPickerWeek();
-  }
+  // Only called in collapsed state now (no nav buttons in expanded)
+  weekOffset += dir;
+  const d = new Date(selectedKey + 'T12:00:00');
+  d.setDate(d.getDate() + dir * 7);
+  selectedKey = clampSelectedKey(toKey(d));
+  renderPickerWeek();
   scrollToDay(selectedKey, true);
 }
 
