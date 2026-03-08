@@ -14,7 +14,7 @@ BASE_URL  = "https://instructor.snow.com"
 LOGIN_URL = f"{BASE_URL}/snow/instructorTools.asp"
 SEASON_START = date(2025, 11, 1)
 SEASON_END   = date(2026,  5, 31)
-WINDOW_DAYS  = 22
+WINDOW_DAYS  = 21
 
 HEADERS = {
     "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/120.0.0.0 Safari/537.36",
