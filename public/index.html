@@ -91,13 +91,22 @@ body::after { content:''; position:fixed; inset:0; pointer-events:none; z-index:
 .top-bar-avatar:active { opacity: 0.7; }
 .top-bar-title {
   flex: 1;
-  text-align: left;
+  text-align: center;
   font-family: var(--f-head);
   font-size: 17px;
   font-weight: 700;
   letter-spacing: -0.01em;
   color: var(--snow);
 }
+.top-bar-search {
+  width: 32px; height: 32px; border-radius: 8px;
+  background: transparent; border: none; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  color: var(--muted); flex-shrink: 0;
+  transition: color 0.15s;
+}
+.top-bar-search:active { color: var(--snow); }
+.top-bar-search svg { width: 18px; height: 18px; stroke: currentColor; fill: none; stroke-width: 1.8; }
 
 /* ── PICKER AREA ── */
 /* ── PICKER ── */
@@ -191,75 +200,91 @@ body::after { content:''; position:fixed; inset:0; pointer-events:none; z-index:
   scroll-snap-align: start;
 }
 /* Month label inside expanded view */
-.picker-grid-month-label {
-  font-family: var(--f-head);
-  font-size: 11px;
-  font-weight: 700;
-  color: var(--blue);
-  letter-spacing: 0.07em;
-  text-transform: uppercase;
-  padding: 10px 0 4px;
-}
 /* Rows inside expanded month use same 7-col grid */
 .picker-month-week-row {
   display: grid;
   grid-template-columns: repeat(7, 1fr);
 }
 
-/* Day cell — column layout: circle num on top, dot below */
+/* Day cell — square tile, fills column */
 .picker-day {
+  position: relative;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 4px;
-  padding: 6px 0;
+  aspect-ratio: 1;
   cursor: pointer;
+  transition: opacity 0.1s;
 }
-.picker-day:active .picker-day-bg { background: rgba(255,255,255,0.08); }
+.picker-day:active { opacity: 0.7; }
 
-/* The circle — tight around the number only */
+/* The coloured square tile — fills the cell with a small inset gap */
 .picker-day-bg {
-  width: 30px; height: 30px;
-  border-radius: 50%;
-  display: flex; align-items: center; justify-content: center;
-  transition: background 0.12s;
+  position: absolute;
+  inset: 3px;
+  border-radius: 8px;
+  transition: box-shadow 0.15s, filter 0.15s;
 }
+
+/* Date number centred on tile */
 .picker-day-num {
+  position: relative; /* above bg */
   font-family: var(--f-head);
-  font-size: 15px; font-weight: 600; line-height: 1;
-  color: var(--snow);
+  font-size: 13px; font-weight: 700; line-height: 1;
+  color: rgba(255,255,255,0.9);
+  z-index: 1;
 }
 
-/* Dot below circle — coloured by program */
+/* Dot — repurposed as "today" red indicator only */
 .picker-day-dot {
-  width: 4px; height: 4px; border-radius: 50%;
-  background: transparent;
-  flex-shrink: 0;
+  display: none; /* hidden by default */
 }
-/* Dot colours matching heatmap */
-.picker-day.dot-schools    .picker-day-dot { background: var(--blue); }
-.picker-day.dot-daily      .picker-day-dot,
-.picker-day.dot-teens      .picker-day-dot { background: var(--teal); }
-.picker-day.dot-club       .picker-day-dot,
-.picker-day.dot-wvsbc      .picker-day-dot { background: var(--purple); }
-.picker-day.dot-private    .picker-day-dot { background: var(--yellow); }
-.picker-day.dot-training   .picker-day-dot { background: var(--green); }
-.picker-day.dot-adaptive   .picker-day-dot { background: #a78bfa; }
-.picker-day.dot-never_ever .picker-day-dot { background: #60d4f0; }
-.picker-day.dot-womens_camps .picker-day-dot { background: #ff8cc8; }
-.picker-day.dot-adult_alpine .picker-day-dot { background: #7dd3a8; }
-.picker-day.dot-adult_base   .picker-day-dot { background: #f09a54; }
-.picker-day.dot-sick       .picker-day-dot { background: var(--red); }
 
-/* States */
-.picker-day.is-off  { opacity: 0.25; }
-.picker-day.past    { opacity: 0.5; }
-.picker-day.faded   { opacity: 0.15; pointer-events: none; }
-.picker-day.today   .picker-day-num { color: var(--blue); }
-.picker-day.selected .picker-day-bg { background: var(--blue); }
-.picker-day.selected .picker-day-num { color: white; }
-.picker-day.selected .picker-day-dot { background: rgba(255,255,255,0.6) !important; }
+/* ── Tile background colours (heatmap palette) ── */
+/* Off / no data */
+.picker-day.is-off   .picker-day-bg { background: rgba(255,255,255,0.05); }
+.picker-day.is-off   .picker-day-num { color: rgba(255,255,255,0.25); }
+/* Past work days slightly dimmed */
+.picker-day.past     { opacity: 0.6; }
+/* Out-of-season filler */
+.picker-day.faded    { opacity: 0.12; pointer-events: none; }
+.picker-day.faded    .picker-day-bg { background: transparent; }
+
+/* Program tile colours */
+.picker-day.dot-schools     .picker-day-bg { background: rgba(59,139,255,0.65); }
+.picker-day.dot-daily       .picker-day-bg,
+.picker-day.dot-teens       .picker-day-bg { background: rgba(45,204,196,0.6); }
+.picker-day.dot-club        .picker-day-bg,
+.picker-day.dot-wvsbc       .picker-day-bg,
+.picker-day.dot-wcb         .picker-day-bg { background: rgba(155,125,255,0.6); }
+.picker-day.dot-private     .picker-day-bg { background: rgba(255,197,66,0.55); }
+.picker-day.dot-training    .picker-day-bg { background: rgba(45,204,138,0.55); }
+.picker-day.dot-adaptive    .picker-day-bg { background: rgba(167,139,250,0.6); }
+.picker-day.dot-never_ever  .picker-day-bg { background: rgba(96,212,240,0.55); }
+.picker-day.dot-womens_camps .picker-day-bg { background: rgba(255,140,200,0.6); }
+.picker-day.dot-adult_alpine .picker-day-bg { background: rgba(125,211,168,0.6); }
+.picker-day.dot-adult_base   .picker-day-bg { background: rgba(240,154,84,0.6); }
+.picker-day.dot-sick         .picker-day-bg { background: rgba(255,77,109,0.55); }
+
+/* ── Today — small red dot in top-right corner ── */
+.picker-day.today::after {
+  content: '';
+  position: absolute;
+  top: 5px; right: 5px;
+  width: 6px; height: 6px;
+  border-radius: 50%;
+  background: var(--red);
+  box-shadow: 0 0 4px var(--red);
+  z-index: 2;
+}
+
+/* ── Selected — white ring around tile ── */
+.picker-day.selected .picker-day-bg {
+  box-shadow: 0 0 0 2px white, 0 0 0 4px rgba(255,255,255,0.15);
+  filter: brightness(1.25);
+}
+.picker-day.selected .picker-day-num { color: white; font-weight: 800; }
 
 /* Pull handle — slim, same height as DOW row, centred */
 .picker-handle {
@@ -484,7 +509,7 @@ body::after { content:''; position:fixed; inset:0; pointer-events:none; z-index:
 
 /* ── STATUS BUBBLE ── */
 .status-bubble {
-  position: fixed; top: calc(env(safe-area-inset-top, 0px) + 10px); left: 50%; transform: translateX(-50%) translateY(-80px);
+  position: fixed; top: 20px; left: 50%; transform: translateX(-50%) translateY(-80px);
   z-index: 999; background: var(--card); border: 1px solid var(--border);
   border-radius: 30px; padding: 10px 18px;
   display: flex; align-items: center; gap: 10px;
@@ -581,6 +606,9 @@ body::after { content:''; position:fixed; inset:0; pointer-events:none; z-index:
   <div class="top-bar">
     <div class="top-bar-avatar" id="topAvatar" onclick="openProfile()">L</div>
     <div class="top-bar-title">WhisSchedule</div>
+    <button class="top-bar-search" onclick="/* search coming soon */" title="Search (coming soon)">
+      <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+    </button>
   </div>
 
   <!-- Collapsible picker -->
@@ -1151,7 +1179,6 @@ function renderPickerMonth() {
     }
 
     html += `<div class="picker-month-block" data-month="${y}-${String(m+1).padStart(2,'0')}">
-      <div class="picker-grid-month-label">${MONTHS_LONG[m]} ${y}</div>
       ${rowsHtml}
     </div>`;
   });
