@@ -97,7 +97,8 @@ body::after { content:''; position:fixed; inset:0; pointer-events:none; z-index:
   gap: 3px;
   cursor: pointer;
   border-radius: 999px;
-  padding: 0 22px;
+  padding: 0;
+  width: 100px;
   height: 100%;
   color: var(--muted);
   font-size: 11px; font-weight: 600;
@@ -105,7 +106,7 @@ body::after { content:''; position:fixed; inset:0; pointer-events:none; z-index:
   transition:
     background 0.2s ease,
     color 0.2s ease,
-    padding 0.38s cubic-bezier(0.16,1,0.3,1);
+    width 0.38s cubic-bezier(0.16,1,0.3,1);
 }
 .tab:active { background: rgba(255,255,255,0.05); }
 .tab.active {
@@ -140,21 +141,10 @@ body::after { content:''; position:fixed; inset:0; pointer-events:none; z-index:
   max-height: 0;
   transform: translateY(-3px) scale(0.85);
 }
-/* Compact padding when collapsed */
-.tabs.collapsed .tab { padding: 0 18px; }
+/* Compact width when collapsed */
+.tabs.collapsed .tab { width: 80px; }
 
-/* Active dot — only visible when collapsed */
-.tab-dot {
-  position: absolute;
-  bottom: 5px;
-  width: 4px; height: 4px; border-radius: 50%;
-  background: var(--blue);
-  opacity: 0; transform: scale(0);
-  transition: opacity 0.2s ease, transform 0.28s cubic-bezier(0.34,1.56,0.64,1);
-}
-.tabs.collapsed .tab.active .tab-dot {
-  opacity: 1; transform: scale(1);
-}
+/* Active dot — REMOVED, active pill is sufficient indicator */
 
 .page { display:none; min-height:100vh; padding-bottom:100px; }
 .page.active { display:block; }
@@ -674,28 +664,37 @@ body::after { content:''; position:fixed; inset:0; pointer-events:none; z-index:
 
 /* ── ONBOARDING ── */
 .ob-wrap {
-  position: fixed; inset: 0; z-index: 1000;
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  z-index: 1000;
   background: var(--bg);
-  display: flex; align-items: center; justify-content: center;
   transition: opacity 0.5s ease;
 }
 .ob-wrap.ob-hidden { opacity: 0; pointer-events: none; }
 
 /* Screens */
 .ob-screen {
-  position: absolute; inset: 0;
-  display: flex; flex-direction: column; align-items: center; justify-content: center;
-  padding: 40px 32px;
+  position: absolute;
+  top: 0; left: 0; right: 0; bottom: 0;
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  padding: 40px 24px;
   overflow-y: auto;
   opacity: 0; pointer-events: none;
-  transition: opacity 0.4s ease, transform 0.4s cubic-bezier(0.16,1,0.3,1);
-  transform: translateX(24px);
+  transition: opacity 0.38s ease;
+}
+/* Inner wrapper — constrains max width and centres children */
+.ob-screen-inner {
+  width: 100%;
+  max-width: 380px;
+  display: flex; flex-direction: column;
+  align-items: center;
 }
 .ob-screen.ob-active {
-  opacity: 1; pointer-events: all; transform: translateX(0);
+  opacity: 1; pointer-events: all;
 }
 .ob-screen.ob-exit-left {
-  opacity: 0; transform: translateX(-24px);
+  opacity: 0;
 }
 
 /* Screen 1 — Landing */
@@ -725,13 +724,13 @@ body::after { content:''; position:fixed; inset:0; pointer-events:none; z-index:
 .ob-heading {
   font-family: var(--f-head);
   font-size: 26px; font-weight: 800;
-  color: var(--snow); margin-bottom: 8px; text-align: center;
+  color: var(--snow); margin-bottom: 8px; text-align: center; width: 100%;
 }
 .ob-sub {
   font-size: 13px; color: var(--muted); text-align: center;
-  line-height: 1.6; max-width: 280px; margin-bottom: 32px;
+  line-height: 1.6; margin-bottom: 32px; width: 100%;
 }
-.ob-form { width: 100%; max-width: 340px; display: flex; flex-direction: column; gap: 14px; }
+.ob-form { width: 100%; display: flex; flex-direction: column; gap: 14px; }
 .ob-field { display: flex; flex-direction: column; gap: 6px; }
 .ob-field label {
   font-size: 11px; font-weight: 600; letter-spacing: 0.08em;
@@ -892,12 +891,10 @@ body::after { content:''; position:fixed; inset:0; pointer-events:none; z-index:
   <div class="tab active" onclick="switchTab('schedule')" id="tab-schedule">
     <svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
     <span class="tab-label">Schedule</span>
-    <div class="tab-dot"></div>
   </div>
   <div class="tab" onclick="switchTab('stats')" id="tab-stats">
     <svg viewBox="0 0 24 24"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
     <span class="tab-label">Stats</span>
-    <div class="tab-dot"></div>
   </div>
 </nav>
 
@@ -1901,50 +1898,56 @@ window.addEventListener('load', () => {
 
   <!-- Screen 1: Landing -->
   <div class="ob-screen ob-active" id="obScreen1">
-    <canvas class="ob-snow-canvas" id="obSnowCanvas"></canvas>
-    <div class="ob-logo">🏔️</div>
-    <div class="ob-app-name">WhisSchedule</div>
-    <div class="ob-tagline">Your Whistler Blackcomb schedule, beautifully organised</div>
-    <button class="ob-cta" style="max-width:240px" onclick="obGoTo(2)">
-      Get Started <span>→</span>
-    </button>
+    <div class="ob-screen-inner">
+      <canvas class="ob-snow-canvas" id="obSnowCanvas"></canvas>
+      <div class="ob-logo">🏔️</div>
+      <div class="ob-app-name">WhisSchedule</div>
+      <div class="ob-tagline">Your Whistler Blackcomb schedule, beautifully organised</div>
+      <button class="ob-cta" style="max-width:240px" onclick="obGoTo(2)">
+        Get Started <span>→</span>
+      </button>
+    </div>
   </div>
 
   <!-- Screen 2: Credentials -->
   <div class="ob-screen" id="obScreen2">
-    <div class="ob-heading">Connect your portal</div>
-    <div class="ob-sub">Enter your <a href="https://instructor.snow.com" target="_blank" rel="noopener" style="font-family:var(--f-mono);font-size:12px;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);padding:1px 6px;border-radius:5px;color:var(--snow);text-decoration:none;">instructor.snow.com</a> credentials.<br>Stored only on your device — never shared.</div>
-    <div class="ob-form">
-      <div class="ob-field">
-        <label>Pass Number</label>
-        <input class="ob-input" id="obPassNumber" type="text" inputmode="numeric" placeholder="e.g. 110101234567" />
-      </div>
-      <div class="ob-field">
-        <label>Password</label>
-        <div class="ob-input-wrap">
-          <input class="ob-input" id="obPassword" type="password" placeholder="Your portal password" style="padding-right:44px" />
-          <button class="ob-pw-toggle" id="obPwToggle" onclick="obTogglePw()" type="button" tabindex="-1">
-            <svg id="obEyeIcon" viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
-          </button>
+    <div class="ob-screen-inner">
+      <div class="ob-heading">Connect your portal</div>
+      <div class="ob-sub">Enter your <a href="https://instructor.snow.com" target="_blank" rel="noopener" style="font-family:var(--f-mono);font-size:12px;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);padding:1px 6px;border-radius:5px;color:var(--snow);text-decoration:none;">instructor.snow.com</a> credentials.<br>Stored only on your device — never shared.</div>
+      <div class="ob-form">
+        <div class="ob-field">
+          <label>Pass Number</label>
+          <input class="ob-input" id="obPassNumber" type="text" inputmode="numeric" placeholder="e.g. 110101234567" />
         </div>
+        <div class="ob-field">
+          <label>Password</label>
+          <div class="ob-input-wrap">
+            <input class="ob-input" id="obPassword" type="password" placeholder="Your portal password" style="padding-right:44px" />
+            <button class="ob-pw-toggle" id="obPwToggle" onclick="obTogglePw()" type="button" tabindex="-1">
+              <svg id="obEyeIcon" viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+            </button>
+          </div>
+        </div>
+        <div class="ob-status" id="obStatus"></div>
+        <button class="ob-cta" id="obConnectBtn" onclick="obConnect()">
+          Connect &amp; Load Schedule →
+        </button>
       </div>
-      <div class="ob-status" id="obStatus"></div>
-      <button class="ob-cta" id="obConnectBtn" onclick="obConnect()">
-        Connect &amp; Load Schedule →
-      </button>
     </div>
   </div>
 
   <!-- Screen 3: Success -->
   <div class="ob-screen" id="obScreen3">
-    <div class="ob-logo" style="font-size:44px;margin-bottom:16px">🎿</div>
-    <div class="ob-welcome-name" id="obWelcomeName">Welcome! 👋</div>
-    <div class="ob-welcome-sub">WhisSchedule is ready</div>
-    <div class="ob-stat-pills" id="obStatPills"></div>
-    <button class="ob-cta" style="max-width:260px" onclick="obEnterApp()">
-      View My Schedule →
-    </button>
-    <div class="ob-auto-bar"><div class="ob-auto-fill" id="obAutoFill"></div></div>
+    <div class="ob-screen-inner">
+      <div class="ob-logo" style="font-size:44px;margin-bottom:16px">🎿</div>
+      <div class="ob-welcome-name" id="obWelcomeName">Welcome! 👋</div>
+      <div class="ob-welcome-sub">WhisSchedule is ready</div>
+      <div class="ob-stat-pills" id="obStatPills"></div>
+      <button class="ob-cta" style="max-width:260px" onclick="obEnterApp()">
+        View My Schedule →
+      </button>
+      <div class="ob-auto-bar"><div class="ob-auto-fill" id="obAutoFill"></div></div>
+    </div>
   </div>
 
 </div>
@@ -1958,10 +1961,11 @@ let obAutoTimer = null;
 function obInit() {
   if (localStorage.getItem('wb_onboarded') === 'true') {
     document.getElementById('obWrap').style.display = 'none';
-    return false; // skip onboarding
+    return false;
   }
+  document.documentElement.style.overflow = 'hidden';
   obStartSnow();
-  return true; // show onboarding
+  return true;
 }
 
 function obGoTo(screenNum) {
@@ -1971,11 +1975,8 @@ function obGoTo(screenNum) {
   current.classList.add('ob-exit-left');
   current.classList.remove('ob-active');
   setTimeout(() => current.classList.remove('ob-exit-left'), 400);
-  next.style.transform = 'translateX(24px)';
-  requestAnimationFrame(() => {
-    next.classList.add('ob-active');
-    if (screenNum === 2) setTimeout(() => document.getElementById('obPassNumber').focus(), 420);
-  });
+  next.classList.add('ob-active');
+  if (screenNum === 2) setTimeout(() => document.getElementById('obPassNumber').focus(), 420);
 }
 
 function obTogglePw() {
@@ -2098,8 +2099,8 @@ function obBuildSuccess(data) {
 function obEnterApp() {
   clearTimeout(obAutoTimer);
   localStorage.setItem('wb_onboarded', 'true');
+  document.documentElement.style.overflow = '';
 
-  // Fade out onboarding
   const wrap = document.getElementById('obWrap');
   wrap.classList.add('ob-hidden');
   setTimeout(() => { wrap.style.display = 'none'; }, 520);
