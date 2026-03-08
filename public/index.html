@@ -41,15 +41,122 @@ body::after { content:''; position:fixed; inset:0; pointer-events:none; z-index:
   background-size:150px; }
 
 /* ── TABS ── */
-.tabs { display:flex; position:fixed; bottom:0; left:0; right:0; z-index:100;
-  background:rgba(6,13,26,0.95); backdrop-filter:blur(20px);
-  border-top:1px solid var(--border); padding-bottom:env(safe-area-inset-bottom,10px); }
-.tab { flex:1; display:flex; flex-direction:column; align-items:center; gap:4px; padding:12px 4px 8px;
-  cursor:pointer; color:var(--muted); font-size:10px; font-weight:500; letter-spacing:0.05em;
-  text-transform:uppercase; transition:color 0.2s; }
-.tab svg { width:20px; height:20px; stroke:currentColor; fill:none; stroke-width:1.8; }
-.tab.active { color:var(--blue); }
-.page { display:none; min-height:100vh; padding-bottom:90px; }
+/* ── GLASS FLOATING TAB BAR ── */
+.tabs {
+  position: fixed;
+  bottom: max(20px, env(safe-area-inset-bottom, 20px));
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  padding: 5px;
+  gap: 2px;
+  /* Glass pill */
+  background: rgba(12,24,44,0.55);
+  backdrop-filter: blur(28px) saturate(180%);
+  -webkit-backdrop-filter: blur(28px) saturate(180%);
+  border-radius: 999px;
+  border: 1px solid rgba(255,255,255,0.10);
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,0.12),
+    inset 0 -1px 0 rgba(0,0,0,0.2),
+    0 8px 32px rgba(0,0,0,0.45),
+    0 2px 8px rgba(0,0,0,0.3);
+  /* Height transition for collapse */
+  height: 58px;
+  transition:
+    height 0.38s cubic-bezier(0.16,1,0.3,1),
+    background 0.3s ease,
+    box-shadow 0.3s ease;
+  will-change: height;
+  white-space: nowrap;
+}
+.tabs.collapsed {
+  height: 44px;
+  background: rgba(12,24,44,0.75);
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,0.15),
+    inset 0 -1px 0 rgba(0,0,0,0.3),
+    0 12px 40px rgba(0,0,0,0.55),
+    0 4px 12px rgba(0,0,0,0.4);
+}
+/* Spring-up when expanding */
+@keyframes tab-nudge {
+  from { transform: translateX(-50%) translateY(5px); }
+  to   { transform: translateX(-50%) translateY(0); }
+}
+.tabs.just-appeared {
+  animation: tab-nudge 0.38s cubic-bezier(0.16,1,0.3,1) both;
+}
+
+.tab {
+  position: relative;
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  gap: 3px;
+  cursor: pointer;
+  border-radius: 999px;
+  padding: 0 22px;
+  height: 100%;
+  color: var(--muted);
+  font-size: 11px; font-weight: 600;
+  letter-spacing: 0.05em; text-transform: uppercase;
+  transition:
+    background 0.2s ease,
+    color 0.2s ease,
+    padding 0.38s cubic-bezier(0.16,1,0.3,1);
+}
+.tab:active { background: rgba(255,255,255,0.05); }
+.tab.active {
+  background: rgba(59,139,255,0.18);
+  color: var(--blue);
+  box-shadow: inset 0 1px 0 rgba(59,139,255,0.25), inset 0 -1px 0 rgba(0,0,0,0.1);
+}
+.tab svg {
+  width: 20px; height: 20px;
+  stroke: currentColor; fill: none; stroke-width: 1.8;
+  stroke-linecap: round; stroke-linejoin: round;
+  transition: transform 0.25s cubic-bezier(0.34,1.56,0.64,1);
+  flex-shrink: 0;
+}
+.tab:active svg { transform: scale(0.88); }
+
+/* Tab label — hides on collapse */
+.tab-label {
+  display: block;
+  overflow: hidden;
+  max-height: 13px;
+  opacity: 1;
+  transform: translateY(0) scale(1);
+  transform-origin: top center;
+  transition:
+    opacity 0.22s ease,
+    max-height 0.32s ease,
+    transform 0.3s cubic-bezier(0.16,1,0.3,1);
+}
+.tabs.collapsed .tab-label {
+  opacity: 0;
+  max-height: 0;
+  transform: translateY(-3px) scale(0.85);
+}
+/* Compact padding when collapsed */
+.tabs.collapsed .tab { padding: 0 18px; }
+
+/* Active dot — only visible when collapsed */
+.tab-dot {
+  position: absolute;
+  bottom: 5px;
+  width: 4px; height: 4px; border-radius: 50%;
+  background: var(--blue);
+  opacity: 0; transform: scale(0);
+  transition: opacity 0.2s ease, transform 0.28s cubic-bezier(0.34,1.56,0.64,1);
+}
+.tabs.collapsed .tab.active .tab-dot {
+  opacity: 1; transform: scale(1);
+}
+
+.page { display:none; min-height:100vh; padding-bottom:100px; }
 .page.active { display:block; }
 
 /* ── SCHEDULE PAGE LAYOUT ── */
@@ -190,15 +297,13 @@ body::after { content:''; position:fixed; inset:0; pointer-events:none; z-index:
 .picker-month-block {
   scroll-snap-align: start;
 }
-/* Month label inside expanded view */
-.picker-grid-month-label {
-  font-family: var(--f-head);
-  font-size: 11px;
-  font-weight: 700;
-  color: var(--blue);
-  letter-spacing: 0.07em;
-  text-transform: uppercase;
-  padding: 10px 0 4px;
+/* Alternating tint — odd months slightly lighter */
+.picker-month-block:nth-child(odd) {
+  background: rgba(255,255,255,0.015);
+  border-radius: 8px;
+}
+.picker-month-block:nth-child(even) {
+  background: transparent;
 }
 /* Rows inside expanded month use same 7-col grid */
 .picker-month-week-row {
@@ -566,6 +671,162 @@ body::after { content:''; position:fixed; inset:0; pointer-events:none; z-index:
 
 .bstat-empty { opacity:0.3; }
 .bstat-empty .bstat-val { font-size:28px; letter-spacing:0.1em; }
+
+/* ── ONBOARDING ── */
+.ob-wrap {
+  position: fixed; inset: 0; z-index: 1000;
+  background: var(--bg);
+  display: flex; align-items: center; justify-content: center;
+  transition: opacity 0.5s ease;
+}
+.ob-wrap.ob-hidden { opacity: 0; pointer-events: none; }
+
+/* Screens */
+.ob-screen {
+  position: absolute; inset: 0;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  padding: 40px 32px;
+  overflow-y: auto;
+  opacity: 0; pointer-events: none;
+  transition: opacity 0.4s ease, transform 0.4s cubic-bezier(0.16,1,0.3,1);
+  transform: translateX(24px);
+}
+.ob-screen.ob-active {
+  opacity: 1; pointer-events: all; transform: translateX(0);
+}
+.ob-screen.ob-exit-left {
+  opacity: 0; transform: translateX(-24px);
+}
+
+/* Screen 1 — Landing */
+.ob-snow-canvas {
+  position: absolute; inset: 0; pointer-events: none;
+}
+.ob-logo {
+  font-size: 52px; line-height: 1; margin-bottom: 24px;
+  filter: drop-shadow(0 0 24px rgba(59,139,255,0.4));
+  animation: ob-float 4s ease-in-out infinite;
+}
+@keyframes ob-float {
+  0%,100% { transform: translateY(0); }
+  50%      { transform: translateY(-8px); }
+}
+.ob-app-name {
+  font-family: var(--f-head);
+  font-size: 36px; font-weight: 800;
+  color: var(--snow); margin-bottom: 10px; text-align: center;
+}
+.ob-tagline {
+  font-size: 14px; color: var(--muted); text-align: center;
+  line-height: 1.6; max-width: 260px; margin-bottom: 48px;
+}
+
+/* Screen 2 — Credentials */
+.ob-heading {
+  font-family: var(--f-head);
+  font-size: 26px; font-weight: 800;
+  color: var(--snow); margin-bottom: 8px; text-align: center;
+}
+.ob-sub {
+  font-size: 13px; color: var(--muted); text-align: center;
+  line-height: 1.6; max-width: 280px; margin-bottom: 32px;
+}
+.ob-form { width: 100%; max-width: 340px; display: flex; flex-direction: column; gap: 14px; }
+.ob-field { display: flex; flex-direction: column; gap: 6px; }
+.ob-field label {
+  font-size: 11px; font-weight: 600; letter-spacing: 0.08em;
+  text-transform: uppercase; color: var(--muted);
+}
+.ob-input-wrap { position: relative; }
+.ob-input {
+  width: 100%; padding: 13px 16px; border-radius: 14px;
+  background: var(--card); border: 1px solid var(--border);
+  color: var(--snow); font-size: 15px; font-family: var(--f-ui);
+  outline: none; transition: border-color 0.2s;
+}
+.ob-input:focus { border-color: var(--blue); }
+.ob-input::placeholder { color: var(--muted); }
+.ob-input.ob-error { border-color: var(--red); animation: ob-shake 0.35s ease; }
+@keyframes ob-shake {
+  0%,100% { transform: translateX(0); }
+  20%      { transform: translateX(-6px); }
+  40%      { transform: translateX(6px); }
+  60%      { transform: translateX(-4px); }
+  80%      { transform: translateX(4px); }
+}
+.ob-pw-toggle {
+  position: absolute; right: 14px; top: 50%; transform: translateY(-50%);
+  background: none; border: none; cursor: pointer; color: var(--muted);
+  padding: 4px; transition: color 0.15s;
+}
+.ob-pw-toggle:hover { color: var(--snow); }
+.ob-pw-toggle svg { width: 16px; height: 16px; stroke: currentColor; fill: none; stroke-width: 1.8; }
+.ob-status {
+  font-size: 12px; text-align: center; min-height: 16px;
+  color: var(--red); transition: opacity 0.2s;
+}
+
+/* CTA button — shared */
+.ob-cta {
+  width: 100%; max-width: 340px;
+  padding: 15px; border-radius: 16px; border: none;
+  background: var(--blue); color: white;
+  font-family: var(--f-head); font-size: 16px; font-weight: 700;
+  cursor: pointer; letter-spacing: 0.02em;
+  transition: opacity 0.2s, transform 0.15s, background 0.2s;
+  box-shadow: 0 4px 20px rgba(59,139,255,0.35);
+  display: flex; align-items: center; justify-content: center; gap: 10px;
+  margin-top: 8px;
+}
+.ob-cta:hover  { opacity: 0.9; }
+.ob-cta:active { transform: scale(0.97); }
+.ob-cta:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
+.ob-cta.ob-loading { background: var(--dim); box-shadow: none; }
+.ob-spinner {
+  width: 16px; height: 16px; border-radius: 50%;
+  border: 2px solid rgba(255,255,255,0.3);
+  border-top-color: white;
+  animation: spin 0.7s linear infinite;
+  flex-shrink: 0;
+}
+.ob-status-text { font-size: 13px; font-weight: 500; }
+
+/* Screen 3 — Success */
+.ob-welcome-name {
+  font-family: var(--f-head);
+  font-size: 32px; font-weight: 800;
+  color: var(--snow); text-align: center; margin-bottom: 6px;
+}
+.ob-welcome-sub {
+  font-size: 14px; color: var(--muted); text-align: center; margin-bottom: 36px;
+}
+.ob-stat-pills {
+  display: flex; flex-wrap: wrap; gap: 8px;
+  justify-content: center; margin-bottom: 48px;
+}
+.ob-stat-pill {
+  display: flex; flex-direction: column; align-items: center;
+  background: var(--card); border: 1px solid var(--border);
+  border-radius: 16px; padding: 14px 20px; min-width: 90px;
+}
+.ob-stat-val {
+  font-family: var(--f-head); font-size: 28px; font-weight: 800; line-height: 1;
+}
+.ob-stat-val.c-blue   { color: var(--blue); }
+.ob-stat-val.c-orange { color: var(--orange); }
+.ob-stat-val.c-yellow { color: var(--yellow); }
+.ob-stat-label {
+  font-size: 10px; color: var(--muted); margin-top: 5px;
+  font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase;
+}
+.ob-auto-bar {
+  width: 100%; max-width: 340px; height: 2px;
+  background: var(--dim); border-radius: 1px; overflow: hidden; margin-top: 16px;
+}
+.ob-auto-fill {
+  height: 100%; background: var(--blue); border-radius: 1px;
+  width: 0%; transition: width 3s linear;
+}
 </style>
 <script>
   window.va = window.va || function () { (window.vaq = window.vaq || []).push(arguments); };
@@ -627,14 +888,16 @@ body::after { content:''; position:fixed; inset:0; pointer-events:none; z-index:
 </div>
 
 <!-- ── TABS ── -->
-<nav class="tabs">
+<nav class="tabs" id="tabBar">
   <div class="tab active" onclick="switchTab('schedule')" id="tab-schedule">
     <svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
-    Schedule
+    <span class="tab-label">Schedule</span>
+    <div class="tab-dot"></div>
   </div>
   <div class="tab" onclick="switchTab('stats')" id="tab-stats">
     <svg viewBox="0 0 24 24"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
-    Stats
+    <span class="tab-label">Stats</span>
+    <div class="tab-dot"></div>
   </div>
 </nav>
 
@@ -1151,7 +1414,6 @@ function renderPickerMonth() {
     }
 
     html += `<div class="picker-month-block" data-month="${y}-${String(m+1).padStart(2,'0')}">
-      <div class="picker-grid-month-label">${MONTHS_LONG[m]} ${y}</div>
       ${rowsHtml}
     </div>`;
   });
@@ -1193,11 +1455,8 @@ function renderPicker() {
 function selectDay(key) {
   selectedKey = clampSelectedKey(key);
   weekOffset  = computeWeekOffsetForKey(selectedKey);
-  if (pickerExpanded) {
-    pickerExpanded = false;
-    document.getElementById('pickerArea').classList.remove('expanded');
-  }
-  renderPickerWeek();
+  if (pickerExpanded) renderPickerMonth();
+  else renderPickerWeek();
   scrollToDay(selectedKey, true);
 }
 
@@ -1216,8 +1475,8 @@ function goToToday() {
     : (dayKeys.length ? (TODAY_KEY < dayKeys[0] ? dayKeys[0] : dayKeys[dayKeys.length-1]) : TODAY_KEY);
   selectedKey = target;
   weekOffset  = computeWeekOffsetForKey(selectedKey);
-  if (pickerExpanded) { pickerExpanded = false; document.getElementById('pickerArea').classList.remove('expanded'); }
-  renderPickerWeek();
+  if (pickerExpanded) renderPickerMonth();
+  else renderPickerWeek();
   scrollToDay(selectedKey, true);
 }
 
@@ -1423,6 +1682,45 @@ function switchTab(tab) {
   document.getElementById('tab-'  + tab).classList.add('active');
 }
 
+// ── Glass tab bar: collapse on scroll down, expand on scroll up ──
+(function() {
+  const TRIGGER = 40;
+  let lastY = 0, collapsed = false, accumulated = 0;
+
+  function attachScrollListener() {
+    const scroller = document.getElementById('dayScroll');
+    const tabBar   = document.getElementById('tabBar');
+    if (!scroller || !tabBar) return;
+
+    scroller.addEventListener('scroll', () => {
+      const y   = scroller.scrollTop;
+      const dir = y - lastY;
+
+      if (dir > 0 && y > 60) {
+        accumulated += dir;
+        if (!collapsed && accumulated > TRIGGER) {
+          collapsed = true;
+          tabBar.classList.add('collapsed');
+          tabBar.classList.remove('just-appeared');
+        }
+      } else if (dir < 0 && collapsed) {
+        collapsed = false; accumulated = 0;
+        tabBar.classList.remove('collapsed');
+        tabBar.classList.add('just-appeared');
+      } else if (dir > 0) {
+        accumulated += dir;
+      }
+      if (y <= 10) {
+        collapsed = false; accumulated = 0;
+        tabBar.classList.remove('collapsed', 'just-appeared');
+      }
+      lastY = y;
+    }, { passive: true });
+  }
+
+  window.addEventListener('load', attachScrollListener);
+})();
+
 // ─────────────────────────────────────────────────────────────────────────────
 // CREDENTIALS
 // ─────────────────────────────────────────────────────────────────────────────
@@ -1570,6 +1868,10 @@ function ingestLessons(lessons) {
 // ─────────────────────────────────────────────────────────────────────────────
 window.addEventListener('load', () => {
   renderPickerDow();
+
+  // Show onboarding for first-time users; skip if already done
+  if (obInit()) return;
+
   const savedName = localStorage.getItem('wb_instructorName');
   const creds     = loadCredentials();
   const cache     = loadScheduleCache();
@@ -1592,6 +1894,268 @@ window.addEventListener('load', () => {
     else setTimeout(() => triggerRefresh(true), 1000);
   }
 });
+</script>
+
+<!-- ── ONBOARDING OVERLAY ── -->
+<div class="ob-wrap" id="obWrap">
+
+  <!-- Screen 1: Landing -->
+  <div class="ob-screen ob-active" id="obScreen1">
+    <canvas class="ob-snow-canvas" id="obSnowCanvas"></canvas>
+    <div class="ob-logo">🏔️</div>
+    <div class="ob-app-name">WhisSchedule</div>
+    <div class="ob-tagline">Your Whistler Blackcomb schedule, beautifully organised</div>
+    <button class="ob-cta" style="max-width:240px" onclick="obGoTo(2)">
+      Get Started <span>→</span>
+    </button>
+  </div>
+
+  <!-- Screen 2: Credentials -->
+  <div class="ob-screen" id="obScreen2">
+    <div class="ob-heading">Connect your portal</div>
+    <div class="ob-sub">Enter your <a href="https://instructor.snow.com" target="_blank" rel="noopener" style="font-family:var(--f-mono);font-size:12px;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);padding:1px 6px;border-radius:5px;color:var(--snow);text-decoration:none;">instructor.snow.com</a> credentials.<br>Stored only on your device — never shared.</div>
+    <div class="ob-form">
+      <div class="ob-field">
+        <label>Pass Number</label>
+        <input class="ob-input" id="obPassNumber" type="text" inputmode="numeric" placeholder="e.g. 110101234567" />
+      </div>
+      <div class="ob-field">
+        <label>Password</label>
+        <div class="ob-input-wrap">
+          <input class="ob-input" id="obPassword" type="password" placeholder="Your portal password" style="padding-right:44px" />
+          <button class="ob-pw-toggle" id="obPwToggle" onclick="obTogglePw()" type="button" tabindex="-1">
+            <svg id="obEyeIcon" viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+          </button>
+        </div>
+      </div>
+      <div class="ob-status" id="obStatus"></div>
+      <button class="ob-cta" id="obConnectBtn" onclick="obConnect()">
+        Connect &amp; Load Schedule →
+      </button>
+    </div>
+  </div>
+
+  <!-- Screen 3: Success -->
+  <div class="ob-screen" id="obScreen3">
+    <div class="ob-logo" style="font-size:44px;margin-bottom:16px">🎿</div>
+    <div class="ob-welcome-name" id="obWelcomeName">Welcome! 👋</div>
+    <div class="ob-welcome-sub">WhisSchedule is ready</div>
+    <div class="ob-stat-pills" id="obStatPills"></div>
+    <button class="ob-cta" style="max-width:260px" onclick="obEnterApp()">
+      View My Schedule →
+    </button>
+    <div class="ob-auto-bar"><div class="ob-auto-fill" id="obAutoFill"></div></div>
+  </div>
+
+</div>
+
+<script>
+// ─────────────────────────────────────────────────────────────────────────────
+// ONBOARDING
+// ─────────────────────────────────────────────────────────────────────────────
+let obAutoTimer = null;
+
+function obInit() {
+  if (localStorage.getItem('wb_onboarded') === 'true') {
+    document.getElementById('obWrap').style.display = 'none';
+    return false; // skip onboarding
+  }
+  obStartSnow();
+  return true; // show onboarding
+}
+
+function obGoTo(screenNum) {
+  const current = document.querySelector('.ob-screen.ob-active');
+  const next    = document.getElementById('obScreen' + screenNum);
+  if (!current || !next || current === next) return;
+  current.classList.add('ob-exit-left');
+  current.classList.remove('ob-active');
+  setTimeout(() => current.classList.remove('ob-exit-left'), 400);
+  next.style.transform = 'translateX(24px)';
+  requestAnimationFrame(() => {
+    next.classList.add('ob-active');
+    if (screenNum === 2) setTimeout(() => document.getElementById('obPassNumber').focus(), 420);
+  });
+}
+
+function obTogglePw() {
+  const inp  = document.getElementById('obPassword');
+  const icon = document.getElementById('obEyeIcon');
+  if (inp.type === 'password') {
+    inp.type = 'text';
+    icon.innerHTML = '<path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94"/><path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19"/><line x1="1" y1="1" x2="23" y2="23"/>';
+  } else {
+    inp.type = 'password';
+    icon.innerHTML = '<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>';
+  }
+}
+
+function obSetStatus(msg) {
+  document.getElementById('obStatus').textContent = msg;
+}
+
+function obShakeInputs() {
+  ['obPassNumber','obPassword'].forEach(id => {
+    const el = document.getElementById(id);
+    el.classList.add('ob-error');
+    setTimeout(() => el.classList.remove('ob-error'), 400);
+  });
+}
+
+async function obConnect() {
+  const pn  = document.getElementById('obPassNumber').value.trim();
+  const pw  = document.getElementById('obPassword').value.trim();
+  const btn = document.getElementById('obConnectBtn');
+
+  if (!pn || !pw) {
+    obSetStatus('Please fill in both fields.');
+    obShakeInputs();
+    return;
+  }
+
+  // Loading state
+  btn.disabled = true;
+  btn.classList.add('ob-loading');
+  btn.innerHTML = `<div class="ob-spinner"></div><span class="ob-status-text">Connecting…</span>`;
+  obSetStatus('');
+
+  try {
+    setTimeout(() => {
+      if (btn.disabled) btn.innerHTML = `<div class="ob-spinner"></div><span class="ob-status-text">Loading your schedule…</span>`;
+    }, 1800);
+
+    const resp = await fetch('/api/scrape', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ passNumber: pn, password: pw }),
+    });
+    const data = await resp.json();
+
+    if (!resp.ok) {
+      throw new Error(data.error || (resp.status === 401 ? 'Invalid credentials — check and try again.' : 'Something went wrong.'));
+    }
+
+    // Save credentials + cache
+    localStorage.setItem('wb_passNumber', pn);
+    localStorage.setItem('wb_password',   pw);
+    if (data.instructorName) localStorage.setItem('wb_instructorName', data.instructorName);
+    saveScheduleCache(data.lessons);
+    ingestLessons(data.lessons);
+
+    // Build success screen stats
+    obBuildSuccess(data);
+    obGoTo(3);
+
+    // Start 3s auto-advance
+    const fill = document.getElementById('obAutoFill');
+    requestAnimationFrame(() => { fill.style.width = '100%'; });
+    obAutoTimer = setTimeout(obEnterApp, 3000);
+
+  } catch (err) {
+    btn.disabled = false;
+    btn.classList.remove('ob-loading');
+    btn.innerHTML = `Connect &amp; Load Schedule →`;
+    obSetStatus(err.message || 'Connection failed — check your credentials.');
+    obShakeInputs();
+  }
+}
+
+function obBuildSuccess(data) {
+  // Welcome name
+  let name = (data.instructorName || '').trim();
+  if (name) {
+    const nick = name.match(/\(\s*([^)]+?)\s*\)/);
+    if (nick) name = nick[1].trim();
+    else name = name.split(' ')[0];
+  }
+  document.getElementById('obWelcomeName').textContent =
+    name ? `Welcome, ${name} 👋` : 'Welcome! 👋';
+
+  // Stat pills — compute from ingested data
+  const validKeys  = Object.keys(byDate).filter(k => !SEASON_END_KEY || k < SEASON_END_KEY);
+  const workDays   = validKeys.filter(k =>
+    byDate[k].some(l => isPaid(l.assignment) && !['off','end','sick','private_admin','other'].includes(getProgram(l.raw)))
+  ).length;
+  const totalDays  = validKeys.length;
+  const clients    = new Set();
+  validKeys.forEach(k => byDate[k].forEach(l => { if (l.client && isPaid(l.assignment)) clients.add(l.client); }));
+
+  document.getElementById('obStatPills').innerHTML = `
+    <div class="ob-stat-pill">
+      <div class="ob-stat-val c-blue">${totalDays}</div>
+      <div class="ob-stat-label">Season Days</div>
+    </div>
+    <div class="ob-stat-pill">
+      <div class="ob-stat-val c-orange">${workDays}</div>
+      <div class="ob-stat-label">Work Days</div>
+    </div>
+    <div class="ob-stat-pill">
+      <div class="ob-stat-val c-yellow">${clients.size}</div>
+      <div class="ob-stat-label">Clients</div>
+    </div>`;
+}
+
+function obEnterApp() {
+  clearTimeout(obAutoTimer);
+  localStorage.setItem('wb_onboarded', 'true');
+
+  // Fade out onboarding
+  const wrap = document.getElementById('obWrap');
+  wrap.classList.add('ob-hidden');
+  setTimeout(() => { wrap.style.display = 'none'; }, 520);
+
+  // Boot app
+  const savedName = localStorage.getItem('wb_instructorName');
+  if (savedName) updateChipName(savedName);
+  renderDayList();
+  focusInitialDay();
+  buildStats();
+}
+
+// ── Snow particle animation (Screen 1) ──
+function obStartSnow() {
+  const canvas = document.getElementById('obSnowCanvas');
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+  let W, H, particles = [];
+
+  function resize() {
+    W = canvas.width  = canvas.offsetWidth;
+    H = canvas.height = canvas.offsetHeight;
+  }
+  resize();
+  window.addEventListener('resize', resize);
+
+  for (let i = 0; i < 60; i++) {
+    particles.push({
+      x: Math.random() * 1000,
+      y: Math.random() * 1000,
+      r: Math.random() * 2 + 0.5,
+      speed: Math.random() * 0.4 + 0.1,
+      drift: Math.random() * 0.3 - 0.15,
+      opacity: Math.random() * 0.4 + 0.1,
+    });
+  }
+
+  let animId;
+  function draw() {
+    if (!document.getElementById('obWrap') || document.getElementById('obWrap').style.display === 'none') {
+      cancelAnimationFrame(animId); return;
+    }
+    ctx.clearRect(0, 0, W, H);
+    particles.forEach(p => {
+      ctx.beginPath();
+      ctx.arc(p.x % W, p.y % H, p.r, 0, Math.PI * 2);
+      ctx.fillStyle = `rgba(232,240,255,${p.opacity})`;
+      ctx.fill();
+      p.y += p.speed;
+      p.x += p.drift;
+      if (p.y > H) { p.y = -4; p.x = Math.random() * W; }
+    });
+    animId = requestAnimationFrame(draw);
+  }
+  draw();
+}
 </script>
 
 <script>
