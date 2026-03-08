@@ -12,9 +12,9 @@ import re
 
 BASE_URL  = "https://instructor.snow.com"
 LOGIN_URL = f"{BASE_URL}/snow/instructorTools.asp"
-SEASON_START = date(2025, 11, 15)
-SEASON_END   = date(2026,  4, 19)
-WINDOW_DAYS  = 21
+SEASON_START = date(2025, 11, 1)
+SEASON_END   = date(2026,  5, 31)
+WINDOW_DAYS  = 22
 
 HEADERS = {
     "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/120.0.0.0 Safari/537.36",
@@ -30,7 +30,7 @@ CORS_HEADERS = {
 
 
 def login(session, pass_number, password):
-    for _ in range(2):
+    for _ in range(4):
         r = session.get(LOGIN_URL, timeout=20)
         inp = BeautifulSoup(r.text, "html.parser").find("input", {"name": "rnd"})
         if not inp:
