@@ -173,14 +173,20 @@ body::after { content:''; position:fixed; inset:0; pointer-events:none; z-index:
   position: sticky;
   top: 0;
   z-index: 10;
-  background: rgba(6, 13, 26, 0.6);
+  background: rgba(6, 13, 26, 0.65);
   backdrop-filter: blur(32px) saturate(200%);
   -webkit-backdrop-filter: blur(32px) saturate(200%);
-  border-bottom: 1px solid rgba(255,255,255,0.08);
+  /* No hard border — shadow + fade does the separation */
   box-shadow:
     inset 0 1px 0 rgba(255,255,255,0.1),
-    0 8px 32px rgba(0,0,0,0.4);
+    0 1px 0 rgba(255,255,255,0.04),
+    0 8px 40px rgba(0,0,0,0.5);
+  /* Soft gradient fade at the bottom edge into content */
+  -webkit-mask-image: linear-gradient(to bottom, black 80%, transparent 100%);
+  mask-image: linear-gradient(to bottom, black 80%, transparent 100%);
   padding-top: env(safe-area-inset-top, 0px);
+  /* Extra bottom padding so content shows through the fade */
+  padding-bottom: 10px;
   flex-shrink: 0;
 }
 .app-header-brand {
@@ -562,6 +568,7 @@ body::after { content:''; position:fixed; inset:0; pointer-events:none; z-index:
 }
 #page-stats .stats-page {
   flex: 1;
+  min-height: 0;
   overflow-y: auto;
   -webkit-overflow-scrolling: touch;
   padding-bottom: max(100px, calc(env(safe-area-inset-bottom, 0px) + 90px));
@@ -1823,18 +1830,16 @@ function suppressTabCollapse(ms) {
 
 (function() {
   const TRIGGER = 40;
-  let lastY = 0, accumulated = 0;
 
-  function attachScrollListener() {
-    const scroller = document.getElementById('dayScroll');
-    const tabBar   = document.getElementById('tabBar');
-    if (!scroller || !tabBar) return;
-
+  function attachScrollToEl(scroller) {
+    if (!scroller) return;
+    let lastY = 0, accumulated = 0;
     scroller.addEventListener('scroll', () => {
       if (_suppressCollapse) { lastY = scroller.scrollTop; return; }
+      const tabBar = document.getElementById('tabBar');
+      if (!tabBar) return;
       const y   = scroller.scrollTop;
       const dir = y - lastY;
-
       if (dir > 0 && y > 60) {
         accumulated += dir;
         if (!_tabBarCollapsed && accumulated > TRIGGER) {
@@ -1855,6 +1860,11 @@ function suppressTabCollapse(ms) {
       }
       lastY = y;
     }, { passive: true });
+  }
+
+  function attachScrollListener() {
+    attachScrollToEl(document.getElementById('dayScroll'));
+    attachScrollToEl(document.querySelector('#page-stats .stats-page'));
   }
 
   window.addEventListener('load', attachScrollListener);
