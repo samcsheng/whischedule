@@ -1512,11 +1512,11 @@ function scrollToDay(key, smooth) {
   const sec    = scroll && scroll.querySelector(`.day-section[data-key="${key}"]`);
   if (!sec) return;
   suppressTabCollapse(smooth ? 800 : 400);
-  // Block the observer from overriding our selection during+after this scroll
   _programmaticScroll = true;
   clearTimeout(_programmaticScrollTimer);
   _programmaticScrollTimer = setTimeout(() => { _programmaticScroll = false; }, smooth ? 900 : 200);
-  const top = sec.offsetTop;
+  // Offset relative to the scroll container, not the document
+  const top = sec.getBoundingClientRect().top - scroll.getBoundingClientRect().top + scroll.scrollTop;
   scroll.scrollTo({ top, behavior: smooth ? 'smooth' : 'instant' });
 }
 
