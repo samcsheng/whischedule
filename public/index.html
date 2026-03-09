@@ -1638,7 +1638,6 @@ function setupScrollSync() {
 // ─────────────────────────────────────────────────────────────────────────────
 function buildStats() {
   if (!Object.keys(byDate).length) {
-    document.getElementById('statsSubtitle').textContent = 'Nov 2025 — May 2026';
     document.getElementById('bigStats').innerHTML = `
       <div class="bstat bstat-empty"><div class="bstat-val c-blue">––</div><div class="bstat-label">Work Days</div></div>
       <div class="bstat bstat-empty"><div class="bstat-val c-orange">––</div><div class="bstat-label">Lesson Hours</div></div>
@@ -1687,8 +1686,6 @@ function buildStats() {
   const allKeys = Object.keys(byDate).sort();
   const s = new Date(allKeys[0]+'T12:00:00');
   const e = new Date((SEASON_END_KEY||allKeys[allKeys.length-1])+'T12:00:00');
-  document.getElementById('statsSubtitle').textContent =
-    `${MONTHS_SHORT[s.getMonth()]} ${s.getDate()}, ${s.getFullYear()} — ${MONTHS_SHORT[e.getMonth()]} ${e.getDate()}, ${e.getFullYear()}`;
   document.getElementById('bigStats').innerHTML = `
     <div class="bstat"><div class="bstat-val c-blue">${workDayKeys.length}</div><div class="bstat-label">Work Days</div></div>
     <div class="bstat"><div class="bstat-val c-orange">${Math.round(lessonHrs)}</div><div class="bstat-label">Lesson Hours</div></div>
