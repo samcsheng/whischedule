@@ -13,7 +13,7 @@
 <link rel="icon" href="/icons/icon.svg" type="image/svg+xml">
 <link rel="apple-touch-icon" href="/icons/icon-192.png">
 <title>WhisSchedule — Whistler Blackcomb</title>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Inter+Tight:wght@600;700;800&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Inter+Tight:wght@600;700;800&family=DM+Mono:wght@400;500&family=Syne:wght@700;800&display=swap" rel="stylesheet">
 <style>
 * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
 :root {
@@ -34,6 +34,7 @@
   --f-ui:    'Inter', sans-serif;
   --f-head:  'Inter Tight', sans-serif;
   --f-mono:  'DM Mono', monospace;
+  --f-display: 'Syne', 'Inter Tight', sans-serif;
 }
 html, body { height: 100%; background: var(--bg); color: var(--snow); font-family: var(--f-ui); overflow-x: hidden; }
 body::after { content:''; position:fixed; inset:0; pointer-events:none; z-index:9999; opacity:0.025;
@@ -169,47 +170,38 @@ body::after { content:''; position:fixed; inset:0; pointer-events:none; z-index:
   position: sticky;
   top: 0;
   z-index: 10;
-  background: rgba(6, 13, 26, 0.65);
+  background: rgba(6, 13, 26, 0.72);
   backdrop-filter: blur(32px) saturate(200%);
   -webkit-backdrop-filter: blur(32px) saturate(200%);
   box-shadow:
-    inset 0 1px 0 rgba(255,255,255,0.1),
-    0 1px 0 rgba(255,255,255,0.04),
-    0 8px 40px rgba(0,0,0,0.5);
+    inset 0 -1px 0 rgba(255,255,255,0.05),
+    0 8px 40px rgba(0,0,0,0.4);
   padding-top: env(safe-area-inset-top, 0px);
   flex-shrink: 0;
 }
-/* ── ROW 1: emoji + title | buttons ── */
+
+/*
+  Row 1 — large title (left) + action buttons (right)
+  Mirrors Apple large-title nav bar: plenty of vertical room,
+  title and buttons share the same flex baseline.
+*/
 .app-header-inner {
   display: flex;
   align-items: center;
+  padding: 16px 14px 8px;
   gap: 10px;
-  padding: 14px 16px 6px;
-}
-.app-header-left {
-  flex: 1;
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  min-width: 0;
-}
-.app-header-emoji {
-  font-size: 26px;
-  line-height: 1;
-  filter: drop-shadow(0 0 10px rgba(59,139,255,0.55));
-  flex-shrink: 0;
-  /* nudge down 1px so emoji optical centre aligns with cap-height */
-  position: relative; top: 1px;
 }
 .app-header-name {
-  font-family: var(--f-head);
-  font-size: 24px;
+  flex: 1;
+  font-family: var(--f-display);
+  font-size: 28px;
   font-weight: 800;
-  letter-spacing: -0.04em;
+  letter-spacing: -0.02em;
   color: #fff;
-  text-shadow: 0 0 20px rgba(59,139,255,0.45), 0 0 60px rgba(59,139,255,0.2);
   white-space: nowrap;
   line-height: 1;
+  /* Subtle blue luminance glow */
+  text-shadow: 0 0 32px rgba(59,139,255,0.35);
 }
 .app-header-right {
   display: flex;
@@ -220,7 +212,7 @@ body::after { content:''; position:fixed; inset:0; pointer-events:none; z-index:
 .app-header-refresh {
   width: 34px; height: 34px; border-radius: 50%;
   background: rgba(255,255,255,0.07);
-  border: 1px solid rgba(255,255,255,0.12);
+  border: 1px solid rgba(255,255,255,0.11);
   display: flex; align-items: center; justify-content: center;
   cursor: pointer; color: var(--muted);
   transition: background 0.15s, color 0.15s, transform 0.15s;
@@ -234,6 +226,7 @@ body::after { content:''; position:fixed; inset:0; pointer-events:none; z-index:
 }
 .app-header-refresh.spinning { color: var(--blue); }
 .app-header-refresh.spinning svg { animation: spin 0.8s linear infinite; }
+
 .app-header-avatar {
   width: 34px; height: 34px; border-radius: 50%;
   background: rgba(255,255,255,0.08);
@@ -241,30 +234,34 @@ body::after { content:''; position:fixed; inset:0; pointer-events:none; z-index:
   backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
   display: flex; align-items: center; justify-content: center;
   font-family: var(--f-head); font-size: 14px; font-weight: 700;
-  color: rgba(255,255,255,0.8); cursor: pointer; flex-shrink: 0;
+  color: rgba(255,255,255,0.85); cursor: pointer; flex-shrink: 0;
   transition: background 0.15s, transform 0.15s;
 }
 .app-header-avatar:active { background: rgba(255,255,255,0.15); transform: scale(0.91); }
 
-/* ── ROW 2: sync status bar ── */
+/*
+  Row 2 — sync status
+  Sits below the title row with its own padding.
+  Fixed height so no layout jumps between states.
+*/
 .app-header-sync-bar {
   display: flex;
   align-items: center;
   gap: 6px;
-  padding: 0 16px 10px;
-  height: 22px; /* fixed height so layout never jumps */
+  padding: 0 16px 12px;
+  height: 24px;
   overflow: hidden;
 }
 .app-sync-dot {
   width: 6px; height: 6px; border-radius: 50%;
   flex-shrink: 0;
-  background: rgba(255,255,255,0.15);
+  background: rgba(255,255,255,0.12);
   transition: background 0.4s;
 }
-.app-sync-dot.syncing  { background: var(--blue);  animation: pulse 1.2s ease-in-out infinite; }
-.app-sync-dot.current  { background: var(--green); animation: none; }
-.app-sync-dot.offline  { background: var(--yellow); animation: none; }
-.app-sync-dot.error    { background: var(--red);   animation: none; }
+.app-sync-dot.syncing { background: var(--blue);   animation: pulse 1.2s ease-in-out infinite; }
+.app-sync-dot.current { background: var(--green);  animation: none; }
+.app-sync-dot.offline { background: var(--yellow); animation: none; }
+.app-sync-dot.error   { background: var(--red);    animation: none; }
 
 .app-sync-text {
   font-size: 11px;
@@ -273,16 +270,14 @@ body::after { content:''; position:fixed; inset:0; pointer-events:none; z-index:
   color: var(--muted);
   white-space: nowrap;
   line-height: 1;
-  transition: color 0.3s, opacity 0.3s;
 }
 .app-sync-text.syncing { color: rgba(59,139,255,0.8); }
 .app-sync-text.current { color: rgba(45,204,138,0.75); }
 .app-sync-text.offline { color: rgba(255,197,66,0.8); }
 .app-sync-text.error   { color: rgba(255,77,109,0.8); }
 
-/* Slide-in animation for text transitions */
-@keyframes sync-slide-in { from { opacity:0; transform:translateY(6px); } to { opacity:1; transform:translateY(0); } }
-.app-sync-text.entering { animation: sync-slide-in 0.3s cubic-bezier(0.16,1,0.3,1) both; }
+@keyframes sync-slide-in { from { opacity:0; transform:translateY(5px); } to { opacity:1; transform:translateY(0); } }
+.app-sync-text.entering { animation: sync-slide-in 0.28s cubic-bezier(0.16,1,0.3,1) both; }
 
 /* ── TOP BAR (legacy — removed) ── */
 
@@ -971,12 +966,8 @@ body::after { content:''; position:fixed; inset:0; pointer-events:none; z-index:
 
   <!-- Schedule header -->
   <div class="app-header" id="scheduleHeader">
-    <!-- Row 1: wordmark + buttons -->
     <div class="app-header-inner">
-      <div class="app-header-left">
-        <span class="app-header-emoji">🏔</span>
-        <span class="app-header-name">WhisSchedule</span>
-      </div>
+      <span class="app-header-name">WhisSchedule</span>
       <div class="app-header-right">
         <button class="app-header-refresh" id="refreshBtn" onclick="triggerRefresh()" title="Sync schedule">
           <svg viewBox="0 0 24 24"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
@@ -984,7 +975,6 @@ body::after { content:''; position:fixed; inset:0; pointer-events:none; z-index:
         <div class="app-header-avatar" id="topAvatar" onclick="openProfile()">S</div>
       </div>
     </div>
-    <!-- Row 2: sync status -->
     <div class="app-header-sync-bar">
       <div class="app-sync-dot" id="syncDot"></div>
       <span class="app-sync-text" id="syncText"></span>
@@ -1022,12 +1012,8 @@ body::after { content:''; position:fixed; inset:0; pointer-events:none; z-index:
 <div class="page" id="page-stats">
   <!-- Stats header -->
   <div class="app-header">
-    <!-- Row 1: wordmark + buttons -->
     <div class="app-header-inner">
-      <div class="app-header-left">
-        <span class="app-header-emoji">🏔</span>
-        <span class="app-header-name">WhisSchedule</span>
-      </div>
+      <span class="app-header-name">WhisSchedule</span>
       <div class="app-header-right">
         <button class="app-header-refresh" onclick="triggerRefresh()" title="Sync schedule">
           <svg viewBox="0 0 24 24"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
@@ -1035,7 +1021,6 @@ body::after { content:''; position:fixed; inset:0; pointer-events:none; z-index:
         <div class="app-header-avatar" onclick="openProfile()">S</div>
       </div>
     </div>
-    <!-- Row 2: sync status -->
     <div class="app-header-sync-bar">
       <div class="app-sync-dot" id="syncDot2"></div>
       <span class="app-sync-text" id="syncText2"></span>
