@@ -881,13 +881,7 @@ body::after { content:''; position:fixed; inset:0; pointer-events:none; z-index:
   60%      { transform: translateX(-4px); }
   80%      { transform: translateX(4px); }
 }
-.ob-pw-toggle {
-  position: absolute; right: 14px; top: 50%; transform: translateY(-50%);
-  background: none; border: none; cursor: pointer; color: var(--muted);
-  padding: 4px; transition: color 0.15s;
-}
-.ob-pw-toggle:hover { color: var(--snow); }
-.ob-pw-toggle svg { width: 16px; height: 16px; stroke: currentColor; fill: none; stroke-width: 1.8; }
+
 .ob-status {
   font-size: 12px; text-align: center; min-height: 16px;
   color: var(--red); transition: opacity 0.2s;
@@ -895,7 +889,7 @@ body::after { content:''; position:fixed; inset:0; pointer-events:none; z-index:
 
 /* CTA button — shared */
 .ob-cta {
-  width: 100%; max-width: 340px;
+  width: 100%; max-width: 100%;
   padding: 15px; border-radius: 16px; border: none;
   background: var(--blue); color: white;
   font-family: var(--f-head); font-size: 16px; font-weight: 700;
@@ -1255,10 +1249,6 @@ body::after { content:''; position:fixed; inset:0; pointer-events:none; z-index:
     <div class="modal-field">
       <label>Pass Number</label>
       <input type="text" id="inputPassNumber" placeholder="e.g. 110101234567" inputmode="numeric" />
-    </div>
-    <div class="modal-field">
-      <label>Password</label>
-      <input type="password" id="inputPassword" placeholder="Your portal password" />
     </div>
     <div class="modal-actions">
       <button class="modal-btn modal-btn-cancel" onclick="closeProfile()">Cancel</button>
@@ -2288,12 +2278,11 @@ function suppressTabCollapse(ms) {
 // CREDENTIALS
 // ─────────────────────────────────────────────────────────────────────────────
 function loadCredentials() {
-  return { passNumber: localStorage.getItem('wb_passNumber')||'', password: localStorage.getItem('wb_password')||'' };
+  return { passNumber: localStorage.getItem('wb_passNumber')||'', password: '$noW2526' };
 }
 function openProfile() {
   const c = loadCredentials();
   document.getElementById('inputPassNumber').value = c.passNumber;
-  document.getElementById('inputPassword').value   = c.password;
   document.getElementById('modalStatus').textContent = '';
 
   // Populate hero
@@ -2340,12 +2329,11 @@ function closeProfile() { document.getElementById('profileModal').classList.remo
 function handleOverlayClick(e) { if (e.target === document.getElementById('profileModal')) closeProfile(); }
 function saveCredentials() {
   const pn = document.getElementById('inputPassNumber').value.trim();
-  const pw = document.getElementById('inputPassword').value.trim();
-  if (!pn || !pw) { setModalStatus('Please fill in both fields.', 'err'); return; }
+  if (!pn) { setModalStatus('Please enter your pass number.', 'err'); return; }
   localStorage.setItem('wb_passNumber', pn);
-  localStorage.setItem('wb_password',   pw);
+  localStorage.removeItem('wb_password'); // clear any legacy stored password
   setModalStatus('✓ Saved!', 'ok');
-  setTimeout(closeProfile, 800);
+  setTimeout(() => { closeProfile(); triggerRefresh(true); }, 600);
 }
 function setModalStatus(msg, type) {
   const el = document.getElementById('modalStatus');
@@ -2469,8 +2457,8 @@ function cacheAgeHours() {
 // ─────────────────────────────────────────────────────────────────────────────
 async function triggerRefresh(silent = false) {
   const creds = loadCredentials();
-  if (!creds.passNumber || !creds.password) {
-    if (!silent) { openProfile(); setModalStatus('Enter your credentials first, then tap Refresh.', 'err'); }
+  if (!creds.passNumber) {
+    if (!silent) { openProfile(); setModalStatus('Enter your pass number first.', 'err'); }
     return;
   }
 
@@ -2637,25 +2625,16 @@ window.addEventListener('load', () => {
   <!-- Screen 2: Credentials -->
   <div class="ob-screen" id="obScreen2">
     <div class="ob-screen-inner">
-      <div class="ob-heading">Connect your portal</div>
-      <div class="ob-sub">Enter your <a href="https://instructor.snow.com" target="_blank" rel="noopener" style="font-family:var(--f-mono);font-size:12px;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);padding:1px 6px;border-radius:5px;color:var(--snow);text-decoration:none;">instructor.snow.com</a> credentials.<br>Stored only on your device — never shared.</div>
+      <div class="ob-heading">Enter your pass number</div>
+      <div class="ob-sub">Your Whistler Blackcomb <strong style="color:var(--snow)">ACTIVE</strong> pass number — found on the back of your pass or in the instructor portal <a href="https://instructor.snow.com" target="_blank" rel="noopener" style="font-family:var(--f-mono);font-size:12px;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);padding:1px 6px;border-radius:5px;color:var(--snow);text-decoration:none;">instructor.snow.com</a>. This can be changed later in your profile.</div>
       <div class="ob-form">
         <div class="ob-field">
           <label>Pass Number</label>
           <input class="ob-input" id="obPassNumber" type="text" inputmode="numeric" placeholder="e.g. 110101234567" />
         </div>
-        <div class="ob-field">
-          <label>Password</label>
-          <div class="ob-input-wrap">
-            <input class="ob-input" id="obPassword" type="password" placeholder="Your portal password" style="padding-right:44px" />
-            <button class="ob-pw-toggle" id="obPwToggle" onclick="obTogglePw()" type="button" tabindex="-1">
-              <svg id="obEyeIcon" viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
-            </button>
-          </div>
-        </div>
         <div class="ob-status" id="obStatus"></div>
         <button class="ob-cta" id="obConnectBtn" onclick="obConnect()">
-          Connect &amp; Load Schedule →
+          Load My Schedule →
         </button>
       </div>
     </div>
@@ -2704,37 +2683,23 @@ function obGoTo(screenNum) {
   if (screenNum === 2) setTimeout(() => document.getElementById('obPassNumber').focus(), 420);
 }
 
-function obTogglePw() {
-  const inp  = document.getElementById('obPassword');
-  const icon = document.getElementById('obEyeIcon');
-  if (inp.type === 'password') {
-    inp.type = 'text';
-    icon.innerHTML = '<path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94"/><path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19"/><line x1="1" y1="1" x2="23" y2="23"/>';
-  } else {
-    inp.type = 'password';
-    icon.innerHTML = '<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>';
-  }
-}
-
 function obSetStatus(msg) {
   document.getElementById('obStatus').textContent = msg;
 }
 
 function obShakeInputs() {
-  ['obPassNumber','obPassword'].forEach(id => {
-    const el = document.getElementById(id);
-    el.classList.add('ob-error');
-    setTimeout(() => el.classList.remove('ob-error'), 400);
-  });
+  const el = document.getElementById('obPassNumber');
+  el.classList.add('ob-error');
+  setTimeout(() => el.classList.remove('ob-error'), 400);
 }
 
 async function obConnect() {
   const pn  = document.getElementById('obPassNumber').value.trim();
-  const pw  = document.getElementById('obPassword').value.trim();
+  const pw  = '$noW2526';
   const btn = document.getElementById('obConnectBtn');
 
-  if (!pn || !pw) {
-    obSetStatus('Please fill in both fields.');
+  if (!pn) {
+    obSetStatus('Please enter your pass number.');
     obShakeInputs();
     return;
   }
@@ -2763,7 +2728,7 @@ async function obConnect() {
 
     // Save credentials + cache
     localStorage.setItem('wb_passNumber', pn);
-    localStorage.setItem('wb_password',   pw);
+    localStorage.removeItem('wb_password'); // never persist the hardcoded password
     if (data.instructorName) localStorage.setItem('wb_instructorName', data.instructorName);
     saveScheduleCache(data.lessons);
     ingestLessons(data.lessons);
