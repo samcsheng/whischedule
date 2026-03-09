@@ -153,7 +153,7 @@ body::after { content:''; position:fixed; inset:0; pointer-events:none; z-index:
 #page-schedule.active {
   display: flex;
   flex-direction: column;
-  height: calc(100vh - 90px);
+  height: 100vh;
   min-height: 0;
   overflow: hidden;
   padding-bottom: 0;
@@ -165,6 +165,7 @@ body::after { content:''; position:fixed; inset:0; pointer-events:none; z-index:
   min-height: 0;
   overflow-y: auto;
   -webkit-overflow-scrolling: touch;
+  padding-bottom: max(100px, calc(env(safe-area-inset-bottom, 0px) + 90px));
 }
 
 /* ── TOP BAR ── */
@@ -282,9 +283,6 @@ body::after { content:''; position:fixed; inset:0; pointer-events:none; z-index:
 .picker-area.expanded .picker-month-grid { max-height: 280px; }
 .picker-area.expanded .picker-week-row   { display: none; }
 
-/* Each month block = snap target */
-.picker-month-block {
-}
 /* Alternating tint — odd months slightly lighter */
 .picker-month-block:nth-child(odd) {
   background: rgba(255,255,255,0.015);
@@ -937,7 +935,7 @@ const MONTHS_SHORT = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct
 const MONTHS_LONG  = ['January','February','March','April','May','June','July','August','September','October','November','December'];
 const DAYS_SHORT   = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
 const DAYS_LONG    = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
-const TODAY_KEY    = new Date().toISOString().slice(0, 10);
+const TODAY_KEY = (() => { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`; })();
 
 function toKey(d) { return d.toISOString().slice(0, 10); }
 
@@ -1582,7 +1580,7 @@ function setupScrollSync() {
 // ─────────────────────────────────────────────────────────────────────────────
 function buildStats() {
   if (!Object.keys(byDate).length) {
-    document.getElementById('statsSubtitle').textContent = 'Nov 2025 — Apr 2026';
+    document.getElementById('statsSubtitle').textContent = 'Nov 2025 — May 2026';
     document.getElementById('bigStats').innerHTML = `
       <div class="bstat bstat-empty"><div class="bstat-val c-blue">––</div><div class="bstat-label">Work Days</div></div>
       <div class="bstat bstat-empty"><div class="bstat-val c-orange">––</div><div class="bstat-label">Lesson Hours</div></div>
@@ -1656,7 +1654,7 @@ function buildStats() {
     return `<div class="brow"><div class="brow-top"><span class="brow-label"><span class="brow-dot" style="background:${p.color}"></span>${p.label}</span><span class="brow-vals">${h.toFixed(1)}h</span></div><div class="brow-bar"><div class="brow-fill" style="width:${pct}%;background:${p.color}"></div></div></div>`;
   }).join('') || '<p style="color:var(--muted);padding:16px;font-size:13px">No lesson hours recorded yet.</p>';
 
-  const hmMonths = [{y:2025,m:10},{y:2025,m:11},{y:2026,m:0},{y:2026,m:1},{y:2026,m:2},{y:2026,m:3}];
+  const hmMonths = [{y:2025,m:10},{y:2025,m:11},{y:2026,m:0},{y:2026,m:1},{y:2026,m:2},{y:2026,m:3},{y:2026,m:4}];
   document.getElementById('heatmap').innerHTML = hmMonths.map(({y,m}) => {
     const first=new Date(y,m,1), days=new Date(y,m+1,0).getDate();
     let cells='';
