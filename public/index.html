@@ -946,14 +946,7 @@ body::after { content:''; position:fixed; inset:0; pointer-events:none; z-index:
   font-size: 10px; color: var(--muted); margin-top: 5px;
   font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase;
 }
-.ob-auto-bar {
-  width: 100%; max-width: 340px; height: 2px;
-  background: var(--dim); border-radius: 1px; overflow: hidden; margin-top: 16px;
-}
-.ob-auto-fill {
-  height: 100%; background: var(--blue); border-radius: 1px;
-  width: 0%; transition: width 3s linear;
-}
+
 
 /* ── PROGRAM DETAIL MODAL ── */
 .prog-modal-overlay {
@@ -2678,7 +2671,6 @@ window.addEventListener('load', () => {
       <button class="ob-cta" style="max-width:260px" onclick="obEnterApp()">
         View My Schedule →
       </button>
-      <div class="ob-auto-bar"><div class="ob-auto-fill" id="obAutoFill"></div></div>
     </div>
   </div>
 
@@ -2688,8 +2680,6 @@ window.addEventListener('load', () => {
 // ─────────────────────────────────────────────────────────────────────────────
 // ONBOARDING
 // ─────────────────────────────────────────────────────────────────────────────
-let obAutoTimer = null;
-
 function obInit() {
   const alreadyOnboarded = localStorage.getItem('wb_onboarded') === 'true'
     || !!localStorage.getItem('wb_passNumber'); // existing users who predate the onboarding flag
@@ -2782,11 +2772,6 @@ async function obConnect() {
     obBuildSuccess(data);
     obGoTo(3);
 
-    // Start 3s auto-advance
-    const fill = document.getElementById('obAutoFill');
-    requestAnimationFrame(() => { fill.style.width = '100%'; });
-    obAutoTimer = setTimeout(obEnterApp, 3000);
-
   } catch (err) {
     btn.disabled = false;
     btn.classList.remove('ob-loading');
@@ -2832,7 +2817,6 @@ function obBuildSuccess(data) {
 }
 
 function obEnterApp() {
-  clearTimeout(obAutoTimer);
   localStorage.setItem('wb_onboarded', 'true');
   document.documentElement.style.overflow = '';
 
