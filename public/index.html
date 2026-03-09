@@ -2691,7 +2691,10 @@ window.addEventListener('load', () => {
 let obAutoTimer = null;
 
 function obInit() {
-  if (localStorage.getItem('wb_onboarded') === 'true') {
+  const alreadyOnboarded = localStorage.getItem('wb_onboarded') === 'true'
+    || !!localStorage.getItem('wb_passNumber'); // existing users who predate the onboarding flag
+  if (alreadyOnboarded) {
+    if (localStorage.getItem('wb_passNumber')) localStorage.setItem('wb_onboarded', 'true'); // backfill
     document.getElementById('obWrap').style.display = 'none';
     return false;
   }
