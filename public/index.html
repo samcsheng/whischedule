@@ -275,7 +275,6 @@ body::after { content:''; position:fixed; inset:0; pointer-events:none; z-index:
   overflow-x: hidden;
   max-height: 0;
   scrollbar-width: none;
-  scroll-snap-type: y mandatory;
   -webkit-overflow-scrolling: touch;
   transition: max-height 0.35s cubic-bezier(0.16,1,0.3,1);
 }
@@ -285,7 +284,6 @@ body::after { content:''; position:fixed; inset:0; pointer-events:none; z-index:
 
 /* Each month block = snap target */
 .picker-month-block {
-  scroll-snap-align: start;
 }
 /* Alternating tint — odd months slightly lighter */
 .picker-month-block:nth-child(odd) {
@@ -1248,7 +1246,16 @@ let selectedKey    = TODAY_KEY;
 function togglePicker() {
   pickerExpanded = !pickerExpanded;
   document.getElementById('pickerArea').classList.toggle('expanded', pickerExpanded);
-  if (pickerExpanded) renderPickerMonth();
+  if (pickerExpanded) {
+    renderPickerMonth();
+    // Instantly position grid at selected month — no animation
+    const grid = document.getElementById('pickerMonthGrid');
+    const selEl = grid.querySelector('.picker-day.selected');
+    if (selEl) {
+      const block = selEl.closest('.picker-month-block');
+      if (block) requestAnimationFrame(() => { grid.scrollTop = block.offsetTop; });
+    }
+  }
 }
 
 function getWeekStart(offset) {
@@ -1418,14 +1425,7 @@ function renderPickerMonth() {
   const grid = document.getElementById('pickerMonthGrid');
   grid.innerHTML = html;
 
-  // Snap-scroll to the block containing selected day
-  const selEl = grid.querySelector('.picker-day.selected');
-  if (selEl) {
-    const block = selEl.closest('.picker-month-block');
-    if (block) setTimeout(() => { grid.scrollTop = block.offsetTop; }, 20);
-  }
-
-  // Update month label on scroll
+  // Update month label (no auto-scroll — grid stays put)
   const selD = new Date(selectedKey + 'T12:00:00');
   document.getElementById('pickerMonthLabel').textContent =
     MONTHS_LONG[selD.getMonth()] + ' ' + selD.getFullYear();
