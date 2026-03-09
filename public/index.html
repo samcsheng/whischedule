@@ -2680,7 +2680,10 @@ function ingestLessons(lessons) {
   });
   const keys = Object.keys(byDate).sort();
   SEASON_START_KEY = keys.find(key =>
-    byDate[key].some(l => getProgram(l.raw) !== 'off')
+    byDate[key].some(l => {
+      const p = getProgram(l.raw);
+      return p !== 'off' && p !== 'end';
+    })
   ) || keys[0] || null;
   SEASON_END_KEY = keys.find(key =>
     byDate[key].some(l => getProgram(l.raw) === 'end')
@@ -2895,9 +2898,7 @@ function obBuildSuccess(data) {
 
   // Stat pills — compute from ingested data
   const dataKeys = Object.keys(byDate).sort();
-  const firstKey = dataKeys.find(k =>
-    byDate[k].some(l => (l.raw || '').trim() && getProgram(l.raw) !== 'off')
-  ) || null;
+  const firstKey = getSeasonStartKey() || null;
   const lastKey  = getSeasonEndKey() || dataKeys[dataKeys.length - 1] || null;
   const validKeys = dataKeys.filter(k => (!firstKey || k >= firstKey) && (!lastKey || k <= lastKey));
 
