@@ -1546,11 +1546,23 @@ function setupScrollSync() {
     const key = visible[0].target.dataset.key;
     if (!key || key === selectedKey) return;
     selectedKey = key;
-    const newOffset = computeWeekOffsetForKey(selectedKey);
-    if (!pickerExpanded && newOffset !== weekOffset) {
-      weekOffset = newOffset;
+
+    if (pickerExpanded) {
+      // In-place update only — never re-render or scroll the month grid
+      document.querySelectorAll('#pickerMonthGrid .picker-day.selected').forEach(el => {
+        el.classList.remove('selected');
+        el.classList.toggle('today', el.getAttribute('onclick') === `selectDay('${TODAY_KEY}')`);
+      });
+      const newSel = document.querySelector(`#pickerMonthGrid .picker-day[onclick="selectDay('${selectedKey}')"]`);
+      if (newSel) { newSel.classList.add('selected'); newSel.classList.remove('today'); }
+      const selD = new Date(selectedKey + 'T12:00:00');
+      document.getElementById('pickerMonthLabel').textContent =
+        MONTHS_LONG[selD.getMonth()] + ' ' + selD.getFullYear();
+    } else {
+      const newOffset = computeWeekOffsetForKey(selectedKey);
+      if (newOffset !== weekOffset) weekOffset = newOffset;
+      renderPickerWeek();
     }
-    renderPicker();
   }, {
     root: scroll,
     rootMargin: '0px 0px -80% 0px',
