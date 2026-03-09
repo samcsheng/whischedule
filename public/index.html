@@ -2758,26 +2758,66 @@ function obBuildSuccess(data) {
     name ? `Welcome, ${name} 👋` : 'Welcome! 👋';
 
   // Stat pills — compute from ingested data
-  const validKeys  = Object.keys(byDate).filter(k => !SEASON_END_KEY || k < SEASON_END_KEY);
-  const workDays   = validKeys.filter(k =>
+  const dataKeys = Object.keys(byDate).sort();
+  const firstKey = dataKeys.find(k =>
+    byDate[k].some(l => (l.raw || '').trim() && getProgram(l.raw) !== 'off')
+  ) || null;
+  const lastKey  = SEASON_END_KEY || dataKeys[dataKeys.length - 1] || null;
+  const validKeys = dataKeys.filter(k => (!firstKey || k >= firstKey) && (!lastKey || k <= lastKey));
+
+  const workDays = validKeys.filter(k =>
     byDate[k].some(l => isPaid(l.assignment) && !['off','end','sick','other'].includes(getProgram(l.raw)))
   ).length;
-  const totalDays  = validKeys.length;
-  const clients    = new Set();
-  validKeys.forEach(k => byDate[k].forEach(l => { if (l.client && isPaid(l.assignment)) clients.add(l.client); }));
+
+  let lessonHours = 0;
+  const programCounts = {};
+  validKeys.forEach(k => byDate[k].forEach(l => {
+    const prog = getProgram(l.raw);
+    if (isPaid(l.assignment) && !['off','end','sick','other'].includes(prog)) {
+      lessonHours += (Number(l.hours) || 0);
+      programCounts[prog] = (programCounts[prog] || 0) + 1;
+    }
+  }));
+
+  let topProgram = 'N/A';
+  let topCount = 0;
+  Object.keys(programCounts).forEach(p => {
+    const c = programCounts[p];
+    if (c > topCount) {
+      topCount = c;
+      topProgram = p;
+    }
+  });
+  const progLabels = {
+    schools: 'Schools',
+    wvsbc: 'WVSBC',
+    wcb: 'WCB',
+    club: 'Club / Roundhouse',
+    adaptive: 'Adaptive',
+    never_ever: 'Never Ever',
+    womens_camps: "Women's Camps",
+    daily: 'Kids Daily',
+    teens: 'Teens Daily',
+    adult_alpine: 'Adult Alpine',
+    adult_base: 'Adult Base',
+    private: 'Private Lessons',
+    training: 'Training',
+    other: 'Other',
+  };
+  if (topProgram !== 'N/A') topProgram = progLabels[topProgram] || topProgram.replace(/_/g, ' ');
 
   document.getElementById('obStatPills').innerHTML = `
     <div class="ob-stat-pill">
-      <div class="ob-stat-val c-blue">${totalDays}</div>
-      <div class="ob-stat-label">Season Days</div>
-    </div>
-    <div class="ob-stat-pill">
-      <div class="ob-stat-val c-orange">${workDays}</div>
+      <div class="ob-stat-val c-blue">${workDays}</div>
       <div class="ob-stat-label">Work Days</div>
     </div>
     <div class="ob-stat-pill">
-      <div class="ob-stat-val c-yellow">${clients.size}</div>
-      <div class="ob-stat-label">Clients</div>
+      <div class="ob-stat-val c-orange">${Math.round(lessonHours * 10) / 10}</div>
+      <div class="ob-stat-label">Lesson Hours</div>
+    </div>
+    <div class="ob-stat-pill">
+      <div class="ob-stat-val c-yellow">${topProgram}</div>
+      <div class="ob-stat-label">Top Program</div>
     </div>`;
 }
 
