@@ -146,8 +146,8 @@ body::after { content:''; position:fixed; inset:0; pointer-events:none; z-index:
 
 /* Active dot — REMOVED, active pill is sufficient indicator */
 
-.page { display:none; min-height:100vh; padding-bottom:100px; }
-.page.active { display:block; }
+.page { display: none; }
+.page.active { display: block; }
 
 /* ── SCHEDULE PAGE LAYOUT ── */
 #page-schedule.active {
@@ -156,9 +156,7 @@ body::after { content:''; position:fixed; inset:0; pointer-events:none; z-index:
   height: 100vh;
   min-height: 0;
   overflow: hidden;
-  padding-bottom: 0;
 }
-#page-schedule .top-bar,
 #page-schedule .picker-area { flex-shrink: 0; }
 #page-schedule .day-scroll {
   flex: 1;
