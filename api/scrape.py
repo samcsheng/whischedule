@@ -155,6 +155,63 @@ def _post_schedule(session, start_dt):
     return BeautifulSoup(resp.text, "html.parser")
 
 
+def _clean_text(value):
+    return re.sub(r"\s+", " ", (value or "").replace("\xa0", " ").replace("\ufffd", " ")).strip()
+
+
+def _parse_private_details(priv_div):
+    details = {
+        "reservationId": "",
+        "guestName": "",
+        "cityState": "",
+        "skillLevel": "",
+        "startDateTime": "",
+        "operatorId": "",
+        "startLocation": "",
+        "lessonComments": "",
+        "scheduleComments": "",
+    }
+    table = priv_div.find("table")
+    if not table:
+        return details
+
+    rows = table.find_all("tr")
+    data_row_idx = None
+    for idx, row in enumerate(rows):
+        txt = _clean_text(row.get_text(" ", strip=True)).lower()
+        if "reservation id" in txt and "guest name" in txt and "start location" in txt:
+            data_row_idx = idx + 1
+            break
+
+    if data_row_idx is not None and data_row_idx < len(rows):
+        vals = [_clean_text(td.get_text(" ", strip=True)) for td in rows[data_row_idx].find_all("td")]
+        while len(vals) < 7:
+            vals.append("")
+        details["reservationId"] = vals[0]
+        details["guestName"] = vals[1]
+        details["cityState"] = vals[2]
+        details["skillLevel"] = vals[3]
+        details["startDateTime"] = vals[4]
+        details["operatorId"] = vals[5]
+        details["startLocation"] = vals[6]
+
+    comments_row = None
+    for row in rows:
+        txt = _clean_text(row.get_text(" ", strip=True)).lower()
+        if "lesson comments:" in txt and "schedule comments:" in txt:
+            comments_row = row
+            break
+    if comments_row:
+        cells = comments_row.find_all("td")
+        if len(cells) >= 2:
+            lesson_txt = _clean_text(cells[0].get_text(" ", strip=True))
+            schedule_txt = _clean_text(cells[1].get_text(" ", strip=True))
+            details["lessonComments"] = re.sub(r"^lesson comments:\s*", "", lesson_txt, flags=re.I).strip()
+            details["scheduleComments"] = re.sub(r"^schedule comments:\s*", "", schedule_txt, flags=re.I).strip()
+
+    return details
+
+
 def fetch_window(session, start_dt, pass_number=None, password=None):
     soup = _post_schedule(session, start_dt)
     if (not _has_logout(soup)) or ("cannot be authenticated" in soup.get_text(" ", strip=True).lower()):
@@ -181,11 +238,17 @@ def fetch_window(session, start_dt, pass_number=None, password=None):
         }
         priv = anchor.find_next("div", id=lambda i: i and i.startswith("privateDetails"))
         if priv:
-            for td in priv.find_all("td"):
-                t = td.get_text(strip=True)
-                if t and "/" in t and ":" in t:
-                    l["start_datetime"] = t
-                    break
+            details = _parse_private_details(priv)
+            if details.get("startDateTime"):
+                l["start_datetime"] = details["startDateTime"]
+            else:
+                for td in priv.find_all("td"):
+                    t = _clean_text(td.get_text(" ", strip=True))
+                    if t and "/" in t and ":" in t:
+                        l["start_datetime"] = t
+                        break
+            if any(details.values()):
+                l["private_details"] = details
         lessons.append(l)
     return lessons, session
 
@@ -198,7 +261,16 @@ def scrape_season(pass_number, password):
         try:
             lessons, session = fetch_window(session, cur, pass_number, password)
             for l in lessons:
-                key = (l["date"], l["activity"])
+                priv = l.get("private_details") or {}
+                key = (
+                    l.get("date", ""),
+                    l.get("activity", ""),
+                    l.get("assignment", ""),
+                    l.get("client", ""),
+                    priv.get("reservationId", ""),
+                    priv.get("startDateTime", ""),
+                    l.get("start_datetime", ""),
+                )
                 if key not in all_lessons:
                     all_lessons[key] = l
         except Exception:

@@ -530,6 +530,45 @@ body::after { content:''; position:fixed; inset:0; pointer-events:none; z-index:
   margin-bottom: 3px;
 }
 .lesson-pills { display: flex; gap: 4px; flex-wrap: wrap; }
+.lesson-private {
+  margin-top: 6px;
+  border-top: 1px dashed rgba(255,255,255,0.08);
+  padding-top: 6px;
+}
+.lesson-private-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 2px 10px;
+}
+.lesson-private-item { min-width: 0; }
+.lesson-private-label {
+  font-size: 9px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--muted);
+  opacity: 0.85;
+}
+.lesson-private-value {
+  font-size: 11px;
+  color: var(--snow);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.lesson-private-comments {
+  margin-top: 5px;
+  display: grid;
+  gap: 4px;
+}
+.lesson-private-comment {
+  font-size: 10px;
+  line-height: 1.35;
+  color: rgba(232,240,255,0.82);
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
 .pill {
   font-size: 10px;
   font-weight: 500;
@@ -1286,6 +1325,24 @@ function getPrivateDuration(raw) {
   if (/\bHD\b/.test(raw)) return 'Half Day';
   return null;
 }
+function escapeHtml(s) {
+  return String(s ?? '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+function cleanPrivateText(s) {
+  return String(s ?? '').replace(/\uFFFD/g, ' ').replace(/\s+/g, ' ').trim();
+}
+function privateStartTime(s) {
+  const txt = cleanPrivateText(s);
+  if (!txt) return '';
+  const m = txt.match(/\b(\d{1,2}:\d{2})(?::\d{2})?\s*([AP]M)\b/i);
+  if (m) return `${m[1]} ${m[2].toUpperCase()}`;
+  return txt;
+}
 
 // ─────────────────────────────────────────────────────────────────────────────
 // V3 ENGINE
@@ -1395,18 +1452,21 @@ function buildDayView(key) {
       if (!rawProg || ['off','end','sick','admin'].includes(rawProg)) return;
       const prog = PROG_REMAP[rawProg] || rawProg;
       const title = cleanTitle(l.raw);
-      if (seenTitles.has(title)) return;
-      seenTitles.add(title);
+      // Keep private rows one-to-one; dedupe only non-private scheduled labels.
+      if (prog !== 'private') {
+        if (seenTitles.has(title)) return;
+        seenTitles.add(title);
+      }
       cards.push({ title, program:prog, discipline:getDiscipline(l.raw), location:getLocation(l.raw),
         isSched:isSchedRow && !isAssigned, hours:null,
-        assignment:isAssigned ? l.assignment : null, client:l.client||null, duration:getPrivateDuration(l.raw) });
+        assignment:isAssigned ? l.assignment : null, client:l.client||null, duration:getPrivateDuration(l.raw),
+        privateDetails:l.privateDetails||null, startDateTime:l.startDateTime||'' });
     });
     if (!cards.length && raw.some(l => /regular day off/i.test(l.raw)))
       cards.push({ title:'Day Off', program:'off', isSched:false, hours:null });
 
   } else {
     const isToday = key === TODAY_KEY;
-    const privateGroups = {};
     const paidPrograms  = new Set();
 
     raw.forEach(l => {
@@ -1414,23 +1474,10 @@ function buildDayView(key) {
       const prog = getProgram(l.raw);
       if (['off','end'].includes(prog)) return;
       paidPrograms.add(prog);
-      if (prog === 'private') {
-        const gk = l.client || 'private_' + key;
-        if (!privateGroups[gk]) privateGroups[gk] = { hours:0, client:l.client, raws:[], assignment:l.assignment };
-        privateGroups[gk].hours += l.hours;
-        privateGroups[gk].raws.push(l.raw);
-      } else {
-        cards.push({ title:cleanTitle(l.raw), program:prog, discipline:getDiscipline(l.raw),
-          location:getLocation(l.raw), isSched:false, hours:l.hours,
-          assignment:l.assignment, client:l.client||null, duration:getPrivateDuration(l.raw) });
-      }
-    });
-
-    Object.values(privateGroups).forEach(g => {
-      const mainRaw = g.raws.find(r => !/meeting|end of day|standby|sched/i.test(r)) || g.raws[0];
-      cards.push({ title:cleanTitle(mainRaw), program:'private', discipline:getDiscipline(mainRaw),
-        location:getLocation(mainRaw), isSched:false, hours:parseFloat(g.hours.toFixed(2)),
-        assignment:g.assignment, client:g.client||null, duration:getPrivateDuration(mainRaw) });
+      cards.push({ title:cleanTitle(l.raw), program:prog, discipline:getDiscipline(l.raw),
+        location:getLocation(l.raw), isSched:false, hours:l.hours,
+        assignment:l.assignment, client:l.client||null, duration:getPrivateDuration(l.raw),
+        privateDetails:l.privateDetails||null, startDateTime:l.startDateTime||'' });
     });
 
     if (isToday) {
@@ -1446,7 +1493,7 @@ function buildDayView(key) {
         const displayProg = PROG_REMAP[schedProg] || schedProg;
         cards.push({ title, program:displayProg, discipline:getDiscipline(l.raw),
           location:getLocation(l.raw), isSched:true, hours:null, assignment:null,
-          client:null, duration:getPrivateDuration(l.raw) });
+          client:null, duration:getPrivateDuration(l.raw), privateDetails:null, startDateTime:l.startDateTime||'' });
       });
     }
 
@@ -1489,12 +1536,44 @@ function buildRowsHtml(cards) {
     const hrsColor = PROG_HOURS_COLOR[c.program] || '';
     const hoursHtml = (c.hours > 0 && !c.isSched)
       ? `<div class="lesson-hours ${hrsColor}">${c.hours}<small>hrs</small></div>` : '';
+    const pd = c.privateDetails || null;
+    const showPrivate = c.program === 'private' && isPaid(c.assignment) && pd && Object.values(pd).some(v => cleanPrivateText(v));
+    const privateHtml = showPrivate ? (() => {
+      const reservationId = cleanPrivateText(pd.reservationId);
+      const guestName = cleanPrivateText(pd.guestName);
+      const cityState = cleanPrivateText(pd.cityState);
+      const skillLevel = cleanPrivateText(pd.skillLevel);
+      const startTime = privateStartTime(pd.startDateTime || c.startDateTime || '');
+      const startLocation = cleanPrivateText(pd.startLocation);
+      const lessonComments = cleanPrivateText(pd.lessonComments);
+      const scheduleComments = cleanPrivateText(pd.scheduleComments);
+      const cells = [
+        ['Start Time', startTime],
+        ['Skill', skillLevel],
+        ['Start', startLocation],
+        ['Guest', guestName],
+        ['City/State', cityState],
+        ['Res ID', reservationId],
+      ].filter(([, val]) => val);
+      const gridHtml = cells.map(([label, val]) =>
+        `<div class="lesson-private-item"><div class="lesson-private-label">${escapeHtml(label)}</div><div class="lesson-private-value">${escapeHtml(val)}</div></div>`
+      ).join('');
+      const commentHtml = [
+        lessonComments ? `<div class="lesson-private-comment"><span class="lesson-private-label">Lesson:</span> ${escapeHtml(lessonComments)}</div>` : '',
+        scheduleComments ? `<div class="lesson-private-comment"><span class="lesson-private-label">Schedule:</span> ${escapeHtml(scheduleComments)}</div>` : '',
+      ].join('');
+      return `<div class="lesson-private">
+        ${gridHtml ? `<div class="lesson-private-grid">${gridHtml}</div>` : ''}
+        ${commentHtml ? `<div class="lesson-private-comments">${commentHtml}</div>` : ''}
+      </div>`;
+    })() : '';
 
     return `<div class="lesson-row${isOff ? ' is-off' : ''}">
       <div class="lesson-dot prog-${c.program}"></div>
       <div class="lesson-main">
         <div class="lesson-title">${c.title}</div>
         ${pills ? `<div class="lesson-pills">${pills}</div>` : ''}
+        ${privateHtml}
       </div>
       ${hoursHtml}
     </div>`;
@@ -2544,7 +2623,8 @@ function ingestLessons(lessons) {
     const key = toKey(d);
     if (!byDate[key]) byDate[key] = [];
     byDate[key].push({ date:d, key, hours:parseFloat(l.hours)||0,
-      raw:(l.activity||'').trim(), assignment:(l.assignment||'').trim(), client:(l.client||'').trim() });
+      raw:(l.activity||'').trim(), assignment:(l.assignment||'').trim(), client:(l.client||'').trim(),
+      privateDetails:(l.private_details || null), startDateTime:(l.start_datetime || '') });
   });
   Object.keys(byDate).sort().forEach(key => {
     if (!SEASON_END_KEY && byDate[key].some(l => getProgram(l.raw)==='end')) SEASON_END_KEY = key;
