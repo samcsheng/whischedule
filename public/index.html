@@ -1176,6 +1176,8 @@ function buildRowsHtml(cards) {
 // ─────────────────────────────────────────────────────────────────────────────
 let dayKeys = [];
 let hasFocusedInitialDay = false;
+let _programmaticScroll = false;
+let _programmaticScrollTimer = null;
 
 function computeDayKeys() {
   const keys = Object.keys(byDate).sort();
@@ -1510,6 +1512,10 @@ function scrollToDay(key, smooth) {
   const sec    = scroll && scroll.querySelector(`.day-section[data-key="${key}"]`);
   if (!sec) return;
   suppressTabCollapse(smooth ? 800 : 400);
+  // Block the observer from overriding our selection during+after this scroll
+  _programmaticScroll = true;
+  clearTimeout(_programmaticScrollTimer);
+  _programmaticScrollTimer = setTimeout(() => { _programmaticScroll = false; }, smooth ? 900 : 200);
   const top = sec.offsetTop;
   scroll.scrollTo({ top, behavior: smooth ? 'smooth' : 'instant' });
 }
@@ -1538,6 +1544,9 @@ function setupScrollSync() {
 
   let observerDebounce = null;
   scrollObserver = new IntersectionObserver((entries) => {
+    // Ignore callbacks triggered by our own programmatic scrolls
+    if (_programmaticScroll) return;
+
     // Find the topmost visible section
     const visible = entries
       .filter(e => e.isIntersecting)
@@ -1548,6 +1557,7 @@ function setupScrollSync() {
 
     clearTimeout(observerDebounce);
     observerDebounce = setTimeout(() => {
+      if (_programmaticScroll) return; // check again after debounce
       selectedKey = key;
 
       if (pickerExpanded) {
