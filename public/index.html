@@ -1530,6 +1530,9 @@ function buildRowsHtml(cards) {
     const lessonComments = cleanPrivateText(pd?.lessonComments);
     const scheduleComments = cleanPrivateText(pd?.scheduleComments);
     const operatorId = cleanPrivateText(pd?.operatorId);
+    const scheduleWithOperator = scheduleComments
+      ? `${scheduleComments}${operatorId ? ` (${operatorId})` : ''}`
+      : '';
     const isPrivateWithReservation = c.program === 'private' && isPaid(c.assignment) && !!reservationId;
 
     let pills = '';
@@ -1562,13 +1565,17 @@ function buildRowsHtml(cards) {
       const commentsHtml = lessonComments
         ? `<div class="lesson-comment-full"><span class="lesson-meta-label">Lesson Comments:</span> ${escapeHtml(lessonComments)}</div>`
         : '';
+      const scheduleHtml = scheduleWithOperator
+        ? `<div class="lesson-comment-full"><span class="lesson-meta-label">Schedule Comments:</span> ${escapeHtml(scheduleWithOperator)}</div>`
+        : '';
       return `<div class="lesson-extra">
         ${fieldsHtml ? `<div class="lesson-meta-grid">${fieldsHtml}</div>` : ''}
         ${commentsHtml}
+        ${scheduleHtml}
       </div>`;
     })() : '';
-    const normalScheduleCommentHtml = (c.program !== 'private' && scheduleComments)
-      ? `<div class="lesson-extra"><div class="lesson-note">📝 ${escapeHtml(scheduleComments)}${operatorId ? ` (${escapeHtml(operatorId)})` : ''}</div></div>`
+    const normalScheduleCommentHtml = (!isPrivateWithReservation && scheduleWithOperator)
+      ? `<div class="lesson-extra"><div class="lesson-note">📝 ${escapeHtml(scheduleWithOperator)}</div></div>`
       : '';
 
     return `<div class="lesson-row${isOff ? ' is-off' : ''}">
