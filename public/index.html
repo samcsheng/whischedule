@@ -1428,7 +1428,38 @@ function getProgram(raw, assignment = 'Assignment') {
 // DATA
 // ─────────────────────────────────────────────────────────────────────────────
 let SEASON_END_KEY = null;
+let SEASON_START_KEY = null;
 const byDate = {};
+
+function getSeasonStartKey() {
+  const keys = Object.keys(byDate).sort();
+  if (!keys.length) return null;
+  return SEASON_START_KEY || keys[0];
+}
+
+function getSeasonEndKey() {
+  const keys = Object.keys(byDate).sort();
+  if (!keys.length) return null;
+  return SEASON_END_KEY || keys[keys.length - 1];
+}
+
+function getSeasonMonthRange() {
+  const startKey = getSeasonStartKey();
+  const endKey = getSeasonEndKey();
+  if (!startKey || !endKey) {
+    return [{y:2025,m:10},{y:2025,m:11},{y:2026,m:0},{y:2026,m:1},{y:2026,m:2},{y:2026,m:3}];
+  }
+  const out = [];
+  const start = new Date(startKey + 'T12:00:00');
+  const end = new Date(endKey + 'T12:00:00');
+  const cur = new Date(start.getFullYear(), start.getMonth(), 1);
+  const stop = new Date(end.getFullYear(), end.getMonth(), 1);
+  while (cur <= stop) {
+    out.push({ y: cur.getFullYear(), m: cur.getMonth() });
+    cur.setMonth(cur.getMonth() + 1);
+  }
+  return out;
+}
 
 // ─────────────────────────────────────────────────────────────────────────────
 // BUILD DAY VIEW
@@ -1606,8 +1637,9 @@ let _programmaticScrollTimer = null;
 function computeDayKeys() {
   const keys = Object.keys(byDate).sort();
   if (!keys.length) return [];
-  const minKey = keys[0];
-  const maxKey = (SEASON_END_KEY && SEASON_END_KEY >= minKey) ? SEASON_END_KEY : keys[keys.length-1];
+  const minKey = getSeasonStartKey() || keys[0];
+  const maxKey = getSeasonEndKey() || keys[keys.length - 1];
+  if (maxKey < minKey) return [minKey];
   const out = [];
   for (let d = new Date(minKey+'T12:00:00'), end = new Date(maxKey+'T12:00:00'); d <= end; d.setDate(d.getDate()+1))
     out.push(toKey(d));
@@ -1697,12 +1729,14 @@ function renderPickerDow() {
 function dayCell(key, num) {
   const lessons    = byDate[key] || [];
   const isFuture   = key > TODAY_KEY;
+  const isBeforeStart = SEASON_START_KEY && key < SEASON_START_KEY;
   const isAfterEnd = SEASON_END_KEY && key > SEASON_END_KEY;
+  const isOutsideSeason = isBeforeStart || isAfterEnd;
   const NON_WORK   = new Set(['off','end','sick','admin']);
 
   // Determine dot colour from dominant program
   let dotClass = '';
-  if (!isAfterEnd) {
+  if (!isOutsideSeason) {
     const candidates = lessons.filter(l =>
       isFuture || key === TODAY_KEY
         ? (isPaid(l.assignment) || isSched(l.raw))
@@ -1725,9 +1759,9 @@ function dayCell(key, num) {
     'picker-day',
     key === selectedKey ? 'selected' : '',
     key === TODAY_KEY && key !== selectedKey ? 'today' : '',
-    !hasWork && !isAfterEnd ? 'is-off' : '',
+    !hasWork && !isOutsideSeason ? 'is-off' : '',
     key < TODAY_KEY && key !== selectedKey ? 'past' : '',
-    isAfterEnd ? 'faded' : '',
+    isOutsideSeason ? 'faded' : '',
     dotClass,
   ].filter(Boolean).join(' ');
 
@@ -1808,6 +1842,14 @@ function renderPickerWeek() {
 }
 
 function computeFallbackKeys() {
+  const startKey = getSeasonStartKey();
+  const endKey = getSeasonEndKey();
+  if (startKey && endKey) {
+    const out = [];
+    for (let d = new Date(startKey + 'T12:00:00'), end = new Date(endKey + 'T12:00:00'); d <= end; d.setDate(d.getDate()+1))
+      out.push(toKey(d));
+    return out;
+  }
   const out = [];
   for (let d = new Date(2025,10,1), end = new Date(2026,3,30); d <= end; d.setDate(d.getDate()+1))
     out.push(toKey(d));
@@ -1815,10 +1857,7 @@ function computeFallbackKeys() {
 }
 
 function renderPickerMonth() {
-  const seasonMonths = [
-    {y:2025,m:10},{y:2025,m:11},
-    {y:2026,m:0},{y:2026,m:1},{y:2026,m:2},{y:2026,m:3},
-  ];
+  const seasonMonths = getSeasonMonthRange();
 
   let html = '';
   seasonMonths.forEach(({y, m}) => {
@@ -2034,7 +2073,11 @@ function buildStats() {
     return;
   }
 
-  const validKeys = Object.keys(byDate).filter(k => !SEASON_END_KEY || k < SEASON_END_KEY);
+  const seasonStart = getSeasonStartKey();
+  const seasonEnd = getSeasonEndKey();
+  const validKeys = Object.keys(byDate).filter(k =>
+    (!seasonStart || k >= seasonStart) && (!seasonEnd || k <= seasonEnd)
+  );
   const workDayKeys = validKeys.filter(k =>
     byDate[k].some(l => { if (!isPaid(l.assignment)) return false;
       const p = getProgram(l.raw); return !['off','end','sick','other'].includes(p); }));
@@ -2057,8 +2100,8 @@ function buildStats() {
   }); });
 
   const allKeys = Object.keys(byDate).sort();
-  const s = new Date(allKeys[0]+'T12:00:00');
-  const e = new Date((SEASON_END_KEY||allKeys[allKeys.length-1])+'T12:00:00');
+  const s = new Date((seasonStart || allKeys[0])+'T12:00:00');
+  const e = new Date((seasonEnd || allKeys[allKeys.length-1])+'T12:00:00');
   document.getElementById('bigStats').innerHTML = `
     <div class="bstat"><div class="bstat-val c-blue">${workDayKeys.length}</div><div class="bstat-label">Work Days</div></div>
     <div class="bstat"><div class="bstat-val c-orange">${Math.round(lessonHrs)}</div><div class="bstat-label">Lesson Hours</div></div>
@@ -2090,17 +2133,18 @@ function buildStats() {
     </div>`;
   }).join('') || '<p style="color:var(--muted);padding:16px;font-size:13px">No lesson hours recorded yet.</p>';
 
-  const hmMonths = [{y:2025,m:10},{y:2025,m:11},{y:2026,m:0},{y:2026,m:1},{y:2026,m:2},{y:2026,m:3},{y:2026,m:4}];
+  const hmMonths = getSeasonMonthRange();
   document.getElementById('heatmap').innerHTML = hmMonths.map(({y,m}) => {
     const first=new Date(y,m,1), days=new Date(y,m+1,0).getDate();
     let cells='';
     for(let p=0;p<first.getDay();p++) cells+=`<div class="hm-cell hm-empty"></div>`;
     for(let d=1;d<=days;d++){
       const key=toKey(new Date(y,m,d)); const ls=byDate[key]||[];
-      const afterEnd=SEASON_END_KEY&&key>SEASON_END_KEY;
+      const beforeStart=seasonStart&&key<seasonStart;
+      const afterEnd=seasonEnd&&key>seasonEnd;
       let cls='hm-cell ';
-      if(afterEnd){cls+='hm-empty';}
-      else if(key===SEASON_END_KEY){cls+='hm-end';}
+      if(beforeStart||afterEnd){cls+='hm-empty';}
+      else if(seasonEnd && key===seasonEnd){cls+='hm-end';}
       else if(!ls.length){cls+='hm-off';}
       else{
         const progs=ls.map(l=>getProgram(l.raw)),paid=ls.filter(l=>isPaid(l.assignment));
@@ -2140,7 +2184,11 @@ function buildStats() {
 // PROGRAM DETAIL MODAL
 // ─────────────────────────────────────────────────────────────────────────────
 function openProgModal(progKey, label, color) {
-  const validKeys = Object.keys(byDate).sort().filter(k => !SEASON_END_KEY || k <= SEASON_END_KEY);
+  const seasonStart = getSeasonStartKey();
+  const seasonEnd = getSeasonEndKey();
+  const validKeys = Object.keys(byDate).sort().filter(k =>
+    (!seasonStart || k >= seasonStart) && (!seasonEnd || k <= seasonEnd)
+  );
 
   // Days + hours for this program
   const progDays = []; // [{key, hours, isFuture}]
@@ -2213,11 +2261,8 @@ function openProgModal(progKey, label, color) {
       cells += `<div class="prog-hm-cell prog-hm-empty"></div>`;
     for (let d = 1; d <= days; d++) {
       const key = toKey(new Date(y, m, d));
-      const allDayKeys = Object.keys(byDate).sort();
-      const seasonStart = allDayKeys[0] || key;
-      const seasonEnd   = SEASON_END_KEY || allDayKeys[allDayKeys.length-1] || key;
-      const inSeason = key >= seasonStart && key <= seasonEnd;
-      const afterEnd = key > seasonEnd;
+      const inSeason = (!seasonStart || key >= seasonStart) && (!seasonEnd || key <= seasonEnd);
+      const afterEnd = seasonEnd && key > seasonEnd;
       let cls = 'prog-hm-cell ';
       let style = '';
       if (!inSeason || afterEnd) {
@@ -2282,20 +2327,7 @@ function progDayClick(key) {
   setTimeout(() => selectDay(key), 80);
 }
 function _getSeasonMonths() {
-  if (!Object.keys(byDate).length) {
-    return [{y:2025,m:10},{y:2025,m:11},{y:2026,m:0},{y:2026,m:1},{y:2026,m:2},{y:2026,m:3}];
-  }
-  const keys = Object.keys(byDate).sort();
-  const first = new Date(keys[0] + 'T12:00:00');
-  const last  = new Date((SEASON_END_KEY || keys[keys.length-1]) + 'T12:00:00');
-  const months = [];
-  const cur = new Date(first.getFullYear(), first.getMonth(), 1);
-  const end = new Date(last.getFullYear(), last.getMonth(), 1);
-  while (cur <= end) {
-    months.push({ y: cur.getFullYear(), m: cur.getMonth() });
-    cur.setMonth(cur.getMonth() + 1);
-  }
-  return months;
+  return getSeasonMonthRange();
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -2398,7 +2430,11 @@ function openProfile() {
   // Populate quick stats from cached data
   const hasData = Object.keys(byDate).length > 0;
   if (hasData) {
-    const validKeys = Object.keys(byDate).filter(k => !SEASON_END_KEY || k < SEASON_END_KEY);
+    const seasonStart = getSeasonStartKey();
+    const seasonEnd = getSeasonEndKey();
+    const validKeys = Object.keys(byDate).filter(k =>
+      (!seasonStart || k >= seasonStart) && (!seasonEnd || k <= seasonEnd)
+    );
     const workDays = validKeys.filter(k =>
       byDate[k].some(l => isPaid(l.assignment) && !['off','end','sick','other'].includes(getProgram(l.raw)))
     ).length;
@@ -2631,6 +2667,7 @@ async function triggerRefresh(silent = false) {
 
 function ingestLessons(lessons) {
   Object.keys(byDate).forEach(k => delete byDate[k]);
+  SEASON_START_KEY = null;
   SEASON_END_KEY = null;
   lessons.forEach(l => {
     const d = new Date(l.date.replace(/^[A-Za-z]+,\s*/,''));
@@ -2641,9 +2678,13 @@ function ingestLessons(lessons) {
       raw:(l.activity||'').trim(), assignment:(l.assignment||'').trim(), client:(l.client||'').trim(),
       privateDetails:(l.private_details || null), startDateTime:(l.start_datetime || '') });
   });
-  Object.keys(byDate).sort().forEach(key => {
-    if (!SEASON_END_KEY && byDate[key].some(l => getProgram(l.raw)==='end')) SEASON_END_KEY = key;
-  });
+  const keys = Object.keys(byDate).sort();
+  SEASON_START_KEY = keys.find(key =>
+    byDate[key].some(l => getProgram(l.raw) !== 'off')
+  ) || keys[0] || null;
+  SEASON_END_KEY = keys.find(key =>
+    byDate[key].some(l => getProgram(l.raw) === 'end')
+  ) || keys[keys.length - 1] || null;
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -2857,7 +2898,7 @@ function obBuildSuccess(data) {
   const firstKey = dataKeys.find(k =>
     byDate[k].some(l => (l.raw || '').trim() && getProgram(l.raw) !== 'off')
   ) || null;
-  const lastKey  = SEASON_END_KEY || dataKeys[dataKeys.length - 1] || null;
+  const lastKey  = getSeasonEndKey() || dataKeys[dataKeys.length - 1] || null;
   const validKeys = dataKeys.filter(k => (!firstKey || k >= firstKey) && (!lastKey || k <= lastKey));
 
   const workDays = validKeys.filter(k =>
