@@ -179,32 +179,27 @@ body::after { content:''; position:fixed; inset:0; pointer-events:none; z-index:
   padding-top: env(safe-area-inset-top, 0px);
   flex-shrink: 0;
 }
+/* ── ROW 1: emoji + title | buttons ── */
 .app-header-inner {
   display: flex;
   align-items: center;
-  gap: 12px;
-  padding: 14px 16px 14px;
+  gap: 10px;
+  padding: 14px 16px 6px;
 }
-
-/* Left: emoji + title + sync ticker */
 .app-header-left {
   flex: 1;
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 10px;
   min-width: 0;
 }
 .app-header-emoji {
-  font-size: 28px;
+  font-size: 26px;
   line-height: 1;
   filter: drop-shadow(0 0 10px rgba(59,139,255,0.55));
   flex-shrink: 0;
-}
-.app-header-title-col {
-  display: flex;
-  flex-direction: column;
-  min-width: 0;
-  gap: 3px;
+  /* nudge down 1px so emoji optical centre aligns with cap-height */
+  position: relative; top: 1px;
 }
 .app-header-name {
   font-family: var(--f-head);
@@ -212,51 +207,10 @@ body::after { content:''; position:fixed; inset:0; pointer-events:none; z-index:
   font-weight: 800;
   letter-spacing: -0.04em;
   color: #fff;
-  text-shadow:
-    0 0 20px rgba(59,139,255,0.45),
-    0 0 60px rgba(59,139,255,0.2);
+  text-shadow: 0 0 20px rgba(59,139,255,0.45), 0 0 60px rgba(59,139,255,0.2);
   white-space: nowrap;
   line-height: 1;
 }
-
-/* Sync ticker — clips overflow, animates text in/out */
-.app-header-sync {
-  display: flex;
-  align-items: center;
-  gap: 5px;
-  height: 16px;
-  overflow: hidden;
-}
-.app-sync-dot {
-  width: 5px; height: 5px; border-radius: 50%;
-  flex-shrink: 0;
-  background: var(--muted);
-  transition: background 0.3s;
-}
-.app-sync-dot.syncing { background: var(--blue); animation: pulse 1s infinite; }
-.app-sync-dot.active  { background: var(--green); }
-.app-sync-dot.error   { background: var(--red); }
-
-/* The text slides vertically inside the clipping .app-header-sync */
-.app-sync-text {
-  font-size: 11px;
-  font-weight: 500;
-  color: var(--muted);
-  white-space: nowrap;
-  line-height: 16px;
-  transition: color 0.25s;
-  /* slide animation applied via JS class */
-}
-.app-sync-text.syncing { color: var(--blue); }
-.app-sync-text.active  { color: var(--green); }
-.app-sync-text.error   { color: var(--red); }
-
-@keyframes slide-in-top  { from { transform: translateY(-16px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
-@keyframes slide-out-top { from { transform: translateY(0); opacity: 1; } to { transform: translateY(-16px); opacity: 0; } }
-.app-sync-text.anim-in  { animation: slide-in-top  0.28s cubic-bezier(0.16,1,0.3,1) both; }
-.app-sync-text.anim-out { animation: slide-out-top 0.22s ease-in both; }
-
-/* Right: refresh + avatar */
 .app-header-right {
   display: flex;
   align-items: center;
@@ -264,7 +218,7 @@ body::after { content:''; position:fixed; inset:0; pointer-events:none; z-index:
   flex-shrink: 0;
 }
 .app-header-refresh {
-  width: 36px; height: 36px; border-radius: 50%;
+  width: 34px; height: 34px; border-radius: 50%;
   background: rgba(255,255,255,0.07);
   border: 1px solid rgba(255,255,255,0.12);
   display: flex; align-items: center; justify-content: center;
@@ -274,25 +228,62 @@ body::after { content:''; position:fixed; inset:0; pointer-events:none; z-index:
 }
 .app-header-refresh:active { background: rgba(255,255,255,0.15); transform: scale(0.91); }
 .app-header-refresh svg {
-  width: 16px; height: 16px;
+  width: 15px; height: 15px;
   stroke: currentColor; fill: none; stroke-width: 2;
   stroke-linecap: round; stroke-linejoin: round;
 }
 .app-header-refresh.spinning { color: var(--blue); }
 .app-header-refresh.spinning svg { animation: spin 0.8s linear infinite; }
-
 .app-header-avatar {
-  width: 36px; height: 36px; border-radius: 50%;
+  width: 34px; height: 34px; border-radius: 50%;
   background: rgba(255,255,255,0.08);
   border: 1px solid rgba(255,255,255,0.15);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
+  backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
   display: flex; align-items: center; justify-content: center;
   font-family: var(--f-head); font-size: 14px; font-weight: 700;
   color: rgba(255,255,255,0.8); cursor: pointer; flex-shrink: 0;
   transition: background 0.15s, transform 0.15s;
 }
 .app-header-avatar:active { background: rgba(255,255,255,0.15); transform: scale(0.91); }
+
+/* ── ROW 2: sync status bar ── */
+.app-header-sync-bar {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 0 16px 10px;
+  height: 22px; /* fixed height so layout never jumps */
+  overflow: hidden;
+}
+.app-sync-dot {
+  width: 6px; height: 6px; border-radius: 50%;
+  flex-shrink: 0;
+  background: rgba(255,255,255,0.15);
+  transition: background 0.4s;
+}
+.app-sync-dot.syncing  { background: var(--blue);  animation: pulse 1.2s ease-in-out infinite; }
+.app-sync-dot.current  { background: var(--green); animation: none; }
+.app-sync-dot.offline  { background: var(--yellow); animation: none; }
+.app-sync-dot.error    { background: var(--red);   animation: none; }
+
+.app-sync-text {
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.01em;
+  color: var(--muted);
+  white-space: nowrap;
+  line-height: 1;
+  transition: color 0.3s, opacity 0.3s;
+}
+.app-sync-text.syncing { color: rgba(59,139,255,0.8); }
+.app-sync-text.current { color: rgba(45,204,138,0.75); }
+.app-sync-text.offline { color: rgba(255,197,66,0.8); }
+.app-sync-text.error   { color: rgba(255,77,109,0.8); }
+
+/* Slide-in animation for text transitions */
+@keyframes sync-slide-in { from { opacity:0; transform:translateY(6px); } to { opacity:1; transform:translateY(0); } }
+.app-sync-text.entering { animation: sync-slide-in 0.3s cubic-bezier(0.16,1,0.3,1) both; }
+
 /* ── TOP BAR (legacy — removed) ── */
 
 /* ── PICKER AREA ── */
@@ -978,18 +969,13 @@ body::after { content:''; position:fixed; inset:0; pointer-events:none; z-index:
 <!-- ── SCHEDULE PAGE ── -->
 <div class="page active" id="page-schedule">
 
-  <!-- Shared header -->
+  <!-- Schedule header -->
   <div class="app-header" id="scheduleHeader">
+    <!-- Row 1: wordmark + buttons -->
     <div class="app-header-inner">
       <div class="app-header-left">
         <span class="app-header-emoji">🏔</span>
-        <div class="app-header-title-col">
-          <span class="app-header-name">WhisSchedule</span>
-          <div class="app-header-sync">
-            <div class="app-sync-dot" id="syncDot"></div>
-            <span class="app-sync-text" id="syncText">—</span>
-          </div>
-        </div>
+        <span class="app-header-name">WhisSchedule</span>
       </div>
       <div class="app-header-right">
         <button class="app-header-refresh" id="refreshBtn" onclick="triggerRefresh()" title="Sync schedule">
@@ -997,6 +983,11 @@ body::after { content:''; position:fixed; inset:0; pointer-events:none; z-index:
         </button>
         <div class="app-header-avatar" id="topAvatar" onclick="openProfile()">S</div>
       </div>
+    </div>
+    <!-- Row 2: sync status -->
+    <div class="app-header-sync-bar">
+      <div class="app-sync-dot" id="syncDot"></div>
+      <span class="app-sync-text" id="syncText"></span>
     </div>
   </div>
 
@@ -1029,18 +1020,13 @@ body::after { content:''; position:fixed; inset:0; pointer-events:none; z-index:
 
 <!-- ── STATS PAGE ── -->
 <div class="page" id="page-stats">
-  <!-- Shared header -->
+  <!-- Stats header -->
   <div class="app-header">
+    <!-- Row 1: wordmark + buttons -->
     <div class="app-header-inner">
       <div class="app-header-left">
         <span class="app-header-emoji">🏔</span>
-        <div class="app-header-title-col">
-          <span class="app-header-name">WhisSchedule</span>
-          <div class="app-header-sync">
-            <div class="app-sync-dot" id="syncDot2"></div>
-            <span class="app-sync-text" id="syncText2">—</span>
-          </div>
-        </div>
+        <span class="app-header-name">WhisSchedule</span>
       </div>
       <div class="app-header-right">
         <button class="app-header-refresh" onclick="triggerRefresh()" title="Sync schedule">
@@ -1048,6 +1034,11 @@ body::after { content:''; position:fixed; inset:0; pointer-events:none; z-index:
         </button>
         <div class="app-header-avatar" onclick="openProfile()">S</div>
       </div>
+    </div>
+    <!-- Row 2: sync status -->
+    <div class="app-header-sync-bar">
+      <div class="app-sync-dot" id="syncDot2"></div>
+      <span class="app-sync-text" id="syncText2"></span>
     </div>
   </div>
   <div class="stats-page">
@@ -2077,57 +2068,45 @@ function getFirstName() {
 // ─────────────────────────────────────────────────────────────────────────────
 // SYNC STATUS — drives the header timestamp row
 // ─────────────────────────────────────────────────────────────────────────────
-// SYNC STATUS — animated ticker in header
+// SYNC STATUS
+// States: 'syncing' | 'current' | 'offline' | 'error'
 // ─────────────────────────────────────────────────────────────────────────────
 let _syncReturnTimer = null;
+let _syncInFlight    = false;   // dedup guard
 
-function setSyncStatus(state, msg, animated = false) {
-  // dot state: idle→muted, syncing→blue pulse, active→green, error→red
-  const dotClass = state === 'syncing' ? 'syncing'
-                 : state === 'success' ? 'active'
-                 : state === 'error'   ? 'error'
-                 : '';
-  const textClass = dotClass;
+function setSyncStatus(state, msg) {
+  clearTimeout(_syncReturnTimer);
 
   document.querySelectorAll('.app-sync-dot').forEach(d => {
-    d.className = 'app-sync-dot' + (dotClass ? ' ' + dotClass : '');
+    d.className = 'app-sync-dot' + (state ? ' ' + state : '');
   });
-
   document.querySelectorAll('.app-sync-text').forEach(t => {
-    if (animated) {
-      // Slide out old, slide in new
-      t.classList.add('anim-out');
-      const next = msg; const nc = textClass;
-      setTimeout(() => {
-        t.className = 'app-sync-text' + (nc ? ' ' + nc : '') + ' anim-in';
-        t.textContent = next;
-      }, 230);
-    } else {
-      t.className = 'app-sync-text' + (textClass ? ' ' + textClass : '');
-      t.textContent = msg;
-    }
+    t.className = 'app-sync-text ' + (state || '') + ' entering';
+    t.textContent = msg;
   });
 }
 
-function formatSyncAge() {
-  const ts = parseInt(localStorage.getItem('wb_cache_ts') || '0', 10);
-  if (!ts) return 'Never synced';
-  const mins = Math.round((Date.now() - ts) / 60000);
-  if (mins < 1)  return 'Synced just now';
-  if (mins < 60) return `Synced ${mins}m ago`;
-  const hrs = Math.round(mins / 60);
-  if (hrs < 24)  return `Synced ${hrs}h ago`;
-  return `Synced ${Math.round(hrs / 24)}d ago`;
-}
-
-function updateSyncTimestamp(animated = false) {
-  setSyncStatus('idle', formatSyncAge(), animated);
-}
-
-function scheduleTimestampReturn(delay = 3500) {
+// After a transient state (current/error), revert to idle timestamp
+function scheduleSyncReturn(delay = 4000) {
   clearTimeout(_syncReturnTimer);
-  _syncReturnTimer = setTimeout(() => updateSyncTimestamp(true), delay);
+  _syncReturnTimer = setTimeout(showSyncIdle, delay);
 }
+
+function showSyncIdle() {
+  const ts = parseInt(localStorage.getItem('wb_cache_ts') || '0', 10);
+  if (!ts) { setSyncStatus('', 'Never synced'); return; }
+  const mins = Math.round((Date.now() - ts) / 60000);
+  let label;
+  if (mins < 1)  label = 'Synced just now';
+  else if (mins < 60) label = `Synced ${mins}m ago`;
+  else {
+    const hrs = Math.round(mins / 60);
+    label = hrs < 24 ? `Synced ${hrs}h ago` : `Synced ${Math.round(hrs/24)}d ago`;
+  }
+  setSyncStatus('', label);
+}
+
+function updateSyncTimestamp() { showSyncIdle(); }   // alias for compat
 
 // ─────────────────────────────────────────────────────────────────────────────
 // DIFF
@@ -2162,30 +2141,51 @@ function cacheAgeHours() {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// REFRESH
+// REFRESH — always fires on open and visibility; deduped; offline-aware
 // ─────────────────────────────────────────────────────────────────────────────
-async function triggerRefresh(silent=false) {
+async function triggerRefresh(silent = false) {
   const creds = loadCredentials();
   if (!creds.passNumber || !creds.password) {
-    if (!silent) { openProfile(); setModalStatus('Enter your credentials first, then hit Refresh.', 'err'); }
+    if (!silent) { openProfile(); setModalStatus('Enter your credentials first, then tap Refresh.', 'err'); }
     return;
   }
-  // Spin the header refresh buttons
-  document.querySelectorAll('.app-header-refresh').forEach(b => { b.classList.add('spinning'); b.disabled = true; });
-  setSyncStatus('syncing', 'Checking schedule…', true);
+
+  // Dedup: ignore if already in flight
+  if (_syncInFlight) return;
+
+  // Offline: show amber state, wait for reconnect
+  if (!navigator.onLine) {
+    setSyncStatus('offline', 'Offline — showing cached data');
+    return;
+  }
+
+  _syncInFlight = true;
+  document.querySelectorAll('.app-header-refresh').forEach(b => {
+    b.classList.add('spinning'); b.disabled = true;
+  });
+  setSyncStatus('syncing', 'Checking for updates…');
+
   const oldLessons = loadScheduleCache();
   try {
     const resp = await fetch('/api/scrape', {
-      method:'POST', headers:{'Content-Type':'application/json'},
-      body: JSON.stringify({ passNumber:creds.passNumber, password:creds.password }),
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ passNumber: creds.passNumber, password: creds.password }),
     });
     const data = await resp.json();
+
     if (!resp.ok) {
-      if (resp.status === 401) { openProfile(); setModalStatus('❌ '+(data.error||'Invalid credentials.'), 'err'); }
-      setSyncStatus('error', 'Sync failed', true);
-      scheduleTimestampReturn(3000);
+      if (resp.status === 401) {
+        openProfile();
+        setModalStatus('❌ ' + (data.error || 'Invalid credentials.'), 'err');
+        setSyncStatus('error', 'Invalid credentials');
+      } else {
+        setSyncStatus('error', 'Sync failed');
+      }
+      scheduleSyncReturn(4000);
       return;
     }
+
     const summary = diffLessons(oldLessons, data.lessons);
     ingestLessons(data.lessons);
     saveScheduleCache(data.lessons);
@@ -2193,16 +2193,33 @@ async function triggerRefresh(silent=false) {
     if (!hasFocusedInitialDay) focusInitialDay();
     else renderPicker();
     buildStats();
-    if (data.instructorName) { localStorage.setItem('wb_instructorName', data.instructorName); updateChipName(data.instructorName); updateGreeting(); }
-    const resultMsg = summary ? `Updated — ${summary}` : 'Up to date';
-    const resultState = summary ? 'success' : 'nochange';
-    setSyncStatus(resultState, resultMsg, true);
-    scheduleTimestampReturn(3500);
-  } catch(err) {
-    setSyncStatus('error', 'Network error', true);
-    scheduleTimestampReturn(3000);
+    if (data.instructorName) {
+      localStorage.setItem('wb_instructorName', data.instructorName);
+      updateChipName(data.instructorName);
+      updateGreeting();
+    }
+
+    if (summary) {
+      setSyncStatus('current', `Updated — ${summary}`);
+      scheduleSyncReturn(4000);
+    } else {
+      // No changes — show "current" briefly then idle
+      setSyncStatus('current', 'Schedule is up to date');
+      scheduleSyncReturn(3000);
+    }
+
+  } catch (err) {
+    if (!navigator.onLine) {
+      setSyncStatus('offline', 'Offline — showing cached data');
+    } else {
+      setSyncStatus('error', 'Could not reach server');
+      scheduleSyncReturn(4000);
+    }
   } finally {
-    document.querySelectorAll('.app-header-refresh').forEach(b => { b.classList.remove('spinning'); b.disabled = false; });
+    _syncInFlight = false;
+    document.querySelectorAll('.app-header-refresh').forEach(b => {
+      b.classList.remove('spinning'); b.disabled = false;
+    });
   }
 }
 
@@ -2246,14 +2263,34 @@ window.addEventListener('load', () => {
     if (!hasFocusedInitialDay) focusInitialDay();
     else renderPicker();
     buildStats();
-    if (cacheAgeHours() > 2) setTimeout(() => triggerRefresh(true), 1200);
+    showSyncIdle();                            // show cached age immediately
+    setTimeout(() => triggerRefresh(true), 600); // always re-fetch on open
   } else {
     renderPicker();
     renderDayList();
     buildStats();
-    if (!creds.passNumber) setTimeout(openProfile, 600);
-    else setTimeout(() => triggerRefresh(true), 1000);
+    if (!creds.passNumber) {
+      setSyncStatus('', 'No credentials — tap profile to set up');
+      setTimeout(openProfile, 700);
+    } else {
+      setTimeout(() => triggerRefresh(true), 800);
+    }
   }
+
+  // Always re-fetch when user returns to the app (tab/phone focus)
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'visible') {
+      if (!navigator.onLine) {
+        setSyncStatus('offline', 'Offline — showing cached data');
+      } else {
+        triggerRefresh(true);
+      }
+    }
+  });
+
+  // Recover from offline when connection restored
+  window.addEventListener('online',  () => triggerRefresh(true));
+  window.addEventListener('offline', () => setSyncStatus('offline', 'Offline — showing cached data'));
 });
 </script>
 
