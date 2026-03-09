@@ -173,11 +173,13 @@ body::after { content:''; position:fixed; inset:0; pointer-events:none; z-index:
   position: sticky;
   top: 0;
   z-index: 10;
-  background: rgba(12, 24, 44, 0.72);
-  backdrop-filter: blur(28px) saturate(180%);
-  -webkit-backdrop-filter: blur(28px) saturate(180%);
-  border-bottom: 1px solid rgba(255,255,255,0.07);
-  box-shadow: 0 1px 0 rgba(255,255,255,0.04), 0 4px 24px rgba(0,0,0,0.3);
+  background: rgba(6, 13, 26, 0.6);
+  backdrop-filter: blur(32px) saturate(200%);
+  -webkit-backdrop-filter: blur(32px) saturate(200%);
+  border-bottom: 1px solid rgba(255,255,255,0.08);
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,0.1),
+    0 8px 32px rgba(0,0,0,0.4);
   padding-top: env(safe-area-inset-top, 0px);
   flex-shrink: 0;
 }
@@ -185,46 +187,55 @@ body::after { content:''; position:fixed; inset:0; pointer-events:none; z-index:
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 10px 16px 6px;
+  padding: 12px 16px 4px;
 }
 .app-header-wordmark {
   display: flex;
   align-items: center;
-  gap: 7px;
+  gap: 8px;
 }
 .app-header-emoji {
-  font-size: 18px;
+  font-size: 22px;
   line-height: 1;
-  filter: drop-shadow(0 0 8px rgba(59,139,255,0.35));
+  filter: drop-shadow(0 0 10px rgba(59,139,255,0.5));
 }
 .app-header-name {
   font-family: var(--f-head);
-  font-size: 15px;
+  font-size: 22px;
   font-weight: 800;
-  letter-spacing: -0.02em;
-  color: var(--snow);
-  opacity: 0.9;
+  letter-spacing: -0.04em;
+  color: #fff;
+  text-shadow:
+    0 0 20px rgba(59,139,255,0.45),
+    0 0 60px rgba(59,139,255,0.2);
 }
 .app-header-avatar {
-  width: 30px; height: 30px; border-radius: 50%;
+  width: 32px; height: 32px; border-radius: 50%;
   background: linear-gradient(135deg, var(--blue), var(--purple));
   display: flex; align-items: center; justify-content: center;
-  font-family: var(--f-head); font-size: 12px; font-weight: 700;
+  font-family: var(--f-head); font-size: 13px; font-weight: 700;
   color: white; cursor: pointer; flex-shrink: 0;
-  box-shadow: 0 2px 8px rgba(59,139,255,0.3);
+  box-shadow: 0 2px 12px rgba(59,139,255,0.35);
   transition: opacity 0.15s, transform 0.15s;
 }
 .app-header-avatar:active { opacity: 0.7; transform: scale(0.93); }
 .app-header-context {
-  padding: 0 16px 10px;
+  padding: 4px 16px 12px;
   display: flex;
   align-items: baseline;
   justify-content: space-between;
   gap: 8px;
+  min-height: 28px;
+}
+.app-header-greeting {
+  font-size: 13px;
+  font-weight: 500;
+  color: rgba(232,240,255,0.55);
+  letter-spacing: 0.01em;
 }
 .app-header-title {
   font-family: var(--f-head);
-  font-size: 22px;
+  font-size: 20px;
   font-weight: 800;
   letter-spacing: -0.03em;
   color: var(--snow);
@@ -897,7 +908,7 @@ body::after { content:''; position:fixed; inset:0; pointer-events:none; z-index:
       <div class="app-header-avatar" id="topAvatar" onclick="openProfile()">S</div>
     </div>
     <div class="app-header-context">
-      <div class="app-header-title" id="scheduleHeaderDate">—</div>
+      <div class="app-header-greeting" id="scheduleGreeting">—</div>
     </div>
   </div>
 
@@ -1542,7 +1553,7 @@ function selectDay(key) {
     renderPickerWeek();
   }
   scrollToDay(selectedKey, true);
-  updateScheduleHeaderDate(selectedKey);
+  
 }
 
 function shiftWeek(dir) {
@@ -1563,7 +1574,7 @@ function goToToday() {
   if (pickerExpanded) renderPickerMonth();
   else renderPickerWeek();
   scrollToDay(selectedKey, true);
-  updateScheduleHeaderDate(selectedKey);
+  
 }
 
 function clampSelectedKey(key) {
@@ -1605,7 +1616,7 @@ function focusInitialDay() {
   weekOffset  = computeWeekOffsetForKey(selectedKey);
   renderPicker();
   scrollToDay(selectedKey, false);
-  updateScheduleHeaderDate(selectedKey);
+  
   hasFocusedInitialDay = true;
 }
 
@@ -1631,7 +1642,7 @@ function setupScrollSync() {
     const key = visible[0].target.dataset.key;
     if (!key || key === selectedKey) return;
     selectedKey = key;
-    updateScheduleHeaderDate(selectedKey);
+    
 
     if (pickerExpanded) {
       // In-place update only — never re-render or scroll the month grid
@@ -1893,15 +1904,24 @@ function updateChipName(name) {
   document.querySelectorAll('.app-header-avatar').forEach(el => el.textContent = initial);
 }
 
-function updateScheduleHeaderDate(key) {
-  const el = document.getElementById('scheduleHeaderDate');
+function updateGreeting() {
+  const el = document.getElementById('scheduleGreeting');
   if (!el) return;
-  if (!key) { el.textContent = '—'; return; }
-  const d = new Date(key + 'T12:00:00');
-  const isToday = key === TODAY_KEY;
-  el.textContent = isToday
-    ? 'Today · ' + DAYS_SHORT[d.getDay()] + ', ' + MONTHS_LONG[d.getMonth()] + ' ' + d.getDate()
-    : DAYS_LONG[d.getDay()] + ', ' + MONTHS_LONG[d.getMonth()] + ' ' + d.getDate();
+  const h = new Date().getHours();
+  const period = h < 12 ? 'morning' : h < 17 ? 'afternoon' : 'evening';
+  const emoji  = h < 12 ? '☀️' : h < 17 ? '⛷️' : '🌙';
+  const name   = getFirstName();
+  el.textContent = name
+    ? `Good ${period}, ${name} ${emoji}`
+    : `Good ${period} ${emoji}`;
+}
+
+function getFirstName() {
+  const raw = localStorage.getItem('wb_instructorName') || '';
+  if (!raw) return '';
+  const nick = raw.match(/\(\s*([^)]+?)\s*\)/);
+  if (nick) return nick[1].trim().split(' ')[0];
+  return raw.trim().split(' ')[0];
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -1978,7 +1998,7 @@ async function triggerRefresh(silent=false) {
     if (!hasFocusedInitialDay) focusInitialDay();
     else renderPicker();
     buildStats();
-    if (data.instructorName) { localStorage.setItem('wb_instructorName', data.instructorName); updateChipName(data.instructorName); }
+    if (data.instructorName) { localStorage.setItem('wb_instructorName', data.instructorName); updateChipName(data.instructorName); updateGreeting(); }
     showBubble(summary ? 'Schedule updated — '+summary : 'No changes to schedule', summary ? 'success' : 'nochange');
   } catch(err) {
     showBubble('Network error — check connection', 'error');
@@ -2018,6 +2038,7 @@ window.addEventListener('load', () => {
 
   if (savedName) updateChipName(savedName);
   else           setChipLoggedOut();
+  updateGreeting();
 
   if (cache && cache.length) {
     ingestLessons(cache);
@@ -2254,6 +2275,7 @@ function obEnterApp() {
   renderDayList();
   focusInitialDay();
   buildStats();
+  updateGreeting();
   expandTabBar();
 }
 
