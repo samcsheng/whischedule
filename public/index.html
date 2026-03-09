@@ -1452,8 +1452,21 @@ function renderPicker() {
 function selectDay(key) {
   selectedKey = clampSelectedKey(key);
   weekOffset  = computeWeekOffsetForKey(selectedKey);
-  if (pickerExpanded) renderPickerMonth();
-  else renderPickerWeek();
+  if (pickerExpanded) {
+    // Update selection in-place — no grid re-render, no scroll jump
+    document.querySelectorAll('#pickerMonthGrid .picker-day.selected').forEach(el => {
+      el.classList.remove('selected');
+      el.classList.toggle('today', el.dataset.key === TODAY_KEY);
+    });
+    const newSel = document.querySelector(`#pickerMonthGrid .picker-day[onclick="selectDay('${selectedKey}')"]`);
+    if (newSel) { newSel.classList.add('selected'); newSel.classList.remove('today'); }
+    // Update month label
+    const selD = new Date(selectedKey + 'T12:00:00');
+    document.getElementById('pickerMonthLabel').textContent =
+      MONTHS_LONG[selD.getMonth()] + ' ' + selD.getFullYear();
+  } else {
+    renderPickerWeek();
+  }
   scrollToDay(selectedKey, true);
 }
 
@@ -1497,7 +1510,9 @@ function computeWeekOffsetForKey(key) {
 function scrollToDay(key, smooth) {
   const scroll = document.getElementById('dayScroll');
   const sec    = scroll && scroll.querySelector(`.day-section[data-key="${key}"]`);
-  if (sec) sec.scrollIntoView({ behavior: smooth ? 'smooth' : 'auto', block: 'start' });
+  if (!sec) return;
+  suppressTabCollapse(smooth ? 800 : 400);
+  sec.scrollIntoView({ behavior: smooth ? 'smooth' : 'auto', block: 'start' });
 }
 
 function focusInitialDay() {
@@ -1677,12 +1692,29 @@ function switchTab(tab) {
   document.querySelectorAll('.tab').forEach(t  => t.classList.remove('active'));
   document.getElementById('page-' + tab).classList.add('active');
   document.getElementById('tab-'  + tab).classList.add('active');
+  expandTabBar();
 }
 
 // ── Glass tab bar: collapse on scroll down, expand on scroll up ──
+let _tabBarCollapsed = false;
+let _suppressCollapse = false;
+
+function expandTabBar() {
+  const tabBar = document.getElementById('tabBar');
+  if (!tabBar) return;
+  _tabBarCollapsed = false;
+  tabBar.classList.remove('collapsed');
+  tabBar.classList.add('just-appeared');
+}
+
+function suppressTabCollapse(ms) {
+  _suppressCollapse = true;
+  setTimeout(() => { _suppressCollapse = false; }, ms);
+}
+
 (function() {
   const TRIGGER = 40;
-  let lastY = 0, collapsed = false, accumulated = 0;
+  let lastY = 0, accumulated = 0;
 
   function attachScrollListener() {
     const scroller = document.getElementById('dayScroll');
@@ -1690,25 +1722,26 @@ function switchTab(tab) {
     if (!scroller || !tabBar) return;
 
     scroller.addEventListener('scroll', () => {
+      if (_suppressCollapse) { lastY = scroller.scrollTop; return; }
       const y   = scroller.scrollTop;
       const dir = y - lastY;
 
       if (dir > 0 && y > 60) {
         accumulated += dir;
-        if (!collapsed && accumulated > TRIGGER) {
-          collapsed = true;
+        if (!_tabBarCollapsed && accumulated > TRIGGER) {
+          _tabBarCollapsed = true;
           tabBar.classList.add('collapsed');
           tabBar.classList.remove('just-appeared');
         }
-      } else if (dir < 0 && collapsed) {
-        collapsed = false; accumulated = 0;
+      } else if (dir < 0 && _tabBarCollapsed) {
+        _tabBarCollapsed = false; accumulated = 0;
         tabBar.classList.remove('collapsed');
         tabBar.classList.add('just-appeared');
       } else if (dir > 0) {
         accumulated += dir;
       }
       if (y <= 10) {
-        collapsed = false; accumulated = 0;
+        _tabBarCollapsed = false; accumulated = 0;
         tabBar.classList.remove('collapsed', 'just-appeared');
       }
       lastY = y;
@@ -2111,6 +2144,7 @@ function obEnterApp() {
   renderDayList();
   focusInitialDay();
   buildStats();
+  expandTabBar();
 }
 
 // ── Snow particle animation (Screen 1) ──
