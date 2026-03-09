@@ -614,8 +614,9 @@ body::after { content:''; position:fixed; inset:0; pointer-events:none; z-index:
 .bstat-label { font-size:10px; color:var(--muted); margin-top:5px; font-weight:500; letter-spacing:0.06em; text-transform:uppercase; }
 
 .breakdown { background:var(--card); border:1px solid var(--border); border-radius:16px; padding:16px; }
-.brow { margin-bottom:14px; }
-.brow:last-child { margin-bottom:0; }
+.brow { transition: background 0.12s; border-radius: 10px; padding: 4px 4px 4px 4px; margin-bottom: 10px; }
+.brow:last-child { margin-bottom: 0; }
+.brow:active { background: rgba(255,255,255,0.04); }
 .brow-top { display:flex; justify-content:space-between; margin-bottom:6px; align-items:center; }
 .brow-label { font-size:12px; font-weight:500; display:flex; align-items:center; gap:6px; }
 .brow-dot { width:7px; height:7px; border-radius:50%; flex-shrink:0; }
@@ -953,6 +954,167 @@ body::after { content:''; position:fixed; inset:0; pointer-events:none; z-index:
   height: 100%; background: var(--blue); border-radius: 1px;
   width: 0%; transition: width 3s linear;
 }
+
+/* ── PROGRAM DETAIL MODAL ── */
+.prog-modal-overlay {
+  position: fixed; inset: 0; z-index: 510;
+  background: rgba(6,13,26,0.75);
+  backdrop-filter: blur(16px) saturate(160%);
+  -webkit-backdrop-filter: blur(16px) saturate(160%);
+  display: flex; align-items: flex-end; justify-content: center;
+  opacity: 0; pointer-events: none;
+  transition: opacity 0.25s;
+}
+.prog-modal-overlay.open { opacity: 1; pointer-events: all; }
+
+.prog-modal-sheet {
+  width: 100%; max-width: 480px;
+  background: rgba(11,22,42,0.95);
+  backdrop-filter: blur(40px) saturate(200%);
+  -webkit-backdrop-filter: blur(40px) saturate(200%);
+  border-radius: 28px 28px 0 0;
+  border: 1px solid rgba(255,255,255,0.10);
+  border-bottom: none;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.10), 0 -12px 48px rgba(0,0,0,0.55);
+  /* Full-height sheet with internal scroll */
+  max-height: 88vh;
+  display: flex; flex-direction: column;
+  transform: translateY(100%);
+  transition: transform 0.32s cubic-bezier(0.16,1,0.3,1);
+}
+.prog-modal-overlay.open .prog-modal-sheet { transform: translateY(0); }
+
+/* Accent bar at top tinted by program colour */
+.prog-modal-accent {
+  height: 3px; border-radius: 3px 3px 0 0;
+  flex-shrink: 0;
+  /* set via inline style */
+}
+.prog-modal-header {
+  display: flex; align-items: center;
+  padding: 14px 20px 12px;
+  flex-shrink: 0;
+}
+.prog-modal-handle {
+  width: 36px; height: 4px; border-radius: 2px;
+  background: rgba(255,255,255,0.12);
+  position: absolute; left: 50%; transform: translateX(-50%);
+  top: 10px;
+}
+.prog-modal-title {
+  flex: 1;
+  font-family: var(--f-head); font-size: 18px; font-weight: 800;
+  color: var(--snow); letter-spacing: -0.01em;
+}
+.prog-modal-close {
+  width: 30px; height: 30px; border-radius: 50%;
+  background: rgba(255,255,255,0.08); border: none; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  color: var(--muted); transition: background 0.15s, color 0.15s;
+  flex-shrink: 0;
+}
+.prog-modal-close:hover { background: rgba(255,255,255,0.14); color: var(--snow); }
+.prog-modal-close svg { width: 14px; height: 14px; stroke: currentColor; fill: none; stroke-width: 2.5; }
+
+/* Stats pills */
+.prog-modal-stats {
+  display: flex; gap: 8px;
+  padding: 0 20px 16px;
+  flex-shrink: 0;
+}
+.prog-modal-stat {
+  flex: 1;
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.07);
+  border-radius: 14px; padding: 10px 6px; text-align: center;
+}
+.prog-modal-stat-val {
+  font-family: var(--f-head); font-size: 22px; font-weight: 800; line-height: 1;
+  /* colour set via inline style */
+}
+.prog-modal-stat-lbl {
+  font-size: 9px; color: var(--muted); margin-top: 5px;
+  font-weight: 600; letter-spacing: 0.05em; text-transform: uppercase;
+}
+
+/* Divider */
+.prog-modal-divider {
+  height: 1px; background: rgba(255,255,255,0.07);
+  margin: 0 20px 0;
+  flex-shrink: 0;
+}
+
+/* Section label */
+.prog-modal-section {
+  font-size: 10px; font-weight: 700; letter-spacing: 0.10em; text-transform: uppercase;
+  color: var(--muted); padding: 14px 20px 8px;
+  flex-shrink: 0;
+}
+
+/* Heatmap inside modal */
+.prog-modal-heatmap {
+  padding: 0 20px 14px;
+  overflow-x: auto;
+  scrollbar-width: none;
+  flex-shrink: 0;
+}
+.prog-modal-heatmap::-webkit-scrollbar { display: none; }
+.prog-hm-wrap { display: flex; gap: 10px; min-width: max-content; }
+.prog-hm-col {}
+.prog-hm-month { font-size: 9px; color: var(--muted); font-weight: 600;
+  letter-spacing: 0.08em; text-transform: uppercase; margin-bottom: 5px; }
+.prog-hm-grid { display: grid; grid-template-columns: repeat(7, 14px); gap: 2px; }
+.prog-hm-cell { width: 14px; height: 14px; border-radius: 2px; }
+.prog-hm-empty  { background: transparent; }
+.prog-hm-season { background: rgba(255,255,255,0.05); }  /* in season, not this program */
+.prog-hm-active { /* set inline with program colour */ }
+.prog-hm-today  { outline: 1px solid rgba(255,255,255,0.35); outline-offset: 1px; }
+
+/* Scrollable day list */
+.prog-modal-list {
+  flex: 1; min-height: 0;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+}
+.prog-month-group {}
+.prog-month-sticky {
+  position: sticky; top: 0;
+  background: rgba(11,22,42,0.92);
+  backdrop-filter: blur(12px);
+  padding: 6px 20px 5px;
+  font-size: 10px; font-weight: 700; letter-spacing: 0.09em; text-transform: uppercase;
+  color: var(--muted);
+  border-bottom: 1px solid rgba(255,255,255,0.05);
+  z-index: 2;
+}
+.prog-day-row {
+  display: flex; align-items: center;
+  padding: 11px 20px;
+  border-bottom: 1px solid rgba(255,255,255,0.04);
+  cursor: pointer;
+  transition: background 0.12s;
+  gap: 12px;
+}
+.prog-day-row:active { background: rgba(255,255,255,0.04); }
+.prog-day-row:last-child { border-bottom: none; }
+.prog-day-row.is-future { opacity: 0.6; }
+.prog-day-date {
+  flex: 1;
+  font-size: 13px; font-weight: 500; color: var(--snow);
+}
+.prog-day-date-sub {
+  font-size: 10px; color: var(--muted); margin-top: 1px; font-weight: 400;
+}
+.prog-day-hrs {
+  font-family: var(--f-mono); font-size: 13px; font-weight: 500;
+  /* colour set inline */
+  flex-shrink: 0;
+}
+.prog-day-row.is-today .prog-day-date { color: var(--blue); }
+.prog-day-chevron {
+  width: 14px; height: 14px; flex-shrink: 0; opacity: 0.3;
+  stroke: var(--snow); fill: none; stroke-width: 2;
+}
 </style>
 <script>
   window.va = window.va || function () { (window.vaq = window.vaq || []).push(arguments); };
@@ -967,7 +1129,7 @@ body::after { content:''; position:fixed; inset:0; pointer-events:none; z-index:
   <!-- Schedule header -->
   <div class="app-header" id="scheduleHeader">
     <div class="app-header-inner">
-      <span class="app-header-name">WhisSchedule</span>
+      <span class="app-header-name">Schedule</span>
       <div class="app-header-right">
         <button class="app-header-refresh" id="refreshBtn" onclick="triggerRefresh()" title="Sync schedule">
           <svg viewBox="0 0 24 24"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
@@ -1013,7 +1175,7 @@ body::after { content:''; position:fixed; inset:0; pointer-events:none; z-index:
   <!-- Stats header -->
   <div class="app-header">
     <div class="app-header-inner">
-      <span class="app-header-name">WhisSchedule</span>
+      <span class="app-header-name">Stats</span>
       <div class="app-header-right">
         <button class="app-header-refresh" onclick="triggerRefresh()" title="Sync schedule">
           <svg viewBox="0 0 24 24"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
@@ -1049,6 +1211,29 @@ body::after { content:''; position:fixed; inset:0; pointer-events:none; z-index:
     <span class="tab-label">Stats</span>
   </div>
 </nav>
+
+<!-- ── PROGRAM DETAIL MODAL ── -->
+<div class="prog-modal-overlay" id="progModal" onclick="handleProgModalOverlay(event)">
+  <div class="prog-modal-sheet" id="progModalSheet">
+    <div class="prog-modal-accent" id="progModalAccent"></div>
+    <div style="position:relative">
+      <div class="prog-modal-handle"></div>
+    </div>
+    <div class="prog-modal-header">
+      <div class="prog-modal-title" id="progModalTitle">Program</div>
+      <button class="prog-modal-close" onclick="closeProgModal()">
+        <svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+    <div class="prog-modal-stats" id="progModalStats"></div>
+    <div class="prog-modal-divider"></div>
+    <div class="prog-modal-section">Season Heatmap</div>
+    <div class="prog-modal-heatmap" id="progModalHeatmap"></div>
+    <div class="prog-modal-divider"></div>
+    <div class="prog-modal-section">Day by Day</div>
+    <div class="prog-modal-list" id="progModalList"></div>
+  </div>
+</div>
 
 <!-- ── PROFILE MODAL ── -->
 <div class="modal-overlay" id="profileModal" onclick="handleOverlayClick(event)">
@@ -1822,9 +2007,17 @@ function buildStats() {
 
   const activePrograms = programs.filter(p=>(progHours[p.key]||0)>0).sort((a,b)=>(progHours[b.key]||0)-(progHours[a.key]||0));
   const maxH = activePrograms.length ? (progHours[activePrograms[0].key]||1) : 1;
+  const totalLessonHrs = lessonHrs || 1;
   document.getElementById('breakdown').innerHTML = activePrograms.map(p => {
     const h = progHours[p.key]; const pct = Math.round((h/maxH)*100);
-    return `<div class="brow"><div class="brow-top"><span class="brow-label"><span class="brow-dot" style="background:${p.color}"></span>${p.label}</span><span class="brow-vals">${h.toFixed(1)}h</span></div><div class="brow-bar"><div class="brow-fill" style="width:${pct}%;background:${p.color}"></div></div></div>`;
+    const sharePct = Math.round((h / totalLessonHrs) * 100);
+    return `<div class="brow" style="cursor:pointer" onclick="openProgModal('${p.key}','${p.label.replace(/'/g,"\\'")}','${p.color}')">
+      <div class="brow-top">
+        <span class="brow-label"><span class="brow-dot" style="background:${p.color}"></span>${p.label}</span>
+        <span class="brow-vals">${h.toFixed(1)}h <span style="opacity:0.5;margin-left:3px">${sharePct}%</span></span>
+      </div>
+      <div class="brow-bar"><div class="brow-fill" style="width:${pct}%;background:${p.color}"></div></div>
+    </div>`;
   }).join('') || '<p style="color:var(--muted);padding:16px;font-size:13px">No lesson hours recorded yet.</p>';
 
   const hmMonths = [{y:2025,m:10},{y:2025,m:11},{y:2026,m:0},{y:2026,m:1},{y:2026,m:2},{y:2026,m:3},{y:2026,m:4}];
@@ -1870,6 +2063,159 @@ function buildStats() {
     const meta=[disc==='ski'?'Ski':disc==='snowboard'?'Snowboard':null,loc,dur].filter(Boolean).join(' · ');
     return `<div class="client-row"><div class="client-avatar">${initials}</div><div><div class="client-name">${c.name}</div><div class="client-meta">${meta||'Private Lesson'}</div></div><div class="client-days">${c.days.size}d</div></div>`;
   }).join('') : `<div class="empty-state" style="padding:32px 20px"><div class="empty-emoji">🎿</div><div class="empty-title">No private clients</div><div class="empty-sub">Private lesson bookings with named clients will show up here.</div></div>`;
+}
+
+
+// ─────────────────────────────────────────────────────────────────────────────
+// PROGRAM DETAIL MODAL
+// ─────────────────────────────────────────────────────────────────────────────
+function openProgModal(progKey, label, color) {
+  const validKeys = Object.keys(byDate).sort().filter(k => !SEASON_END_KEY || k <= SEASON_END_KEY);
+
+  // Days + hours for this program
+  const progDays = []; // [{key, hours, isFuture}]
+  validKeys.forEach(k => {
+    const ls = byDate[k] || [];
+    const rows = ls.filter(l => isPaid(l.assignment) && getProgram(l.raw) === progKey);
+    if (!rows.length) return;
+    const hours = rows.reduce((s,l) => s + l.hours, 0);
+    progDays.push({ key: k, hours: parseFloat(hours.toFixed(2)), isFuture: k > TODAY_KEY });
+  });
+
+  const totalHrs  = progDays.reduce((s,d) => s + d.hours, 0);
+  const allLessonHrs = Object.values(
+    (() => { const ph = {};
+      validKeys.forEach(k => { (byDate[k]||[]).forEach(l => {
+        if (!isPaid(l.assignment)) return;
+        const p = getProgram(l.raw);
+        if (['off','end','sick','other'].includes(p)) return;
+        if (p === 'other' && /term process/i.test(l.raw)) return;
+        ph[p] = (ph[p]||0) + l.hours;
+      }); });
+      return ph;
+    })()
+  ).reduce((a,b) => a+b, 0) || 1;
+  const sharePct  = Math.round((totalHrs / allLessonHrs) * 100);
+
+  // Header
+  document.getElementById('progModalAccent').style.background = color;
+  document.getElementById('progModalTitle').textContent = label;
+
+  // Stats pills — resolve colour class from color string
+  const colClass = color.startsWith('var(--') ? color.replace('var(--','c-').replace(')','') : '';
+  const colStyle = colClass ? '' : `style="color:${color}"`;
+  const colAttr  = colClass ? `class="prog-modal-stat-val ${colClass}"` : `class="prog-modal-stat-val" style="color:${color}"`;
+  document.getElementById('progModalStats').innerHTML = `
+    <div class="prog-modal-stat">
+      <div ${colAttr}>${progDays.length}</div>
+      <div class="prog-modal-stat-lbl">Days</div>
+    </div>
+    <div class="prog-modal-stat">
+      <div ${colAttr}>${totalHrs.toFixed(1)}</div>
+      <div class="prog-modal-stat-lbl">Hours</div>
+    </div>
+    <div class="prog-modal-stat">
+      <div ${colAttr}>${sharePct}%</div>
+      <div class="prog-modal-stat-lbl">Of Total</div>
+    </div>`;
+
+  // Heatmap — only this program's season range
+  const seasonMonths = _getSeasonMonths();
+  const progDaySet = new Set(progDays.map(d => d.key));
+  const progDayMap = {};
+  progDays.forEach(d => { progDayMap[d.key] = d.hours; });
+
+  const hmHtml = seasonMonths.map(({y, m}) => {
+    const first = new Date(y, m, 1);
+    const days  = new Date(y, m+1, 0).getDate();
+    let cells = '';
+    for (let p = 0; p < first.getDay(); p++)
+      cells += `<div class="prog-hm-cell prog-hm-empty"></div>`;
+    for (let d = 1; d <= days; d++) {
+      const key = toKey(new Date(y, m, d));
+      const allDayKeys = Object.keys(byDate).sort();
+      const seasonStart = allDayKeys[0] || key;
+      const seasonEnd   = SEASON_END_KEY || allDayKeys[allDayKeys.length-1] || key;
+      const inSeason = key >= seasonStart && key <= seasonEnd;
+      const afterEnd = key > seasonEnd;
+      let cls = 'prog-hm-cell ';
+      let style = '';
+      if (!inSeason || afterEnd) {
+        cls += 'prog-hm-empty';
+      } else if (progDaySet.has(key)) {
+        cls += 'prog-hm-active';
+        style = `background:${color};opacity:0.85`;
+      } else {
+        cls += 'prog-hm-season';
+      }
+      if (key === TODAY_KEY) cls += ' prog-hm-today';
+      cells += `<div class="${cls}" ${style ? `style="${style}"` : ''} title="${key}"></div>`;
+    }
+    return `<div class="prog-hm-col"><div class="prog-hm-month">${MONTHS_SHORT[m]} ${y===2025?'25':'26'}</div><div class="prog-hm-grid">${cells}</div></div>`;
+  }).join('');
+  document.getElementById('progModalHeatmap').innerHTML = `<div class="prog-hm-wrap">${hmHtml}</div>`;
+
+  // Day list grouped by month
+  if (!progDays.length) {
+    document.getElementById('progModalList').innerHTML = '<p style="padding:20px;color:var(--muted);font-size:13px;text-align:center">No days recorded yet.</p>';
+  } else {
+    let listHtml = '';
+    let curMonth = null;
+    progDays.forEach(d => {
+      const dt  = new Date(d.key + 'T12:00:00');
+      const mon = MONTHS_LONG[dt.getMonth()] + ' ' + dt.getFullYear();
+      if (mon !== curMonth) {
+        if (curMonth !== null) listHtml += '</div>'; // close previous group
+        curMonth = mon;
+        listHtml += `<div class="prog-month-group"><div class="prog-month-sticky">${mon}</div>`;
+      }
+      const isToday   = d.key === TODAY_KEY;
+      const dayLabel  = DAYS_LONG[dt.getDay()] + ', ' + MONTHS_SHORT[dt.getMonth()] + ' ' + dt.getDate();
+      const hrsStr    = d.hours > 0 ? d.hours.toFixed(1) + 'h' : '—';
+      const futureCls = d.isFuture ? ' is-future' : '';
+      const todayCls  = isToday ? ' is-today' : '';
+      listHtml += `<div class="prog-day-row${futureCls}${todayCls}" onclick="progDayClick('${d.key}')">
+        <div>
+          <div class="prog-day-date">${dayLabel}${isToday ? ' · Today' : ''}</div>
+        </div>
+        <div class="prog-day-hrs" style="color:${color}">${hrsStr}</div>
+        <svg class="prog-day-chevron" viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg>
+      </div>`;
+    });
+    if (curMonth !== null) listHtml += '</div>'; // close last group
+    document.getElementById('progModalList').innerHTML = listHtml;
+  }
+
+  document.getElementById('progModal').classList.add('open');
+}
+
+function closeProgModal() {
+  document.getElementById('progModal').classList.remove('open');
+}
+function handleProgModalOverlay(e) {
+  if (e.target === document.getElementById('progModal')) closeProgModal();
+}
+function progDayClick(key) {
+  closeProgModal();
+  switchTab('schedule');
+  // Small delay so tab transition completes before scroll
+  setTimeout(() => selectDay(key), 80);
+}
+function _getSeasonMonths() {
+  if (!Object.keys(byDate).length) {
+    return [{y:2025,m:10},{y:2025,m:11},{y:2026,m:0},{y:2026,m:1},{y:2026,m:2},{y:2026,m:3}];
+  }
+  const keys = Object.keys(byDate).sort();
+  const first = new Date(keys[0] + 'T12:00:00');
+  const last  = new Date((SEASON_END_KEY || keys[keys.length-1]) + 'T12:00:00');
+  const months = [];
+  const cur = new Date(first.getFullYear(), first.getMonth(), 1);
+  const end = new Date(last.getFullYear(), last.getMonth(), 1);
+  while (cur <= end) {
+    months.push({ y: cur.getFullYear(), m: cur.getMonth() });
+    cur.setMonth(cur.getMonth() + 1);
+  }
+  return months;
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
