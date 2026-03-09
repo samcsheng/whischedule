@@ -46,6 +46,18 @@
   --glass-highlight: rgba(255,255,255,0.12);
   --glass-highlight-strong: rgba(255,255,255,0.15);
   --glass-press: rgba(255,255,255,0.05);
+  --glass-shadow:
+    inset 0 1px 0 var(--glass-highlight),
+    inset 0 -1px 0 rgba(0,0,0,0.2),
+    0 8px 32px rgba(0,0,0,0.45),
+    0 2px 8px rgba(0,0,0,0.3);
+  --glass-shadow-collapsed:
+    inset 0 1px 0 var(--glass-highlight-strong),
+    inset 0 -1px 0 rgba(0,0,0,0.3),
+    0 12px 40px rgba(0,0,0,0.55),
+    0 4px 12px rgba(0,0,0,0.4);
+  --tab-active-bg: rgba(59,139,255,0.18);
+  --tab-active-shadow: inset 0 1px 0 rgba(59,139,255,0.25), inset 0 -1px 0 rgba(0,0,0,0.1);
   --header-bg: rgba(6,13,26,0.72);
   --header-divider: rgba(255,255,255,0.05);
   --header-shadow: 0 8px 40px rgba(0,0,0,0.4);
@@ -116,12 +128,27 @@ html[data-theme="light"] {
   --snow:    #16253d;
   --muted:   #5f728d;
   --dim:     #d9e5f5;
-  --tabs-bg: rgba(255,255,255,0.88);
-  --tabs-bg-collapsed: rgba(255,255,255,0.95);
-  --glass-border: rgba(20,49,89,0.14);
-  --glass-highlight: rgba(255,255,255,0.85);
-  --glass-highlight-strong: rgba(255,255,255,0.95);
+  --tabs-bg: rgba(255,255,255,0.56);
+  --tabs-bg-collapsed: rgba(255,255,255,0.7);
+  --glass-border: rgba(255,255,255,0.48);
+  --glass-highlight: rgba(255,255,255,0.82);
+  --glass-highlight-strong: rgba(255,255,255,0.96);
   --glass-press: rgba(20,49,89,0.07);
+  --glass-shadow:
+    inset 0 1px 0 rgba(255,255,255,0.92),
+    inset 0 -1px 0 rgba(122,152,193,0.14),
+    0 18px 40px rgba(84,118,165,0.16),
+    0 3px 12px rgba(84,118,165,0.10);
+  --glass-shadow-collapsed:
+    inset 0 1px 0 rgba(255,255,255,0.98),
+    inset 0 -1px 0 rgba(122,152,193,0.18),
+    0 20px 44px rgba(84,118,165,0.18),
+    0 5px 14px rgba(84,118,165,0.12);
+  --tab-active-bg: rgba(255,255,255,0.54);
+  --tab-active-shadow:
+    inset 0 1px 0 rgba(255,255,255,0.95),
+    inset 0 -1px 0 rgba(122,152,193,0.16),
+    0 8px 18px rgba(84,118,165,0.12);
   --header-bg: rgba(237,243,251,0.88);
   --header-divider: rgba(19,44,78,0.08);
   --header-shadow: 0 10px 30px rgba(32,67,112,0.08);
@@ -194,11 +221,7 @@ body::after { content:''; position:fixed; inset:0; pointer-events:none; z-index:
   -webkit-backdrop-filter: blur(28px) saturate(180%);
   border-radius: 999px;
   border: 1px solid var(--glass-border);
-  box-shadow:
-    inset 0 1px 0 var(--glass-highlight),
-    inset 0 -1px 0 rgba(0,0,0,0.2),
-    0 8px 32px rgba(0,0,0,0.45),
-    0 2px 8px rgba(0,0,0,0.3);
+  box-shadow: var(--glass-shadow);
   height: 58px;
   transition:
     height 0.38s cubic-bezier(0.16,1,0.3,1),
@@ -210,11 +233,7 @@ body::after { content:''; position:fixed; inset:0; pointer-events:none; z-index:
 .tabs.collapsed {
   height: 44px;
   background: var(--tabs-bg-collapsed);
-  box-shadow:
-    inset 0 1px 0 var(--glass-highlight-strong),
-    inset 0 -1px 0 rgba(0,0,0,0.3),
-    0 12px 40px rgba(0,0,0,0.55),
-    0 4px 12px rgba(0,0,0,0.4);
+  box-shadow: var(--glass-shadow-collapsed);
 }
 /* Spring-up when expanding */
 @keyframes tab-nudge {
@@ -245,9 +264,9 @@ body::after { content:''; position:fixed; inset:0; pointer-events:none; z-index:
 }
 .tab:active { background: var(--glass-press); }
 .tab.active {
-  background: rgba(59,139,255,0.18);
+  background: var(--tab-active-bg);
   color: var(--blue);
-  box-shadow: inset 0 1px 0 rgba(59,139,255,0.25), inset 0 -1px 0 rgba(0,0,0,0.1);
+  box-shadow: var(--tab-active-shadow);
 }
 .tab svg {
   width: 20px; height: 20px;
@@ -1001,6 +1020,7 @@ body::after { content:''; position:fixed; inset:0; pointer-events:none; z-index:
   backdrop-filter: blur(16px) saturate(160%);
   -webkit-backdrop-filter: blur(16px) saturate(160%);
   box-shadow: 0 10px 30px rgba(0,0,0,0.14);
+  transition: background 0.42s ease, border-color 0.42s ease, color 0.42s ease, box-shadow 0.42s ease, transform 0.18s ease;
 }
 .theme-toggle-btn svg {
   width: 18px;
@@ -1014,35 +1034,90 @@ body::after { content:''; position:fixed; inset:0; pointer-events:none; z-index:
 .theme-toggle-btn:active { transform: scale(0.96); }
 .theme-segmented {
   display: flex;
-  gap: 8px;
+  gap: 6px;
   width: 100%;
+}
+.theme-segmented.profile-theme-control {
+  width: fit-content;
+  margin: 0 auto;
+  padding: 4px;
+  border-radius: 999px;
+  background: var(--theme-chip-bg);
+  border: 1px solid var(--theme-chip-border);
+  box-shadow: inset 0 1px 0 var(--glass-highlight);
 }
 .theme-segmented.compact { width: auto; }
 .theme-chip {
   appearance: none;
-  border: 1px solid var(--theme-chip-border);
-  background: var(--theme-chip-bg);
+  border: 1px solid transparent;
+  background: transparent;
   color: var(--muted);
   border-radius: 999px;
-  padding: 10px 14px;
+  padding: 11px 18px;
+  min-width: 132px;
   font-family: var(--f-head);
   font-size: 13px;
   font-weight: 700;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
   cursor: pointer;
-  transition: background 0.18s ease, border-color 0.18s ease, color 0.18s ease, transform 0.15s ease;
+  transition: background 0.42s ease, border-color 0.42s ease, color 0.42s ease, box-shadow 0.42s ease, transform 0.18s ease;
 }
 .theme-chip.compact {
   padding: 8px 11px;
   font-size: 12px;
 }
+.theme-chip svg {
+  width: 15px;
+  height: 15px;
+  stroke: currentColor;
+  fill: none;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
 .theme-chip.is-active {
   background: var(--theme-chip-active-bg);
   border-color: var(--theme-chip-active-border);
   color: var(--theme-chip-active-text);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.15);
 }
 .theme-chip:active { transform: scale(0.98); }
 .modal-fieldset {
   margin-bottom: 14px;
+}
+.modal-fieldset .modal-section-title {
+  text-align: center;
+}
+.app-header,
+.tabs,
+.tab,
+.picker-handle,
+.day-list,
+.day-header,
+.lesson-row,
+.bstat,
+.breakdown,
+.heatmap-wrap,
+.hm-legend,
+.client-list,
+.client-row,
+.modal-overlay,
+.modal-sheet,
+.prog-modal-overlay,
+.prog-modal-sheet,
+.prog-month-sticky,
+.prog-day-row,
+.prog-modal-stat,
+.modal-qstat,
+.modal-field input,
+.modal-btn-cancel,
+.ob-wrap,
+.ob-stat-pill,
+.empty-cta {
+  transition: background 0.48s ease, background-color 0.48s ease, border-color 0.48s ease, color 0.48s ease, box-shadow 0.48s ease;
 }
 .ob-wrap.ob-hidden { opacity: 0; pointer-events: none; }
 
@@ -1498,9 +1573,15 @@ body::after { content:''; position:fixed; inset:0; pointer-events:none; z-index:
     </div>
     <div class="modal-fieldset">
       <div class="modal-section-title">Appearance</div>
-      <div class="theme-segmented" data-theme-controls="profile">
-        <button type="button" class="theme-chip" data-theme-option="dark" onclick="setTheme('dark')">Dark</button>
-        <button type="button" class="theme-chip" data-theme-option="light" onclick="setTheme('light')">Light</button>
+      <div class="theme-segmented profile-theme-control" data-theme-controls="profile">
+        <button type="button" class="theme-chip" data-theme-option="dark" onclick="setTheme('dark')">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M21 12.79A9 9 0 1 1 11.21 3c0 .31-.03.62-.03.94A7.5 7.5 0 0 0 20.06 12c.32 0 .63-.02.94-.03Z"></path></svg>
+          <span>Dark</span>
+        </button>
+        <button type="button" class="theme-chip" data-theme-option="light" onclick="setTheme('light')">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4"></circle><path d="M12 2v2"></path><path d="M12 20v2"></path><path d="M4.93 4.93l1.41 1.41"></path><path d="M17.66 17.66l1.41 1.41"></path><path d="M2 12h2"></path><path d="M20 12h2"></path><path d="M4.93 19.07l1.41-1.41"></path><path d="M17.66 6.34l1.41-1.41"></path></svg>
+          <span>Light</span>
+        </button>
       </div>
     </div>
     <div class="modal-actions">
@@ -3168,24 +3249,18 @@ function obBuildSuccess(data) {
   ).length;
 
   let lessonHours = 0;
-  const programCounts = {};
+  const progHours = {};
   validKeys.forEach(k => byDate[k].forEach(l => {
     const prog = getProgram(l.raw);
-    if (isPaid(l.assignment) && !['off','end','sick','other'].includes(prog)) {
-      lessonHours += (Number(l.hours) || 0);
-      programCounts[prog] = (programCounts[prog] || 0) + 1;
-    }
+    if (!isPaid(l.assignment)) return;
+    if (['off','end','sick','other'].includes(prog)) return;
+    if (prog === 'other' && /term process/i.test(l.raw)) return;
+    const hours = Number(l.hours) || 0;
+    lessonHours += hours;
+    progHours[prog] = (progHours[prog] || 0) + hours;
   }));
 
   let topProgram = 'N/A';
-  let topCount = 0;
-  Object.keys(programCounts).forEach(p => {
-    const c = programCounts[p];
-    if (c > topCount) {
-      topCount = c;
-      topProgram = p;
-    }
-  });
   const progLabels = {
     schools: 'Schools',
     wvsbc: 'WVSBC',
@@ -3202,7 +3277,8 @@ function obBuildSuccess(data) {
     training: 'Training',
     other: 'Other',
   };
-  if (topProgram !== 'N/A') topProgram = progLabels[topProgram] || topProgram.replace(/_/g, ' ');
+  const topProgramKey = Object.keys(progHours).sort((a, b) => (progHours[b] || 0) - (progHours[a] || 0))[0];
+  if (topProgramKey) topProgram = progLabels[topProgramKey] || topProgramKey.replace(/_/g, ' ');
 
   document.getElementById('obStatPills').innerHTML = `
     <div class="ob-stat-pill">
