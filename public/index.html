@@ -1399,7 +1399,7 @@ function buildDayView(key) {
       seenTitles.add(title);
       cards.push({ title, program:prog, discipline:getDiscipline(l.raw), location:getLocation(l.raw),
         isSched:isSchedRow && !isAssigned, hours:null,
-        assignment:isAssigned ? l.assignment : null, client:l.client||null, duration:getPrivateDuration(l.raw), privateDetails: l.privateDetails || null });
+        assignment:isAssigned ? l.assignment : null, client:l.client||null, duration:getPrivateDuration(l.raw) });
     });
     if (!cards.length && raw.some(l => /regular day off/i.test(l.raw)))
       cards.push({ title:'Day Off', program:'off', isSched:false, hours:null });
@@ -1422,7 +1422,7 @@ function buildDayView(key) {
       } else {
         cards.push({ title:cleanTitle(l.raw), program:prog, discipline:getDiscipline(l.raw),
           location:getLocation(l.raw), isSched:false, hours:l.hours,
-          assignment:l.assignment, client:l.client||null, duration:getPrivateDuration(l.raw), privateDetails: l.privateDetails || null });
+          assignment:l.assignment, client:l.client||null, duration:getPrivateDuration(l.raw) });
       }
     });
 
@@ -1430,7 +1430,7 @@ function buildDayView(key) {
       const mainRaw = g.raws.find(r => !/meeting|end of day|standby|sched/i.test(r)) || g.raws[0];
       cards.push({ title:cleanTitle(mainRaw), program:'private', discipline:getDiscipline(mainRaw),
         location:getLocation(mainRaw), isSched:false, hours:parseFloat(g.hours.toFixed(2)),
-        assignment:g.assignment, client:g.client||null, duration:getPrivateDuration(mainRaw), privateDetails: g.privateDetails || null });
+        assignment:g.assignment, client:g.client||null, duration:getPrivateDuration(mainRaw) });
     });
 
     if (isToday) {
@@ -1446,7 +1446,7 @@ function buildDayView(key) {
         const displayProg = PROG_REMAP[schedProg] || schedProg;
         cards.push({ title, program:displayProg, discipline:getDiscipline(l.raw),
           location:getLocation(l.raw), isSched:true, hours:null, assignment:null,
-          client:null, duration:getPrivateDuration(l.raw), privateDetails: l.privateDetails || null });
+          client:null, duration:getPrivateDuration(l.raw) });
       });
     }
 
@@ -1471,20 +1471,6 @@ const PROG_HOURS_COLOR = {
 };
 
 function buildRowsHtml(cards) {
-  let privateDetailsHtml = '';
-if (c.privateDetails && c.assignment && isPaid(c.assignment)) {
-  const pd = c.privateDetails;
-  const skillLabels = ['Level 0', 'L1', 'L2', 'L3', 'L4', 'Advanced'];
-  const skillText = skillLabels[pd.skillLevel] || `Level ${pd.skillLevel}`;
-  privateDetailsHtml = `
-    <div style="margin-top:8px; padding-top:8px; border-top:1px solid rgba(255,255,255,0.08); font-size:11px; color:var(--muted); line-height:1.4;">
-      <div><strong style="color:var(--snow);">👤 ${pd.guestName}</strong> • ${skillText}</div>
-      ${pd.cityState ? `<div>${pd.cityState}</div>` : ''}
-      ${pd.lessonComments ? `<div style="margin-top:4px;"><strong>Lesson:</strong> ${pd.lessonComments}</div>` : ''}
-      ${pd.scheduleComments ? `<div style="margin-top:4px;"><strong>Notes:</strong> ${pd.scheduleComments}</div>` : ''}
-    </div>
-  `;
-}
   return cards.map(c => {
     const isOff = (c.program === 'off' || c.program === 'sick');
 
@@ -1509,7 +1495,6 @@ if (c.privateDetails && c.assignment && isPaid(c.assignment)) {
       <div class="lesson-main">
         <div class="lesson-title">${c.title}</div>
         ${pills ? `<div class="lesson-pills">${pills}</div>` : ''}
-        ${privateDetailsHtml}
       </div>
       ${hoursHtml}
     </div>`;
@@ -2559,7 +2544,7 @@ function ingestLessons(lessons) {
     const key = toKey(d);
     if (!byDate[key]) byDate[key] = [];
     byDate[key].push({ date:d, key, hours:parseFloat(l.hours)||0,
-      raw:(l.activity||'').trim(), assignment:(l.assignment||'').trim(), client:(l.client||'').trim(), privateDetails: l.privateDetails || null });
+      raw:(l.activity||'').trim(), assignment:(l.assignment||'').trim(), client:(l.client||'').trim() });
   });
   Object.keys(byDate).sort().forEach(key => {
     if (!SEASON_END_KEY && byDate[key].some(l => getProgram(l.raw)==='end')) SEASON_END_KEY = key;
