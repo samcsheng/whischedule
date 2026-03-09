@@ -1510,7 +1510,8 @@ function scrollToDay(key, smooth) {
   const sec    = scroll && scroll.querySelector(`.day-section[data-key="${key}"]`);
   if (!sec) return;
   suppressTabCollapse(smooth ? 800 : 400);
-  sec.scrollIntoView({ behavior: smooth ? 'smooth' : 'auto', block: 'start' });
+  const top = sec.offsetTop;
+  scroll.scrollTo({ top, behavior: smooth ? 'smooth' : 'instant' });
 }
 
 function focusInitialDay() {
