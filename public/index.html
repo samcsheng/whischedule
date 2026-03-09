@@ -984,12 +984,6 @@ body::after { content:''; position:fixed; inset:0; pointer-events:none; z-index:
 }
 .prog-modal-overlay.open .prog-modal-sheet { transform: translateY(0); }
 
-/* Accent bar at top tinted by program colour */
-.prog-modal-accent {
-  height: 3px; border-radius: 3px 3px 0 0;
-  flex-shrink: 0;
-  /* set via inline style */
-}
 .prog-modal-header {
   display: flex; align-items: center;
   padding: 14px 20px 12px;
@@ -1215,7 +1209,6 @@ body::after { content:''; position:fixed; inset:0; pointer-events:none; z-index:
 <!-- ── PROGRAM DETAIL MODAL ── -->
 <div class="prog-modal-overlay" id="progModal" onclick="handleProgModalOverlay(event)">
   <div class="prog-modal-sheet" id="progModalSheet">
-    <div class="prog-modal-accent" id="progModalAccent"></div>
     <div style="position:relative">
       <div class="prog-modal-handle"></div>
     </div>
@@ -2098,24 +2091,34 @@ function openProgModal(progKey, label, color) {
   const sharePct  = Math.round((totalHrs / allLessonHrs) * 100);
 
   // Header
-  document.getElementById('progModalAccent').style.background = color;
   document.getElementById('progModalTitle').textContent = label;
 
-  // Stats pills — resolve colour class from color string
-  const colClass = color.startsWith('var(--') ? color.replace('var(--','c-').replace(')','') : '';
-  const colStyle = colClass ? '' : `style="color:${color}"`;
-  const colAttr  = colClass ? `class="prog-modal-stat-val ${colClass}"` : `class="prog-modal-stat-val" style="color:${color}"`;
+  // Resolve CSS variable colours to actual hex values for reliable inline use
+  const CSS_VAR_MAP = {
+    'var(--blue)':   '#3b8bff',
+    'var(--orange)': '#ff7c42',
+    'var(--green)':  '#2dcc8a',
+    'var(--purple)': '#9b7dff',
+    'var(--yellow)': '#ffc542',
+    'var(--red)':    '#ff4d6d',
+    'var(--teal)':   '#2dccc4',
+    'var(--muted)':  '#4a6080',
+    'var(--snow)':   '#e8f0ff',
+  };
+  const resolvedColor = CSS_VAR_MAP[color] || color;
+  const statStyle = `color:${resolvedColor}`;
+
   document.getElementById('progModalStats').innerHTML = `
     <div class="prog-modal-stat">
-      <div ${colAttr}>${progDays.length}</div>
+      <div class="prog-modal-stat-val" style="${statStyle}">${progDays.length}</div>
       <div class="prog-modal-stat-lbl">Days</div>
     </div>
     <div class="prog-modal-stat">
-      <div ${colAttr}>${totalHrs.toFixed(1)}</div>
+      <div class="prog-modal-stat-val" style="${statStyle}">${totalHrs.toFixed(1)}</div>
       <div class="prog-modal-stat-lbl">Hours</div>
     </div>
     <div class="prog-modal-stat">
-      <div ${colAttr}>${sharePct}%</div>
+      <div class="prog-modal-stat-val" style="${statStyle}">${sharePct}%</div>
       <div class="prog-modal-stat-lbl">Of Total</div>
     </div>`;
 
@@ -2144,7 +2147,7 @@ function openProgModal(progKey, label, color) {
         cls += 'prog-hm-empty';
       } else if (progDaySet.has(key)) {
         cls += 'prog-hm-active';
-        style = `background:${color};opacity:0.85`;
+        style = `background:${resolvedColor};opacity:0.85`;
       } else {
         cls += 'prog-hm-season';
       }
@@ -2178,7 +2181,7 @@ function openProgModal(progKey, label, color) {
         <div>
           <div class="prog-day-date">${dayLabel}${isToday ? ' · Today' : ''}</div>
         </div>
-        <div class="prog-day-hrs" style="color:${color}">${hrsStr}</div>
+        <div class="prog-day-hrs" style="color:${resolvedColor}">${hrsStr}</div>
         <svg class="prog-day-chevron" viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg>
       </div>`;
     });
