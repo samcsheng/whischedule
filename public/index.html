@@ -13,7 +13,7 @@
 <link rel="icon" href="/icons/icon.svg" type="image/svg+xml">
 <link rel="apple-touch-icon" href="/icons/icon-192.png">
 <title>WhisSchedule — Whistler Blackcomb</title>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Inter+Tight:wght@600;700;800&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Inter+Tight:wght@600;700;800&family=DM+Mono:wght@400;500&family=Syne:wght@700;800&display=swap" rel="stylesheet">
 <style>
 * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
 :root {
@@ -34,6 +34,7 @@
   --f-ui:    'Inter', sans-serif;
   --f-head:  'Inter Tight', sans-serif;
   --f-mono:  'DM Mono', monospace;
+  --f-display: 'Syne', 'Inter Tight', sans-serif;
 }
 html, body { height: 100%; background: var(--bg); color: var(--snow); font-family: var(--f-ui); overflow-x: hidden; }
 body::after { content:''; position:fixed; inset:0; pointer-events:none; z-index:9999; opacity:0.025;
@@ -52,7 +53,6 @@ body::after { content:''; position:fixed; inset:0; pointer-events:none; z-index:
   align-items: center;
   padding: 5px;
   gap: 2px;
-  /* Glass pill */
   background: rgba(12,24,44,0.55);
   backdrop-filter: blur(28px) saturate(180%);
   -webkit-backdrop-filter: blur(28px) saturate(180%);
@@ -63,7 +63,6 @@ body::after { content:''; position:fixed; inset:0; pointer-events:none; z-index:
     inset 0 -1px 0 rgba(0,0,0,0.2),
     0 8px 32px rgba(0,0,0,0.45),
     0 2px 8px rgba(0,0,0,0.3);
-  /* Height transition for collapse */
   height: 58px;
   transition:
     height 0.38s cubic-bezier(0.16,1,0.3,1),
@@ -171,51 +170,115 @@ body::after { content:''; position:fixed; inset:0; pointer-events:none; z-index:
   position: sticky;
   top: 0;
   z-index: 10;
-  background: rgba(6, 13, 26, 0.65);
+  background: rgba(6, 13, 26, 0.72);
   backdrop-filter: blur(32px) saturate(200%);
   -webkit-backdrop-filter: blur(32px) saturate(200%);
   box-shadow:
-    inset 0 1px 0 rgba(255,255,255,0.1),
-    0 1px 0 rgba(255,255,255,0.04),
-    0 8px 40px rgba(0,0,0,0.5);
+    inset 0 -1px 0 rgba(255,255,255,0.05),
+    0 8px 40px rgba(0,0,0,0.4);
   padding-top: env(safe-area-inset-top, 0px);
   flex-shrink: 0;
 }
-.app-header-brand {
+
+/*
+  Row 1 — large title (left) + action buttons (right)
+  Mirrors Apple large-title nav bar: plenty of vertical room,
+  title and buttons share the same flex baseline.
+*/
+.app-header-inner {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  padding: 12px 16px 12px;
+  padding: 16px 14px 8px;
+  gap: 10px;
 }
-.app-header-wordmark {
+.app-header-name {
+  flex: 1;
+  font-family: var(--f-display);
+  font-size: 28px;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  color: #fff;
+  white-space: nowrap;
+  line-height: 1;
+  /* Subtle blue luminance glow */
+  text-shadow: 0 0 32px rgba(59,139,255,0.35);
+}
+.app-header-right {
   display: flex;
   align-items: center;
   gap: 8px;
+  flex-shrink: 0;
 }
-.app-header-emoji {
-  font-size: 22px;
-  line-height: 1;
-  filter: drop-shadow(0 0 10px rgba(59,139,255,0.5));
-}
-.app-header-name {
-  font-family: var(--f-head);
-  font-size: 22px;
-  font-weight: 800;
-  letter-spacing: -0.04em;
-  color: #fff;
-  text-shadow:
-    0 0 20px rgba(59,139,255,0.45),
-    0 0 60px rgba(59,139,255,0.2);
-}
-.app-header-avatar {
-  width: 32px; height: 32px; border-radius: 50%;
-  background: linear-gradient(135deg, var(--blue), var(--purple));
+.app-header-refresh {
+  width: 34px; height: 34px; border-radius: 50%;
+  background: rgba(255,255,255,0.07);
+  border: 1px solid rgba(255,255,255,0.11);
   display: flex; align-items: center; justify-content: center;
-  font-family: var(--f-head); font-size: 13px; font-weight: 700;
-  color: white; cursor: pointer; flex-shrink: 0;
-  box-shadow: 0 2px 12px rgba(59,139,255,0.35);
-  transition: opacity 0.15s, transform 0.15s;
+  cursor: pointer; color: var(--muted);
+  transition: background 0.15s, color 0.15s, transform 0.15s;
+  outline: none; -webkit-tap-highlight-color: transparent;
 }
+.app-header-refresh:active { background: rgba(255,255,255,0.15); transform: scale(0.91); }
+.app-header-refresh svg {
+  width: 15px; height: 15px;
+  stroke: currentColor; fill: none; stroke-width: 2;
+  stroke-linecap: round; stroke-linejoin: round;
+}
+.app-header-refresh.spinning { color: var(--blue); }
+.app-header-refresh.spinning svg { animation: spin 0.8s linear infinite; }
+
+.app-header-avatar {
+  width: 34px; height: 34px; border-radius: 50%;
+  background: rgba(255,255,255,0.08);
+  border: 1px solid rgba(255,255,255,0.15);
+  backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+  display: flex; align-items: center; justify-content: center;
+  font-family: var(--f-head); font-size: 14px; font-weight: 700;
+  color: rgba(255,255,255,0.85); cursor: pointer; flex-shrink: 0;
+  transition: background 0.15s, transform 0.15s;
+}
+.app-header-avatar:active { background: rgba(255,255,255,0.15); transform: scale(0.91); }
+
+/*
+  Row 2 — sync status
+  Sits below the title row with its own padding.
+  Fixed height so no layout jumps between states.
+*/
+.app-header-sync-bar {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 0 16px 12px;
+  height: 24px;
+  overflow: hidden;
+}
+.app-sync-dot {
+  width: 6px; height: 6px; border-radius: 50%;
+  flex-shrink: 0;
+  background: rgba(255,255,255,0.12);
+  transition: background 0.4s;
+}
+.app-sync-dot.syncing { background: var(--blue);   animation: pulse 1.2s ease-in-out infinite; }
+.app-sync-dot.current { background: var(--green);  animation: none; }
+.app-sync-dot.offline { background: var(--yellow); animation: none; }
+.app-sync-dot.error   { background: var(--red);    animation: none; }
+
+.app-sync-text {
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.01em;
+  color: var(--muted);
+  white-space: nowrap;
+  line-height: 1;
+}
+.app-sync-text.syncing { color: rgba(59,139,255,0.8); }
+.app-sync-text.current { color: rgba(45,204,138,0.75); }
+.app-sync-text.offline { color: rgba(255,197,66,0.8); }
+.app-sync-text.error   { color: rgba(255,77,109,0.8); }
+
+@keyframes sync-slide-in { from { opacity:0; transform:translateY(5px); } to { opacity:1; transform:translateY(0); } }
+.app-sync-text.entering { animation: sync-slide-in 0.28s cubic-bezier(0.16,1,0.3,1) both; }
+
 /* ── TOP BAR (legacy — removed) ── */
 
 /* ── PICKER AREA ── */
@@ -422,9 +485,9 @@ body::after { content:''; position:fixed; inset:0; pointer-events:none; z-index:
 .day-header-date.is-today { color: var(--blue); }
 .lesson-row {
   display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 10px 16px;
+  align-items: flex-start;
+  gap: 14px;
+  padding: 14px 16px;
   border-bottom: 1px solid var(--border);
   cursor: pointer;
   transition: background 0.12s;
@@ -457,16 +520,63 @@ body::after { content:''; position:fixed; inset:0; pointer-events:none; z-index:
 .lesson-dot.prog-off         { background: var(--dim); }
 .lesson-dot.prog-other       { background: var(--muted); }
 .lesson-main { flex: 1; min-width: 0; }
+.lesson-top {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 14px;
+}
+.lesson-head { min-width: 0; flex: 1; }
 .lesson-title {
-  font-size: 13px;
-  font-weight: 500;
+  font-size: 15px;
+  font-weight: 600;
+  line-height: 1.3;
   color: var(--snow);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  margin-bottom: 3px;
+  margin-bottom: 6px;
 }
-.lesson-pills { display: flex; gap: 4px; flex-wrap: wrap; }
+.lesson-pills { display: flex; gap: 6px; flex-wrap: wrap; }
+.lesson-extra {
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px dashed rgba(255,255,255,0.08);
+}
+.lesson-note {
+  margin-top: 2px;
+  font-size: 11px;
+  line-height: 1.5;
+  color: rgba(232,240,255,0.82);
+}
+.lesson-meta-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px 18px;
+}
+.lesson-meta-item { min-width: 0; }
+.lesson-meta-label {
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--muted);
+  opacity: 0.85;
+}
+.lesson-meta-value {
+  font-size: 13px;
+  line-height: 1.35;
+  color: var(--snow);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.lesson-comment-full {
+  margin-top: 10px;
+  font-size: 12px;
+  line-height: 1.5;
+  color: rgba(232,240,255,0.9);
+  white-space: pre-wrap;
+}
 .pill {
   font-size: 10px;
   font-weight: 500;
@@ -485,16 +595,16 @@ body::after { content:''; position:fixed; inset:0; pointer-events:none; z-index:
 .pill-fd         { background: rgba(255,197,66,0.1); color: var(--yellow); }
 .pill-hd         { background: rgba(255,197,66,0.06); color: #c9a030; }
 .lesson-hours {
-  font-size: 14px;
+  font-size: 16px;
   font-weight: 600;
   color: var(--muted);
   flex-shrink: 0;
   text-align: right;
-  line-height: 1;
+  line-height: 1.1;
 }
 .lesson-hours small {
   display: block;
-  font-size: 9px;
+  font-size: 10px;
   font-weight: 400;
   margin-top: 2px;
   color: var(--muted);
@@ -551,8 +661,9 @@ body::after { content:''; position:fixed; inset:0; pointer-events:none; z-index:
 .bstat-label { font-size:10px; color:var(--muted); margin-top:5px; font-weight:500; letter-spacing:0.06em; text-transform:uppercase; }
 
 .breakdown { background:var(--card); border:1px solid var(--border); border-radius:16px; padding:16px; }
-.brow { margin-bottom:14px; }
-.brow:last-child { margin-bottom:0; }
+.brow { transition: background 0.12s; border-radius: 10px; padding: 4px 4px 4px 4px; margin-bottom: 10px; }
+.brow:last-child { margin-bottom: 0; }
+.brow:active { background: rgba(255,255,255,0.04); }
 .brow-top { display:flex; justify-content:space-between; margin-bottom:6px; align-items:center; }
 .brow-label { font-size:12px; font-weight:500; display:flex; align-items:center; gap:6px; }
 .brow-dot { width:7px; height:7px; border-radius:50%; flex-shrink:0; }
@@ -591,80 +702,114 @@ body::after { content:''; position:fixed; inset:0; pointer-events:none; z-index:
 @keyframes fi { from{opacity:0;transform:translateY(8px)} to{opacity:1;transform:translateY(0)} }
 .d1{animation-delay:.05s}.d2{animation-delay:.1s}.d3{animation-delay:.15s}.d4{animation-delay:.2s}.d5{animation-delay:.25s}
 
-/* ── FLOATING REFRESH ── */
-.fab-refresh {
-  position: fixed; bottom: 90px; right: 20px; z-index: 200;
-  width: 52px; height: 52px; border-radius: 50%;
-  background: var(--blue); border: none; cursor: pointer;
-  display: flex; align-items: center; justify-content: center;
-  box-shadow: 0 4px 20px rgba(59,139,255,0.4);
-  transition: transform 0.2s, box-shadow 0.2s, background 0.2s;
-  color: white;
-}
-.fab-refresh:hover { transform: scale(1.08); box-shadow: 0 6px 28px rgba(59,139,255,0.55); }
-.fab-refresh:active { transform: scale(0.95); }
-.fab-refresh.spinning svg { animation: spin 0.8s linear infinite; }
-.fab-refresh svg { width: 22px; height: 22px; stroke: white; fill: none; stroke-width: 2.2; }
+/* ── HEADER REFRESH SPIN ── */
 @keyframes spin { to { transform: rotate(360deg); } }
-
-/* ── STATUS BUBBLE ── */
-.status-bubble {
-  position: fixed; top: calc(env(safe-area-inset-top, 0px) + 10px); left: 50%; transform: translateX(-50%) translateY(-80px);
-  z-index: 999; background: var(--card); border: 1px solid var(--border);
-  border-radius: 30px; padding: 10px 18px;
-  display: flex; align-items: center; gap: 10px;
-  font-size: 13px; font-weight: 500; color: var(--snow);
-  box-shadow: 0 8px 32px rgba(0,0,0,0.4);
-  transition: transform 0.35s cubic-bezier(0.16,1,0.3,1), opacity 0.35s;
-  opacity: 0; pointer-events: none; white-space: nowrap;
-}
-.status-bubble.show { transform: translateX(-50%) translateY(0); opacity: 1; }
-.status-bubble .sb-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
-.status-bubble.loading .sb-dot { background: var(--blue); animation: pulse 1s infinite; }
-.status-bubble.success .sb-dot { background: var(--green); }
-.status-bubble.nochange .sb-dot { background: var(--muted); }
-.status-bubble.error   .sb-dot { background: var(--red); }
 @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.3} }
 
 /* ── PROFILE MODAL ── */
 .modal-overlay {
   position: fixed; inset: 0; z-index: 500;
-  background: rgba(6,13,26,0.85); backdrop-filter: blur(8px);
+  background: rgba(6,13,26,0.75);
+  backdrop-filter: blur(16px) saturate(160%);
+  -webkit-backdrop-filter: blur(16px) saturate(160%);
   display: flex; align-items: flex-end; justify-content: center;
   opacity: 0; pointer-events: none; transition: opacity 0.25s;
 }
 .modal-overlay.open { opacity: 1; pointer-events: all; }
 .modal-sheet {
   width: 100%; max-width: 480px;
-  background: var(--surface); border-radius: 24px 24px 0 0;
-  border: 1px solid var(--border); border-bottom: none;
-  padding: 12px 20px 40px;
-  transform: translateY(100%); transition: transform 0.3s cubic-bezier(0.16,1,0.3,1);
+  background: rgba(11,22,42,0.92);
+  backdrop-filter: blur(40px) saturate(200%);
+  -webkit-backdrop-filter: blur(40px) saturate(200%);
+  border-radius: 28px 28px 0 0;
+  border: 1px solid rgba(255,255,255,0.10);
+  border-bottom: none;
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,0.10),
+    0 -12px 48px rgba(0,0,0,0.55);
+  padding: 12px 20px max(36px, env(safe-area-inset-bottom, 20px));
+  transform: translateY(100%); transition: transform 0.32s cubic-bezier(0.16,1,0.3,1);
 }
 .modal-overlay.open .modal-sheet { transform: translateY(0); }
-.modal-handle { width: 36px; height: 4px; border-radius: 2px; background: var(--dim); margin: 0 auto 20px; }
-.modal-title { font-family:var(--f-head); font-size:20px; font-weight:800; margin-bottom:4px; }
-.modal-sub { font-size:12px; color:var(--muted); margin-bottom:24px; }
-.modal-field { margin-bottom:16px; }
-.modal-field label { display:block; font-size:11px; font-weight:600; letter-spacing:0.08em; text-transform:uppercase; color:var(--muted); margin-bottom:6px; }
+.modal-handle { width: 36px; height: 4px; border-radius: 2px; background: rgba(255,255,255,0.12); margin: 0 auto 20px; }
+
+/* ── Hero row: avatar + name + pass ── */
+.modal-hero {
+  display: flex; align-items: center; gap: 14px;
+  margin-bottom: 16px;
+}
+.modal-hero-avatar {
+  width: 52px; height: 52px; border-radius: 50%; flex-shrink: 0;
+  background: rgba(255,255,255,0.08);
+  border: 1px solid rgba(255,255,255,0.15);
+  display: flex; align-items: center; justify-content: center;
+  font-family: var(--f-head); font-size: 22px; font-weight: 800;
+  color: rgba(255,255,255,0.85);
+}
+.modal-hero-info { flex: 1; min-width: 0; }
+.modal-hero-name {
+  font-family: var(--f-head); font-size: 19px; font-weight: 800;
+  color: var(--snow); line-height: 1.2;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.modal-hero-pass {
+  font-family: var(--f-mono); font-size: 11px; color: var(--muted);
+  margin-top: 3px; letter-spacing: 0.04em;
+}
+
+/* ── Quick stats row ── */
+.modal-quick-stats {
+  display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px;
+  margin-bottom: 20px;
+}
+.modal-qstat {
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.07);
+  border-radius: 14px; padding: 10px 6px; text-align: center;
+}
+.modal-qstat-val {
+  font-family: var(--f-head); font-size: 22px; font-weight: 800; line-height: 1;
+}
+.modal-qstat-val.c-blue   { color: var(--blue); }
+.modal-qstat-val.c-orange { color: var(--orange); }
+.modal-qstat-val.c-yellow { color: var(--yellow); }
+.modal-qstat-val.c-green  { color: var(--green); }
+.modal-qstat-lbl {
+  font-size: 9px; color: var(--muted); margin-top: 5px;
+  font-weight: 600; letter-spacing: 0.05em; text-transform: uppercase; line-height: 1.3;
+}
+
+/* ── Divider ── */
+.modal-divider {
+  height: 1px; background: rgba(255,255,255,0.07);
+  margin: 0 0 16px;
+}
+.modal-section-title {
+  font-size: 10px; font-weight: 700; letter-spacing: 0.10em; text-transform: uppercase;
+  color: var(--muted); margin-bottom: 12px;
+}
+
+/* ── Credential fields ── */
+.modal-field { margin-bottom: 10px; }
+.modal-field label { display:block; font-size:11px; font-weight:600; letter-spacing:0.07em; text-transform:uppercase; color:var(--muted); margin-bottom:6px; }
 .modal-field input {
-  width:100%; padding:12px 14px; border-radius:12px;
-  background:var(--card); border:1px solid var(--border);
+  width:100%; padding:11px 14px; border-radius:13px;
+  background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.09);
   color:var(--snow); font-size:15px; font-family:var(--f-ui);
   outline:none; transition:border-color 0.2s;
 }
-.modal-field input:focus { border-color:var(--blue); }
+.modal-field input:focus { border-color: rgba(59,139,255,0.55); background: rgba(59,139,255,0.06); }
 .modal-field input::placeholder { color:var(--muted); }
-.modal-actions { display:flex; gap:10px; margin-top:20px; }
+.modal-actions { display:flex; gap:8px; margin-top:14px; }
 .modal-btn {
-  flex:1; padding:14px; border-radius:14px; border:none;
-  font-family:var(--f-head); font-size:16px; font-weight:700;
-  cursor:pointer; letter-spacing:0.03em; transition:opacity 0.2s, transform 0.15s;
+  flex:1; padding:13px; border-radius:14px; border:none;
+  font-family:var(--f-head); font-size:15px; font-weight:700;
+  cursor:pointer; letter-spacing:0.02em; transition:opacity 0.2s, transform 0.15s;
 }
 .modal-btn:active { transform:scale(0.97); }
-.modal-btn-save { background:var(--blue); color:white; }
-.modal-btn-cancel { background:var(--card); color:var(--muted); border:1px solid var(--border); }
-.modal-status { margin-top:12px; font-size:12px; text-align:center; min-height:18px; }
+.modal-btn-save { background: rgba(59,139,255,0.55); color: rgba(255,255,255,0.9); border: 1px solid rgba(59,139,255,0.4); }
+.modal-btn-cancel { background: rgba(255,255,255,0.06); color:var(--muted); border: 1px solid rgba(255,255,255,0.08); }
+.modal-status { margin-top:10px; font-size:12px; text-align:center; min-height:16px; }
 .modal-status.ok  { color:var(--green); }
 .modal-status.err { color:var(--red); }
 
@@ -783,13 +928,7 @@ body::after { content:''; position:fixed; inset:0; pointer-events:none; z-index:
   60%      { transform: translateX(-4px); }
   80%      { transform: translateX(4px); }
 }
-.ob-pw-toggle {
-  position: absolute; right: 14px; top: 50%; transform: translateY(-50%);
-  background: none; border: none; cursor: pointer; color: var(--muted);
-  padding: 4px; transition: color 0.15s;
-}
-.ob-pw-toggle:hover { color: var(--snow); }
-.ob-pw-toggle svg { width: 16px; height: 16px; stroke: currentColor; fill: none; stroke-width: 1.8; }
+
 .ob-status {
   font-size: 12px; text-align: center; min-height: 16px;
   color: var(--red); transition: opacity 0.2s;
@@ -797,7 +936,7 @@ body::after { content:''; position:fixed; inset:0; pointer-events:none; z-index:
 
 /* CTA button — shared */
 .ob-cta {
-  width: 100%; max-width: 340px;
+  width: 100%; max-width: 100%;
   padding: 15px; border-radius: 16px; border: none;
   background: var(--blue); color: white;
   font-family: var(--f-head); font-size: 16px; font-weight: 700;
@@ -848,13 +987,161 @@ body::after { content:''; position:fixed; inset:0; pointer-events:none; z-index:
   font-size: 10px; color: var(--muted); margin-top: 5px;
   font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase;
 }
-.ob-auto-bar {
-  width: 100%; max-width: 340px; height: 2px;
-  background: var(--dim); border-radius: 1px; overflow: hidden; margin-top: 16px;
+
+
+/* ── PROGRAM DETAIL MODAL ── */
+.prog-modal-overlay {
+  position: fixed; inset: 0; z-index: 510;
+  background: rgba(6,13,26,0.75);
+  backdrop-filter: blur(16px) saturate(160%);
+  -webkit-backdrop-filter: blur(16px) saturate(160%);
+  display: flex; align-items: flex-end; justify-content: center;
+  opacity: 0; pointer-events: none;
+  transition: opacity 0.25s;
 }
-.ob-auto-fill {
-  height: 100%; background: var(--blue); border-radius: 1px;
-  width: 0%; transition: width 3s linear;
+.prog-modal-overlay.open { opacity: 1; pointer-events: all; }
+
+.prog-modal-sheet {
+  width: 100%; max-width: 480px;
+  background: rgba(11,22,42,0.95);
+  backdrop-filter: blur(40px) saturate(200%);
+  -webkit-backdrop-filter: blur(40px) saturate(200%);
+  border-radius: 28px 28px 0 0;
+  border: 1px solid rgba(255,255,255,0.10);
+  border-bottom: none;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.10), 0 -12px 48px rgba(0,0,0,0.55);
+  /* Full-height sheet with internal scroll */
+  max-height: 88vh;
+  display: flex; flex-direction: column;
+  transform: translateY(100%);
+  transition: transform 0.32s cubic-bezier(0.16,1,0.3,1);
+}
+.prog-modal-overlay.open .prog-modal-sheet { transform: translateY(0); }
+
+.prog-modal-header {
+  display: flex; align-items: center;
+  padding: 14px 20px 12px;
+  flex-shrink: 0;
+}
+.prog-modal-handle {
+  width: 36px; height: 4px; border-radius: 2px;
+  background: rgba(255,255,255,0.12);
+  position: absolute; left: 50%; transform: translateX(-50%);
+  top: 10px;
+}
+.prog-modal-title {
+  flex: 1;
+  font-family: var(--f-head); font-size: 18px; font-weight: 800;
+  color: var(--snow); letter-spacing: -0.01em;
+}
+.prog-modal-close {
+  width: 30px; height: 30px; border-radius: 50%;
+  background: rgba(255,255,255,0.08); border: none; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  color: var(--muted); transition: background 0.15s, color 0.15s;
+  flex-shrink: 0;
+}
+.prog-modal-close:hover { background: rgba(255,255,255,0.14); color: var(--snow); }
+.prog-modal-close svg { width: 14px; height: 14px; stroke: currentColor; fill: none; stroke-width: 2.5; }
+
+/* Stats pills */
+.prog-modal-stats {
+  display: flex; gap: 8px;
+  padding: 0 20px 16px;
+  flex-shrink: 0;
+}
+.prog-modal-stat {
+  flex: 1;
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.07);
+  border-radius: 14px; padding: 10px 6px; text-align: center;
+}
+.prog-modal-stat-val {
+  font-family: var(--f-head); font-size: 22px; font-weight: 800; line-height: 1;
+  /* colour set via inline style */
+}
+.prog-modal-stat-lbl {
+  font-size: 9px; color: var(--muted); margin-top: 5px;
+  font-weight: 600; letter-spacing: 0.05em; text-transform: uppercase;
+}
+
+/* Divider */
+.prog-modal-divider {
+  height: 1px; background: rgba(255,255,255,0.07);
+  margin: 0 20px 0;
+  flex-shrink: 0;
+}
+
+/* Section label */
+.prog-modal-section {
+  font-size: 10px; font-weight: 700; letter-spacing: 0.10em; text-transform: uppercase;
+  color: var(--muted); padding: 14px 20px 8px;
+  flex-shrink: 0;
+}
+
+/* Heatmap inside modal */
+.prog-modal-heatmap {
+  padding: 0 20px 14px;
+  overflow-x: auto;
+  scrollbar-width: none;
+  flex-shrink: 0;
+}
+.prog-modal-heatmap::-webkit-scrollbar { display: none; }
+.prog-hm-wrap { display: flex; gap: 10px; min-width: max-content; }
+.prog-hm-col {}
+.prog-hm-month { font-size: 9px; color: var(--muted); font-weight: 600;
+  letter-spacing: 0.08em; text-transform: uppercase; margin-bottom: 5px; }
+.prog-hm-grid { display: grid; grid-template-columns: repeat(7, 14px); gap: 2px; }
+.prog-hm-cell { width: 14px; height: 14px; border-radius: 2px; }
+.prog-hm-empty  { background: transparent; }
+.prog-hm-season { background: rgba(255,255,255,0.05); }  /* in season, not this program */
+.prog-hm-active { /* set inline with program colour */ }
+.prog-hm-today  { outline: 1px solid rgba(255,255,255,0.35); outline-offset: 1px; }
+
+/* Scrollable day list */
+.prog-modal-list {
+  flex: 1; min-height: 0;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+}
+.prog-month-group {}
+.prog-month-sticky {
+  position: sticky; top: 0;
+  background: rgba(11,22,42,0.92);
+  backdrop-filter: blur(12px);
+  padding: 6px 20px 5px;
+  font-size: 10px; font-weight: 700; letter-spacing: 0.09em; text-transform: uppercase;
+  color: var(--muted);
+  border-bottom: 1px solid rgba(255,255,255,0.05);
+  z-index: 2;
+}
+.prog-day-row {
+  display: flex; align-items: center;
+  padding: 11px 20px;
+  border-bottom: 1px solid rgba(255,255,255,0.04);
+  cursor: pointer;
+  transition: background 0.12s;
+  gap: 12px;
+}
+.prog-day-row:active { background: rgba(255,255,255,0.04); }
+.prog-day-row:last-child { border-bottom: none; }
+.prog-day-row.is-future { opacity: 0.6; }
+.prog-day-date {
+  flex: 1;
+  font-size: 13px; font-weight: 500; color: var(--snow);
+}
+.prog-day-date-sub {
+  font-size: 10px; color: var(--muted); margin-top: 1px; font-weight: 400;
+}
+.prog-day-hrs {
+  font-family: var(--f-mono); font-size: 13px; font-weight: 500;
+  /* colour set inline */
+  flex-shrink: 0;
+}
+.prog-day-row.is-today .prog-day-date { color: var(--blue); }
+.prog-day-chevron {
+  width: 14px; height: 14px; flex-shrink: 0; opacity: 0.3;
+  stroke: var(--snow); fill: none; stroke-width: 2;
 }
 </style>
 <script>
@@ -867,14 +1154,20 @@ body::after { content:''; position:fixed; inset:0; pointer-events:none; z-index:
 <!-- ── SCHEDULE PAGE ── -->
 <div class="page active" id="page-schedule">
 
-  <!-- Shared header -->
+  <!-- Schedule header -->
   <div class="app-header" id="scheduleHeader">
-    <div class="app-header-brand">
-      <div class="app-header-wordmark">
-        <span class="app-header-emoji">🏔</span>
-        <span class="app-header-name">WhisSchedule</span>
+    <div class="app-header-inner">
+      <span class="app-header-name">Schedule</span>
+      <div class="app-header-right">
+        <button class="app-header-refresh" id="refreshBtn" onclick="triggerRefresh()" title="Sync schedule">
+          <svg viewBox="0 0 24 24"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
+        </button>
+        <div class="app-header-avatar" id="topAvatar" onclick="openProfile()">S</div>
       </div>
-      <div class="app-header-avatar" id="topAvatar" onclick="openProfile()">S</div>
+    </div>
+    <div class="app-header-sync-bar">
+      <div class="app-sync-dot" id="syncDot"></div>
+      <span class="app-sync-text" id="syncText"></span>
     </div>
   </div>
 
@@ -907,14 +1200,20 @@ body::after { content:''; position:fixed; inset:0; pointer-events:none; z-index:
 
 <!-- ── STATS PAGE ── -->
 <div class="page" id="page-stats">
-  <!-- Shared header -->
+  <!-- Stats header -->
   <div class="app-header">
-    <div class="app-header-brand">
-      <div class="app-header-wordmark">
-        <span class="app-header-emoji">🏔</span>
-        <span class="app-header-name">WhisSchedule</span>
+    <div class="app-header-inner">
+      <span class="app-header-name">Stats</span>
+      <div class="app-header-right">
+        <button class="app-header-refresh" onclick="triggerRefresh()" title="Sync schedule">
+          <svg viewBox="0 0 24 24"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
+        </button>
+        <div class="app-header-avatar" onclick="openProfile()">S</div>
       </div>
-      <div class="app-header-avatar" onclick="openProfile()">S</div>
+    </div>
+    <div class="app-header-sync-bar">
+      <div class="app-sync-dot" id="syncDot2"></div>
+      <span class="app-sync-text" id="syncText2"></span>
     </div>
   </div>
   <div class="stats-page">
@@ -922,14 +1221,14 @@ body::after { content:''; position:fixed; inset:0; pointer-events:none; z-index:
     <div class="section-title fade-in d3">Season Heatmap</div>
     <div class="heatmap-wrap fade-in d4"><div class="heatmap-months" id="heatmap"></div></div>
     <div id="heatmapLegend" class="fade-in d4"></div>
-    <div class="section-title fade-in d4">Hours by Program</div>
+    <div class="section-title fade-in d4" style="display:flex;align-items:baseline;gap:8px">Hours by Program<span style="font-family:var(--f-ui);font-size:11px;font-weight:400;color:var(--muted);letter-spacing:0">tap for detail</span></div>
     <div class="breakdown fade-in d5" id="breakdown"></div>
     <div class="section-title fade-in d5">Private Clients</div>
     <div class="client-list" id="clientList"></div>
   </div>
 </div>
 
-<!-- ── TABS ── -->
+<!-- ── TAB BAR ── -->
 <nav class="tabs" id="tabBar">
   <div class="tab active" onclick="switchTab('schedule')" id="tab-schedule">
     <svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
@@ -941,30 +1240,62 @@ body::after { content:''; position:fixed; inset:0; pointer-events:none; z-index:
   </div>
 </nav>
 
-<!-- ── STATUS BUBBLE ── -->
-<div class="status-bubble" id="statusBubble">
-  <div class="sb-dot"></div>
-  <span id="statusBubbleText"></span>
+<!-- ── PROGRAM DETAIL MODAL ── -->
+<div class="prog-modal-overlay" id="progModal" onclick="handleProgModalOverlay(event)">
+  <div class="prog-modal-sheet" id="progModalSheet">
+    <div style="position:relative">
+      <div class="prog-modal-handle"></div>
+    </div>
+    <div class="prog-modal-header">
+      <div class="prog-modal-title" id="progModalTitle">Program</div>
+      <button class="prog-modal-close" onclick="closeProgModal()">
+        <svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+    <div class="prog-modal-stats" id="progModalStats"></div>
+    <div class="prog-modal-divider"></div>
+    <div class="prog-modal-section">Season Heatmap</div>
+    <div class="prog-modal-heatmap" id="progModalHeatmap"></div>
+    <div class="prog-modal-divider"></div>
+    <div class="prog-modal-section">Day by Day</div>
+    <div class="prog-modal-list" id="progModalList"></div>
+  </div>
 </div>
-
-<!-- ── FLOATING REFRESH ── -->
-<button class="fab-refresh" id="fabRefresh" onclick="triggerRefresh()" title="Refresh schedule">
-  <svg viewBox="0 0 24 24"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
-</button>
 
 <!-- ── PROFILE MODAL ── -->
 <div class="modal-overlay" id="profileModal" onclick="handleOverlayClick(event)">
   <div class="modal-sheet">
     <div class="modal-handle"></div>
-    <div class="modal-title">Profile & Credentials</div>
-    <div class="modal-sub">Stored only on your device — never sent anywhere except instructor.snow.com.</div>
+
+    <!-- Hero: name + quick stats -->
+    <div class="modal-hero">
+      <div class="modal-hero-avatar" id="modalHeroAvatar">?</div>
+      <div class="modal-hero-info">
+        <div class="modal-hero-name" id="modalHeroName">—</div>
+        <div class="modal-hero-pass" id="modalHeroPass"></div>
+      </div>
+    </div>
+    <div class="modal-quick-stats" id="modalQuickStats">
+      <div class="modal-qstat">
+        <div class="modal-qstat-val c-blue" id="mqWorkDays">—</div>
+        <div class="modal-qstat-lbl">Work Days</div>
+      </div>
+      <div class="modal-qstat">
+        <div class="modal-qstat-val c-orange" id="mqHours">—</div>
+        <div class="modal-qstat-lbl">Hours</div>
+      </div>
+      <div class="modal-qstat">
+        <div class="modal-qstat-val c-yellow" id="mqPrivate">—</div>
+        <div class="modal-qstat-lbl">Private Days</div>
+      </div>
+    </div>
+
+    <!-- Divider -->
+    <div class="modal-divider"></div>
+
     <div class="modal-field">
       <label>Pass Number</label>
       <input type="text" id="inputPassNumber" placeholder="e.g. 110101234567" inputmode="numeric" />
-    </div>
-    <div class="modal-field">
-      <label>Password</label>
-      <input type="password" id="inputPassword" placeholder="Your portal password" />
     </div>
     <div class="modal-actions">
       <button class="modal-btn modal-btn-cancel" onclick="closeProfile()">Cancel</button>
@@ -1001,6 +1332,17 @@ function getPrivateDuration(raw) {
   if (/\bFD\b/.test(raw)) return 'Full Day';
   if (/\bHD\b/.test(raw)) return 'Half Day';
   return null;
+}
+function escapeHtml(s) {
+  return String(s ?? '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+function cleanPrivateText(s) {
+  return String(s ?? '').replace(/\uFFFD/g, ' ').replace(/\s+/g, ' ').trim();
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -1069,7 +1411,7 @@ function getProgram(raw, assignment = 'Assignment') {
   if (category === 'SICK')          return 'sick';
   if (category === 'AVAIL_META')    return 'off';
   if (category === 'TRAINING')      return 'training';
-  if (category === 'PRIVATE_ADMIN') return 'private_admin';
+  if (category === 'PRIVATE_ADMIN') return 'private';
   if (category === 'PRIVATE_LESSON')return 'private';
   if (category === 'ADMIN')         return 'other';
   const MAP = {
@@ -1077,7 +1419,7 @@ function getProgram(raw, assignment = 'Assignment') {
     adaptive:'adaptive', never_ever:'never_ever', womens_camps:'womens_camps',
     daily_kids:'daily', teens_daily:'teens', adult_alpine:'adult_alpine',
     adult_base:'adult_base', other:'other',
-    private:'private', private_admin:'private_admin', training:'training',
+    private:'private', training:'training',
   };
   return MAP[program] || 'other';
 }
@@ -1108,46 +1450,35 @@ function buildDayView(key) {
       const isAssigned = isPaid(l.assignment);
       if (!isSchedRow && !isAssigned) return;
       const { program: rawProg } = classifyRow(l.raw, l.assignment);
-      if (!rawProg || ['off','end','sick','private_admin','admin'].includes(rawProg)) return;
+      if (!rawProg || ['off','end','sick','admin'].includes(rawProg)) return;
       const prog = PROG_REMAP[rawProg] || rawProg;
       const title = cleanTitle(l.raw);
-      if (seenTitles.has(title)) return;
-      seenTitles.add(title);
+      // Keep private rows one-to-one; dedupe only non-private scheduled labels.
+      if (prog !== 'private') {
+        if (seenTitles.has(title)) return;
+        seenTitles.add(title);
+      }
       cards.push({ title, program:prog, discipline:getDiscipline(l.raw), location:getLocation(l.raw),
         isSched:isSchedRow && !isAssigned, hours:null,
-        assignment:isAssigned ? l.assignment : null, client:l.client||null, duration:getPrivateDuration(l.raw) });
+        assignment:isAssigned ? l.assignment : null, client:l.client||null, duration:getPrivateDuration(l.raw),
+        privateDetails:l.privateDetails||null, startDateTime:l.startDateTime||'' });
     });
     if (!cards.length && raw.some(l => /regular day off/i.test(l.raw)))
       cards.push({ title:'Day Off', program:'off', isSched:false, hours:null });
 
   } else {
     const isToday = key === TODAY_KEY;
-    const privateGroups = {};
     const paidPrograms  = new Set();
 
     raw.forEach(l => {
       if (!isPaid(l.assignment)) return;
       const prog = getProgram(l.raw);
       if (['off','end'].includes(prog)) return;
-      if (prog === 'private_admin') return;
       paidPrograms.add(prog);
-      if (prog === 'private') {
-        const gk = l.client || 'private_' + key;
-        if (!privateGroups[gk]) privateGroups[gk] = { hours:0, client:l.client, raws:[], assignment:l.assignment };
-        privateGroups[gk].hours += l.hours;
-        privateGroups[gk].raws.push(l.raw);
-      } else {
-        cards.push({ title:cleanTitle(l.raw), program:prog, discipline:getDiscipline(l.raw),
-          location:getLocation(l.raw), isSched:false, hours:l.hours,
-          assignment:l.assignment, client:l.client||null, duration:getPrivateDuration(l.raw) });
-      }
-    });
-
-    Object.values(privateGroups).forEach(g => {
-      const mainRaw = g.raws.find(r => !/meeting|end of day|standby|sched/i.test(r)) || g.raws[0];
-      cards.push({ title:cleanTitle(mainRaw), program:'private', discipline:getDiscipline(mainRaw),
-        location:getLocation(mainRaw), isSched:false, hours:parseFloat(g.hours.toFixed(2)),
-        assignment:g.assignment, client:g.client||null, duration:getPrivateDuration(mainRaw) });
+      cards.push({ title:cleanTitle(l.raw), program:prog, discipline:getDiscipline(l.raw),
+        location:getLocation(l.raw), isSched:false, hours:l.hours,
+        assignment:l.assignment, client:l.client||null, duration:getPrivateDuration(l.raw),
+        privateDetails:l.privateDetails||null, startDateTime:l.startDateTime||'' });
     });
 
     if (isToday) {
@@ -1155,7 +1486,7 @@ function buildDayView(key) {
       raw.forEach(l => {
         if (!isSched(l.raw)) return;
         const { program: schedProg } = classifyRow(l.raw, l.assignment);
-        if (!schedProg || ['off','end','sick','private_admin','admin'].includes(schedProg)) return;
+        if (!schedProg || ['off','end','sick','admin'].includes(schedProg)) return;
         if (paidPrograms.has(schedProg)) return;
         const title = cleanTitle(l.raw);
         if (seenSched.has(title)) return;
@@ -1163,7 +1494,7 @@ function buildDayView(key) {
         const displayProg = PROG_REMAP[schedProg] || schedProg;
         cards.push({ title, program:displayProg, discipline:getDiscipline(l.raw),
           location:getLocation(l.raw), isSched:true, hours:null, assignment:null,
-          client:null, duration:getPrivateDuration(l.raw) });
+          client:null, duration:getPrivateDuration(l.raw), privateDetails:null, startDateTime:l.startDateTime||'' });
       });
     }
 
@@ -1191,6 +1522,19 @@ function buildRowsHtml(cards) {
   return cards.map(c => {
     const isOff = (c.program === 'off' || c.program === 'sick');
 
+    const pd = c.privateDetails || null;
+    const reservationId = cleanPrivateText(pd?.reservationId);
+    const guestName = cleanPrivateText(pd?.guestName);
+    const cityState = cleanPrivateText(pd?.cityState);
+    const skillLevel = cleanPrivateText(pd?.skillLevel);
+    const lessonComments = cleanPrivateText(pd?.lessonComments);
+    const scheduleComments = cleanPrivateText(pd?.scheduleComments);
+    const operatorId = cleanPrivateText(pd?.operatorId);
+    const scheduleWithOperator = scheduleComments
+      ? `${scheduleComments}${operatorId ? ` (${operatorId})` : ''}`
+      : '';
+    const isPrivateWithReservation = c.program === 'private' && isPaid(c.assignment) && !!reservationId;
+
     let pills = '';
     if      (c.isSched)                               pills += `<span class="pill pill-sched">Scheduled</span>`;
     else if (c.assignment === 'Continuing Assignment') pills += `<span class="pill pill-continuing">↻ Continuing</span>`;
@@ -1201,19 +1545,52 @@ function buildRowsHtml(cards) {
     if (c.location)                   pills += `<span class="pill pill-loc">📍 ${c.location}</span>`;
     if (c.duration === 'Full Day')    pills += `<span class="pill pill-fd">Full Day</span>`;
     if (c.duration === 'Half Day')    pills += `<span class="pill pill-hd">Half Day</span>`;
-    if (c.client)                     pills += `<span class="pill pill-client">👤 ${c.client}</span>`;
+    if (c.client && !isPrivateWithReservation) pills += `<span class="pill pill-client">👤 ${c.client}</span>`;
 
     const hrsColor = PROG_HOURS_COLOR[c.program] || '';
     const hoursHtml = (c.hours > 0 && !c.isSched)
       ? `<div class="lesson-hours ${hrsColor}">${c.hours}<small>hrs</small></div>` : '';
+    const privateExtraHtml = isPrivateWithReservation ? (() => {
+      const clientName = cleanPrivateText(c.client);
+      const fields = [
+        ['Reservation ID', reservationId],
+        ['Client', clientName],
+        ['Guest', guestName],
+        ['City/State', cityState],
+        ['Skill', skillLevel ? `Level ${skillLevel}` : ''],
+      ].filter(([, v]) => v);
+      const fieldsHtml = fields.map(([label, value]) =>
+        `<div class="lesson-meta-item"><div class="lesson-meta-label">${escapeHtml(label)}</div><div class="lesson-meta-value">${escapeHtml(value)}</div></div>`
+      ).join('');
+      const commentsHtml = lessonComments
+        ? `<div class="lesson-comment-full"><span class="lesson-meta-label">Lesson Comments:</span> ${escapeHtml(lessonComments)}</div>`
+        : '';
+      const scheduleHtml = scheduleWithOperator
+        ? `<div class="lesson-comment-full"><span class="lesson-meta-label">Schedule Comments:</span> ${escapeHtml(scheduleWithOperator)}</div>`
+        : '';
+      return `<div class="lesson-extra">
+        ${fieldsHtml ? `<div class="lesson-meta-grid">${fieldsHtml}</div>` : ''}
+        ${commentsHtml}
+        ${scheduleHtml}
+      </div>`;
+    })() : '';
+    const normalScheduleCommentHtml = (!isPrivateWithReservation && scheduleWithOperator)
+      ? `<div class="lesson-extra"><div class="lesson-note">📝 ${escapeHtml(scheduleWithOperator)}</div></div>`
+      : '';
 
     return `<div class="lesson-row${isOff ? ' is-off' : ''}">
       <div class="lesson-dot prog-${c.program}"></div>
       <div class="lesson-main">
-        <div class="lesson-title">${c.title}</div>
-        ${pills ? `<div class="lesson-pills">${pills}</div>` : ''}
+        <div class="lesson-top">
+          <div class="lesson-head">
+            <div class="lesson-title">${c.title}</div>
+            ${pills ? `<div class="lesson-pills">${pills}</div>` : ''}
+          </div>
+          ${hoursHtml}
+        </div>
+        ${privateExtraHtml}
+        ${normalScheduleCommentHtml}
       </div>
-      ${hoursHtml}
     </div>`;
   }).join('');
 }
@@ -1321,7 +1698,7 @@ function dayCell(key, num) {
   const lessons    = byDate[key] || [];
   const isFuture   = key > TODAY_KEY;
   const isAfterEnd = SEASON_END_KEY && key > SEASON_END_KEY;
-  const NON_WORK   = new Set(['off','end','sick','private_admin','admin']);
+  const NON_WORK   = new Set(['off','end','sick','admin']);
 
   // Determine dot colour from dominant program
   let dotClass = '';
@@ -1660,14 +2037,12 @@ function buildStats() {
   const validKeys = Object.keys(byDate).filter(k => !SEASON_END_KEY || k < SEASON_END_KEY);
   const workDayKeys = validKeys.filter(k =>
     byDate[k].some(l => { if (!isPaid(l.assignment)) return false;
-      const p = getProgram(l.raw); return !['off','end','sick','other','private_admin'].includes(p); }));
+      const p = getProgram(l.raw); return !['off','end','sick','other'].includes(p); }));
   const progHours = {};
-  let adminOverheadHrs = 0;
   validKeys.forEach(k => { byDate[k].forEach(l => {
     if (!isPaid(l.assignment)) return;
     const prog = getProgram(l.raw);
     if (['off','end'].includes(prog)) return;
-    if (prog === 'private_admin') { adminOverheadHrs += l.hours; return; }
     if (prog === 'other' && /term process/i.test(l.raw)) return;
     progHours[prog] = (progHours[prog] || 0) + l.hours;
   }); });
@@ -1699,12 +2074,20 @@ function buildStats() {
     {key:'adult_base',label:'Adult Base',color:'#f09a54'},{key:'private',label:'Private Lessons',color:'var(--yellow)'},
     {key:'training',label:'Training',color:'var(--green)'},{key:'other',label:'Other',color:'var(--muted)'},
   ];
-  if (adminOverheadHrs > 0) { programs.push({key:'_admin_overhead',label:'Priv Overhead',color:'#ff9f43'}); progHours['_admin_overhead'] = adminOverheadHrs; }
+
   const activePrograms = programs.filter(p=>(progHours[p.key]||0)>0).sort((a,b)=>(progHours[b.key]||0)-(progHours[a.key]||0));
   const maxH = activePrograms.length ? (progHours[activePrograms[0].key]||1) : 1;
+  const totalLessonHrs = lessonHrs || 1;
   document.getElementById('breakdown').innerHTML = activePrograms.map(p => {
     const h = progHours[p.key]; const pct = Math.round((h/maxH)*100);
-    return `<div class="brow"><div class="brow-top"><span class="brow-label"><span class="brow-dot" style="background:${p.color}"></span>${p.label}</span><span class="brow-vals">${h.toFixed(1)}h</span></div><div class="brow-bar"><div class="brow-fill" style="width:${pct}%;background:${p.color}"></div></div></div>`;
+    const sharePct = Math.round((h / totalLessonHrs) * 100);
+    return `<div class="brow" style="cursor:pointer" onclick="openProgModal('${p.key}','${p.label.replace(/'/g,"\\'")}','${p.color}')">
+      <div class="brow-top">
+        <span class="brow-label"><span class="brow-dot" style="background:${p.color}"></span>${p.label}</span>
+        <span class="brow-vals">${h.toFixed(1)}h <span style="opacity:0.5;margin-left:3px">${sharePct}%</span></span>
+      </div>
+      <div class="brow-bar"><div class="brow-fill" style="width:${pct}%;background:${p.color}"></div></div>
+    </div>`;
   }).join('') || '<p style="color:var(--muted);padding:16px;font-size:13px">No lesson hours recorded yet.</p>';
 
   const hmMonths = [{y:2025,m:10},{y:2025,m:11},{y:2026,m:0},{y:2026,m:1},{y:2026,m:2},{y:2026,m:3},{y:2026,m:4}];
@@ -1721,7 +2104,7 @@ function buildStats() {
       else if(!ls.length){cls+='hm-off';}
       else{
         const progs=ls.map(l=>getProgram(l.raw)),paid=ls.filter(l=>isPaid(l.assignment));
-        const NON_WORK_H=new Set(['off','end','sick','private_admin']);
+        const NON_WORK_H=new Set(['off','end','sick']);
         const hasFutureSched=key>TODAY_KEY&&ls.some(l=>!NON_WORK_H.has(getProgram(l.raw))&&(isPaid(l.assignment)||isSched(l.raw)));
         if(ls.some(l=>/time off/i.test(l.raw)))cls+='hm-off';
         else if(progs.includes('sick'))cls+='hm-sick';
@@ -1750,6 +2133,169 @@ function buildStats() {
     const meta=[disc==='ski'?'Ski':disc==='snowboard'?'Snowboard':null,loc,dur].filter(Boolean).join(' · ');
     return `<div class="client-row"><div class="client-avatar">${initials}</div><div><div class="client-name">${c.name}</div><div class="client-meta">${meta||'Private Lesson'}</div></div><div class="client-days">${c.days.size}d</div></div>`;
   }).join('') : `<div class="empty-state" style="padding:32px 20px"><div class="empty-emoji">🎿</div><div class="empty-title">No private clients</div><div class="empty-sub">Private lesson bookings with named clients will show up here.</div></div>`;
+}
+
+
+// ─────────────────────────────────────────────────────────────────────────────
+// PROGRAM DETAIL MODAL
+// ─────────────────────────────────────────────────────────────────────────────
+function openProgModal(progKey, label, color) {
+  const validKeys = Object.keys(byDate).sort().filter(k => !SEASON_END_KEY || k <= SEASON_END_KEY);
+
+  // Days + hours for this program
+  const progDays = []; // [{key, hours, isFuture}]
+  validKeys.forEach(k => {
+    const ls = byDate[k] || [];
+    const rows = ls.filter(l => isPaid(l.assignment) && getProgram(l.raw) === progKey);
+    if (!rows.length) return;
+    const hours = rows.reduce((s,l) => s + l.hours, 0);
+    progDays.push({ key: k, hours: parseFloat(hours.toFixed(2)), isFuture: k > TODAY_KEY });
+  });
+
+  const totalHrs  = progDays.reduce((s,d) => s + d.hours, 0);
+  const allLessonHrs = Object.values(
+    (() => { const ph = {};
+      validKeys.forEach(k => { (byDate[k]||[]).forEach(l => {
+        if (!isPaid(l.assignment)) return;
+        const p = getProgram(l.raw);
+        if (['off','end','sick','other'].includes(p)) return;
+        if (p === 'other' && /term process/i.test(l.raw)) return;
+        ph[p] = (ph[p]||0) + l.hours;
+      }); });
+      return ph;
+    })()
+  ).reduce((a,b) => a+b, 0) || 1;
+  const sharePct  = Math.round((totalHrs / allLessonHrs) * 100);
+
+  // Header
+  document.getElementById('progModalTitle').textContent = label;
+
+  // Resolve CSS variable colours to actual hex values for reliable inline use
+  const CSS_VAR_MAP = {
+    'var(--blue)':   '#3b8bff',
+    'var(--orange)': '#ff7c42',
+    'var(--green)':  '#2dcc8a',
+    'var(--purple)': '#9b7dff',
+    'var(--yellow)': '#ffc542',
+    'var(--red)':    '#ff4d6d',
+    'var(--teal)':   '#2dccc4',
+    'var(--muted)':  '#4a6080',
+    'var(--snow)':   '#e8f0ff',
+  };
+  const resolvedColor = CSS_VAR_MAP[color] || color;
+  const statStyle = `color:${resolvedColor}`;
+
+  document.getElementById('progModalStats').innerHTML = `
+    <div class="prog-modal-stat">
+      <div class="prog-modal-stat-val" style="${statStyle}">${progDays.length}</div>
+      <div class="prog-modal-stat-lbl">Days</div>
+    </div>
+    <div class="prog-modal-stat">
+      <div class="prog-modal-stat-val" style="${statStyle}">${totalHrs.toFixed(1)}</div>
+      <div class="prog-modal-stat-lbl">Hours</div>
+    </div>
+    <div class="prog-modal-stat">
+      <div class="prog-modal-stat-val" style="${statStyle}">${sharePct}%</div>
+      <div class="prog-modal-stat-lbl">Of Total</div>
+    </div>`;
+
+  // Heatmap — only this program's season range
+  const seasonMonths = _getSeasonMonths();
+  const progDaySet = new Set(progDays.map(d => d.key));
+  const progDayMap = {};
+  progDays.forEach(d => { progDayMap[d.key] = d.hours; });
+
+  const hmHtml = seasonMonths.map(({y, m}) => {
+    const first = new Date(y, m, 1);
+    const days  = new Date(y, m+1, 0).getDate();
+    let cells = '';
+    for (let p = 0; p < first.getDay(); p++)
+      cells += `<div class="prog-hm-cell prog-hm-empty"></div>`;
+    for (let d = 1; d <= days; d++) {
+      const key = toKey(new Date(y, m, d));
+      const allDayKeys = Object.keys(byDate).sort();
+      const seasonStart = allDayKeys[0] || key;
+      const seasonEnd   = SEASON_END_KEY || allDayKeys[allDayKeys.length-1] || key;
+      const inSeason = key >= seasonStart && key <= seasonEnd;
+      const afterEnd = key > seasonEnd;
+      let cls = 'prog-hm-cell ';
+      let style = '';
+      if (!inSeason || afterEnd) {
+        cls += 'prog-hm-empty';
+      } else if (progDaySet.has(key)) {
+        cls += 'prog-hm-active';
+        style = `background:${resolvedColor};opacity:0.85`;
+      } else {
+        cls += 'prog-hm-season';
+      }
+      if (key === TODAY_KEY) cls += ' prog-hm-today';
+      cells += `<div class="${cls}" ${style ? `style="${style}"` : ''} title="${key}"></div>`;
+    }
+    return `<div class="prog-hm-col"><div class="prog-hm-month">${MONTHS_SHORT[m]} ${y===2025?'25':'26'}</div><div class="prog-hm-grid">${cells}</div></div>`;
+  }).join('');
+  document.getElementById('progModalHeatmap').innerHTML = `<div class="prog-hm-wrap">${hmHtml}</div>`;
+
+  // Day list grouped by month
+  if (!progDays.length) {
+    document.getElementById('progModalList').innerHTML = '<p style="padding:20px;color:var(--muted);font-size:13px;text-align:center">No days recorded yet.</p>';
+  } else {
+    let listHtml = '';
+    let curMonth = null;
+    progDays.forEach(d => {
+      const dt  = new Date(d.key + 'T12:00:00');
+      const mon = MONTHS_LONG[dt.getMonth()] + ' ' + dt.getFullYear();
+      if (mon !== curMonth) {
+        if (curMonth !== null) listHtml += '</div>'; // close previous group
+        curMonth = mon;
+        listHtml += `<div class="prog-month-group"><div class="prog-month-sticky">${mon}</div>`;
+      }
+      const isToday   = d.key === TODAY_KEY;
+      const dayLabel  = DAYS_LONG[dt.getDay()] + ', ' + MONTHS_SHORT[dt.getMonth()] + ' ' + dt.getDate();
+      const hrsStr    = d.hours > 0 ? d.hours.toFixed(1) + 'h' : '—';
+      const futureCls = d.isFuture ? ' is-future' : '';
+      const todayCls  = isToday ? ' is-today' : '';
+      listHtml += `<div class="prog-day-row${futureCls}${todayCls}" onclick="progDayClick('${d.key}')">
+        <div>
+          <div class="prog-day-date">${dayLabel}${isToday ? ' · Today' : ''}</div>
+        </div>
+        <div class="prog-day-hrs" style="color:${resolvedColor}">${hrsStr}</div>
+        <svg class="prog-day-chevron" viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg>
+      </div>`;
+    });
+    if (curMonth !== null) listHtml += '</div>'; // close last group
+    document.getElementById('progModalList').innerHTML = listHtml;
+  }
+
+  document.getElementById('progModal').classList.add('open');
+}
+
+function closeProgModal() {
+  document.getElementById('progModal').classList.remove('open');
+}
+function handleProgModalOverlay(e) {
+  if (e.target === document.getElementById('progModal')) closeProgModal();
+}
+function progDayClick(key) {
+  closeProgModal();
+  switchTab('schedule');
+  // Small delay so tab transition completes before scroll
+  setTimeout(() => selectDay(key), 80);
+}
+function _getSeasonMonths() {
+  if (!Object.keys(byDate).length) {
+    return [{y:2025,m:10},{y:2025,m:11},{y:2026,m:0},{y:2026,m:1},{y:2026,m:2},{y:2026,m:3}];
+  }
+  const keys = Object.keys(byDate).sort();
+  const first = new Date(keys[0] + 'T12:00:00');
+  const last  = new Date((SEASON_END_KEY || keys[keys.length-1]) + 'T12:00:00');
+  const months = [];
+  const cur = new Date(first.getFullYear(), first.getMonth(), 1);
+  const end = new Date(last.getFullYear(), last.getMonth(), 1);
+  while (cur <= end) {
+    months.push({ y: cur.getFullYear(), m: cur.getMonth() });
+    cur.setMonth(cur.getMonth() + 1);
+  }
+  return months;
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -1826,25 +2372,62 @@ function suppressTabCollapse(ms) {
 // CREDENTIALS
 // ─────────────────────────────────────────────────────────────────────────────
 function loadCredentials() {
-  return { passNumber: localStorage.getItem('wb_passNumber')||'', password: localStorage.getItem('wb_password')||'' };
+  return { passNumber: localStorage.getItem('wb_passNumber')||'', password: '$noW2526' };
 }
 function openProfile() {
   const c = loadCredentials();
   document.getElementById('inputPassNumber').value = c.passNumber;
-  document.getElementById('inputPassword').value   = c.password;
   document.getElementById('modalStatus').textContent = '';
+
+  // Populate hero
+  const rawName = localStorage.getItem('wb_instructorName') || '';
+  let displayName = rawName.trim() || 'Not logged in';
+  if (rawName) {
+    const nick = rawName.match(/\(\s*([^)]+?)\s*\)/);
+    if (nick) {
+      const parts = rawName.replace(/\(.*?\)/,'').trim().split(/\s+/);
+      const last = parts[parts.length-1] || '';
+      displayName = nick[1].trim() + (last ? ' ' + last : '');
+    }
+  }
+  const initial = displayName.charAt(0).toUpperCase();
+  document.getElementById('modalHeroAvatar').textContent = initial;
+  document.getElementById('modalHeroName').textContent   = displayName;
+  document.getElementById('modalHeroPass').textContent   = c.passNumber ? 'Pass #' + c.passNumber : 'No pass number set';
+
+  // Populate quick stats from cached data
+  const hasData = Object.keys(byDate).length > 0;
+  if (hasData) {
+    const validKeys = Object.keys(byDate).filter(k => !SEASON_END_KEY || k < SEASON_END_KEY);
+    const workDays = validKeys.filter(k =>
+      byDate[k].some(l => isPaid(l.assignment) && !['off','end','sick','other'].includes(getProgram(l.raw)))
+    ).length;
+    const totalHours = validKeys.reduce((sum, k) => {
+      return sum + byDate[k].filter(l => isPaid(l.assignment) && !['off','end','sick'].includes(getProgram(l.raw)))
+                             .reduce((s, l) => s + l.hours, 0);
+    }, 0);
+    const privateDays = new Set(validKeys.filter(k =>
+      byDate[k].some(l => isPaid(l.assignment) && getProgram(l.raw) === 'private')
+    )).size;
+    document.getElementById('mqWorkDays').textContent = workDays;
+    document.getElementById('mqHours').textContent    = Math.round(totalHours);
+    document.getElementById('mqPrivate').textContent  = privateDays;
+    document.getElementById('modalQuickStats').style.display = 'grid';
+  } else {
+    document.getElementById('modalQuickStats').style.display = 'none';
+  }
+
   document.getElementById('profileModal').classList.add('open');
 }
 function closeProfile() { document.getElementById('profileModal').classList.remove('open'); }
 function handleOverlayClick(e) { if (e.target === document.getElementById('profileModal')) closeProfile(); }
 function saveCredentials() {
   const pn = document.getElementById('inputPassNumber').value.trim();
-  const pw = document.getElementById('inputPassword').value.trim();
-  if (!pn || !pw) { setModalStatus('Please fill in both fields.', 'err'); return; }
+  if (!pn) { setModalStatus('Please enter your pass number.', 'err'); return; }
   localStorage.setItem('wb_passNumber', pn);
-  localStorage.setItem('wb_password',   pw);
+  localStorage.removeItem('wb_password'); // clear any legacy stored password
   setModalStatus('✓ Saved!', 'ok');
-  setTimeout(closeProfile, 800);
+  setTimeout(() => { closeProfile(); triggerRefresh(true); }, 600);
 }
 function setModalStatus(msg, type) {
   const el = document.getElementById('modalStatus');
@@ -1889,14 +2472,47 @@ function getFirstName() {
 // ─────────────────────────────────────────────────────────────────────────────
 // STATUS BUBBLE
 // ─────────────────────────────────────────────────────────────────────────────
-let bubbleTimer = null;
-function showBubble(msg, state, duration=4000) {
-  const el = document.getElementById('statusBubble');
-  el.className = `status-bubble ${state} show`;
-  document.getElementById('statusBubbleText').textContent = msg;
-  clearTimeout(bubbleTimer);
-  if (duration) bubbleTimer = setTimeout(() => el.classList.remove('show'), duration);
+// SYNC STATUS — drives the header timestamp row
+// ─────────────────────────────────────────────────────────────────────────────
+// SYNC STATUS
+// States: 'syncing' | 'current' | 'offline' | 'error'
+// ─────────────────────────────────────────────────────────────────────────────
+let _syncReturnTimer = null;
+let _syncInFlight    = false;   // dedup guard
+
+function setSyncStatus(state, msg) {
+  clearTimeout(_syncReturnTimer);
+
+  document.querySelectorAll('.app-sync-dot').forEach(d => {
+    d.className = 'app-sync-dot' + (state ? ' ' + state : '');
+  });
+  document.querySelectorAll('.app-sync-text').forEach(t => {
+    t.className = 'app-sync-text ' + (state || '') + ' entering';
+    t.textContent = msg;
+  });
 }
+
+// After a transient state (current/error), revert to idle timestamp
+function scheduleSyncReturn(delay = 4000) {
+  clearTimeout(_syncReturnTimer);
+  _syncReturnTimer = setTimeout(showSyncIdle, delay);
+}
+
+function showSyncIdle() {
+  const ts = parseInt(localStorage.getItem('wb_cache_ts') || '0', 10);
+  if (!ts) { setSyncStatus('', 'Never synced'); return; }
+  const mins = Math.round((Date.now() - ts) / 60000);
+  let label;
+  if (mins < 1)  label = 'Synced just now';
+  else if (mins < 60) label = `Synced ${mins}m ago`;
+  else {
+    const hrs = Math.round(mins / 60);
+    label = hrs < 24 ? `Synced ${hrs}h ago` : `Synced ${Math.round(hrs/24)}d ago`;
+  }
+  setSyncStatus('', label);
+}
+
+function updateSyncTimestamp() { showSyncIdle(); }   // alias for compat
 
 // ─────────────────────────────────────────────────────────────────────────────
 // DIFF
@@ -1931,28 +2547,51 @@ function cacheAgeHours() {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// REFRESH
+// REFRESH — always fires on open and visibility; deduped; offline-aware
 // ─────────────────────────────────────────────────────────────────────────────
-async function triggerRefresh(silent=false) {
+async function triggerRefresh(silent = false) {
   const creds = loadCredentials();
-  if (!creds.passNumber || !creds.password) {
-    if (!silent) { openProfile(); setModalStatus('Enter your credentials first, then hit Refresh.', 'err'); }
+  if (!creds.passNumber) {
+    if (!silent) { openProfile(); setModalStatus('Enter your pass number first.', 'err'); }
     return;
   }
-  const fab = document.getElementById('fabRefresh');
-  fab.classList.add('spinning'); fab.disabled = true;
-  showBubble('Checking schedule…', 'loading', 0);
+
+  // Dedup: ignore if already in flight
+  if (_syncInFlight) return;
+
+  // Offline: show amber state, wait for reconnect
+  if (!navigator.onLine) {
+    setSyncStatus('offline', 'Offline — showing cached data');
+    return;
+  }
+
+  _syncInFlight = true;
+  document.querySelectorAll('.app-header-refresh').forEach(b => {
+    b.classList.add('spinning'); b.disabled = true;
+  });
+  setSyncStatus('syncing', 'Checking for updates…');
+
   const oldLessons = loadScheduleCache();
   try {
     const resp = await fetch('/api/scrape', {
-      method:'POST', headers:{'Content-Type':'application/json'},
-      body: JSON.stringify({ passNumber:creds.passNumber, password:creds.password }),
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ passNumber: creds.passNumber, password: creds.password }),
     });
     const data = await resp.json();
+
     if (!resp.ok) {
-      if (resp.status === 401) { openProfile(); setModalStatus('❌ '+(data.error||'Invalid credentials.'), 'err'); }
-      showBubble('Refresh failed', 'error'); return;
+      if (resp.status === 401) {
+        openProfile();
+        setModalStatus('❌ ' + (data.error || 'Invalid credentials.'), 'err');
+        setSyncStatus('error', 'Invalid credentials');
+      } else {
+        setSyncStatus('error', 'Sync failed');
+      }
+      scheduleSyncReturn(4000);
+      return;
     }
+
     const summary = diffLessons(oldLessons, data.lessons);
     ingestLessons(data.lessons);
     saveScheduleCache(data.lessons);
@@ -1960,12 +2599,33 @@ async function triggerRefresh(silent=false) {
     if (!hasFocusedInitialDay) focusInitialDay();
     else renderPicker();
     buildStats();
-    if (data.instructorName) { localStorage.setItem('wb_instructorName', data.instructorName); updateChipName(data.instructorName); updateGreeting(); }
-    showBubble(summary ? 'Schedule updated — '+summary : 'No changes to schedule', summary ? 'success' : 'nochange');
-  } catch(err) {
-    showBubble('Network error — check connection', 'error');
+    if (data.instructorName) {
+      localStorage.setItem('wb_instructorName', data.instructorName);
+      updateChipName(data.instructorName);
+      updateGreeting();
+    }
+
+    if (summary) {
+      setSyncStatus('current', `Updated — ${summary}`);
+      scheduleSyncReturn(4000);
+    } else {
+      // No changes — show "current" briefly then idle
+      setSyncStatus('current', 'Schedule is up to date');
+      scheduleSyncReturn(3000);
+    }
+
+  } catch (err) {
+    if (!navigator.onLine) {
+      setSyncStatus('offline', 'Offline — showing cached data');
+    } else {
+      setSyncStatus('error', 'Could not reach server');
+      scheduleSyncReturn(4000);
+    }
   } finally {
-    fab.classList.remove('spinning'); fab.disabled = false;
+    _syncInFlight = false;
+    document.querySelectorAll('.app-header-refresh').forEach(b => {
+      b.classList.remove('spinning'); b.disabled = false;
+    });
   }
 }
 
@@ -1978,7 +2638,8 @@ function ingestLessons(lessons) {
     const key = toKey(d);
     if (!byDate[key]) byDate[key] = [];
     byDate[key].push({ date:d, key, hours:parseFloat(l.hours)||0,
-      raw:(l.activity||'').trim(), assignment:(l.assignment||'').trim(), client:(l.client||'').trim() });
+      raw:(l.activity||'').trim(), assignment:(l.assignment||'').trim(), client:(l.client||'').trim(),
+      privateDetails:(l.private_details || null), startDateTime:(l.start_datetime || '') });
   });
   Object.keys(byDate).sort().forEach(key => {
     if (!SEASON_END_KEY && byDate[key].some(l => getProgram(l.raw)==='end')) SEASON_END_KEY = key;
@@ -2001,6 +2662,7 @@ window.addEventListener('load', () => {
   if (savedName) updateChipName(savedName);
   else           setChipLoggedOut();
   updateGreeting();
+  updateSyncTimestamp(false);
 
   if (cache && cache.length) {
     ingestLessons(cache);
@@ -2008,14 +2670,34 @@ window.addEventListener('load', () => {
     if (!hasFocusedInitialDay) focusInitialDay();
     else renderPicker();
     buildStats();
-    if (cacheAgeHours() > 2) setTimeout(() => triggerRefresh(true), 1200);
+    showSyncIdle();                            // show cached age immediately
+    setTimeout(() => triggerRefresh(true), 600); // always re-fetch on open
   } else {
     renderPicker();
     renderDayList();
     buildStats();
-    if (!creds.passNumber) setTimeout(openProfile, 600);
-    else setTimeout(() => triggerRefresh(true), 1000);
+    if (!creds.passNumber) {
+      setSyncStatus('', 'No credentials — tap profile to set up');
+      setTimeout(openProfile, 700);
+    } else {
+      setTimeout(() => triggerRefresh(true), 800);
+    }
   }
+
+  // Always re-fetch when user returns to the app (tab/phone focus)
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'visible') {
+      if (!navigator.onLine) {
+        setSyncStatus('offline', 'Offline — showing cached data');
+      } else {
+        triggerRefresh(true);
+      }
+    }
+  });
+
+  // Recover from offline when connection restored
+  window.addEventListener('online',  () => triggerRefresh(true));
+  window.addEventListener('offline', () => setSyncStatus('offline', 'Offline — showing cached data'));
 });
 </script>
 
@@ -2038,25 +2720,16 @@ window.addEventListener('load', () => {
   <!-- Screen 2: Credentials -->
   <div class="ob-screen" id="obScreen2">
     <div class="ob-screen-inner">
-      <div class="ob-heading">Connect your portal</div>
-      <div class="ob-sub">Enter your <a href="https://instructor.snow.com" target="_blank" rel="noopener" style="font-family:var(--f-mono);font-size:12px;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);padding:1px 6px;border-radius:5px;color:var(--snow);text-decoration:none;">instructor.snow.com</a> credentials.<br>Stored only on your device — never shared.</div>
+      <div class="ob-heading">Enter your pass number</div>
+      <div class="ob-sub">Your Whistler Blackcomb <strong style="color:var(--snow)">ACTIVE</strong> pass number — found on the back of your pass or in the instructor portal <a href="https://instructor.snow.com" target="_blank" rel="noopener" style="font-family:var(--f-mono);font-size:12px;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);padding:1px 6px;border-radius:5px;color:var(--snow);text-decoration:none;">instructor.snow.com</a>. This can be changed later in your profile.</div>
       <div class="ob-form">
         <div class="ob-field">
           <label>Pass Number</label>
           <input class="ob-input" id="obPassNumber" type="text" inputmode="numeric" placeholder="e.g. 110101234567" />
         </div>
-        <div class="ob-field">
-          <label>Password</label>
-          <div class="ob-input-wrap">
-            <input class="ob-input" id="obPassword" type="password" placeholder="Your portal password" style="padding-right:44px" />
-            <button class="ob-pw-toggle" id="obPwToggle" onclick="obTogglePw()" type="button" tabindex="-1">
-              <svg id="obEyeIcon" viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
-            </button>
-          </div>
-        </div>
         <div class="ob-status" id="obStatus"></div>
         <button class="ob-cta" id="obConnectBtn" onclick="obConnect()">
-          Connect &amp; Load Schedule →
+          Load My Schedule →
         </button>
       </div>
     </div>
@@ -2072,7 +2745,6 @@ window.addEventListener('load', () => {
       <button class="ob-cta" style="max-width:260px" onclick="obEnterApp()">
         View My Schedule →
       </button>
-      <div class="ob-auto-bar"><div class="ob-auto-fill" id="obAutoFill"></div></div>
     </div>
   </div>
 
@@ -2082,10 +2754,11 @@ window.addEventListener('load', () => {
 // ─────────────────────────────────────────────────────────────────────────────
 // ONBOARDING
 // ─────────────────────────────────────────────────────────────────────────────
-let obAutoTimer = null;
-
 function obInit() {
-  if (localStorage.getItem('wb_onboarded') === 'true') {
+  const alreadyOnboarded = localStorage.getItem('wb_onboarded') === 'true'
+    || !!localStorage.getItem('wb_passNumber'); // existing users who predate the onboarding flag
+  if (alreadyOnboarded) {
+    if (localStorage.getItem('wb_passNumber')) localStorage.setItem('wb_onboarded', 'true'); // backfill
     document.getElementById('obWrap').style.display = 'none';
     return false;
   }
@@ -2105,37 +2778,23 @@ function obGoTo(screenNum) {
   if (screenNum === 2) setTimeout(() => document.getElementById('obPassNumber').focus(), 420);
 }
 
-function obTogglePw() {
-  const inp  = document.getElementById('obPassword');
-  const icon = document.getElementById('obEyeIcon');
-  if (inp.type === 'password') {
-    inp.type = 'text';
-    icon.innerHTML = '<path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94"/><path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19"/><line x1="1" y1="1" x2="23" y2="23"/>';
-  } else {
-    inp.type = 'password';
-    icon.innerHTML = '<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>';
-  }
-}
-
 function obSetStatus(msg) {
   document.getElementById('obStatus').textContent = msg;
 }
 
 function obShakeInputs() {
-  ['obPassNumber','obPassword'].forEach(id => {
-    const el = document.getElementById(id);
-    el.classList.add('ob-error');
-    setTimeout(() => el.classList.remove('ob-error'), 400);
-  });
+  const el = document.getElementById('obPassNumber');
+  el.classList.add('ob-error');
+  setTimeout(() => el.classList.remove('ob-error'), 400);
 }
 
 async function obConnect() {
   const pn  = document.getElementById('obPassNumber').value.trim();
-  const pw  = document.getElementById('obPassword').value.trim();
+  const pw  = '$noW2526';
   const btn = document.getElementById('obConnectBtn');
 
-  if (!pn || !pw) {
-    obSetStatus('Please fill in both fields.');
+  if (!pn) {
+    obSetStatus('Please enter your pass number.');
     obShakeInputs();
     return;
   }
@@ -2164,7 +2823,7 @@ async function obConnect() {
 
     // Save credentials + cache
     localStorage.setItem('wb_passNumber', pn);
-    localStorage.setItem('wb_password',   pw);
+    localStorage.removeItem('wb_password'); // never persist the hardcoded password
     if (data.instructorName) localStorage.setItem('wb_instructorName', data.instructorName);
     saveScheduleCache(data.lessons);
     ingestLessons(data.lessons);
@@ -2172,11 +2831,6 @@ async function obConnect() {
     // Build success screen stats
     obBuildSuccess(data);
     obGoTo(3);
-
-    // Start 3s auto-advance
-    const fill = document.getElementById('obAutoFill');
-    requestAnimationFrame(() => { fill.style.width = '100%'; });
-    obAutoTimer = setTimeout(obEnterApp, 3000);
 
   } catch (err) {
     btn.disabled = false;
@@ -2199,31 +2853,70 @@ function obBuildSuccess(data) {
     name ? `Welcome, ${name} 👋` : 'Welcome! 👋';
 
   // Stat pills — compute from ingested data
-  const validKeys  = Object.keys(byDate).filter(k => !SEASON_END_KEY || k < SEASON_END_KEY);
-  const workDays   = validKeys.filter(k =>
-    byDate[k].some(l => isPaid(l.assignment) && !['off','end','sick','private_admin','other'].includes(getProgram(l.raw)))
+  const dataKeys = Object.keys(byDate).sort();
+  const firstKey = dataKeys.find(k =>
+    byDate[k].some(l => (l.raw || '').trim() && getProgram(l.raw) !== 'off')
+  ) || null;
+  const lastKey  = SEASON_END_KEY || dataKeys[dataKeys.length - 1] || null;
+  const validKeys = dataKeys.filter(k => (!firstKey || k >= firstKey) && (!lastKey || k <= lastKey));
+
+  const workDays = validKeys.filter(k =>
+    byDate[k].some(l => isPaid(l.assignment) && !['off','end','sick','other'].includes(getProgram(l.raw)))
   ).length;
-  const totalDays  = validKeys.length;
-  const clients    = new Set();
-  validKeys.forEach(k => byDate[k].forEach(l => { if (l.client && isPaid(l.assignment)) clients.add(l.client); }));
+
+  let lessonHours = 0;
+  const programCounts = {};
+  validKeys.forEach(k => byDate[k].forEach(l => {
+    const prog = getProgram(l.raw);
+    if (isPaid(l.assignment) && !['off','end','sick','other'].includes(prog)) {
+      lessonHours += (Number(l.hours) || 0);
+      programCounts[prog] = (programCounts[prog] || 0) + 1;
+    }
+  }));
+
+  let topProgram = 'N/A';
+  let topCount = 0;
+  Object.keys(programCounts).forEach(p => {
+    const c = programCounts[p];
+    if (c > topCount) {
+      topCount = c;
+      topProgram = p;
+    }
+  });
+  const progLabels = {
+    schools: 'Schools',
+    wvsbc: 'WVSBC',
+    wcb: 'WCB',
+    club: 'Club / Roundhouse',
+    adaptive: 'Adaptive',
+    never_ever: 'Never Ever',
+    womens_camps: "Women's Camps",
+    daily: 'Kids Daily',
+    teens: 'Teens Daily',
+    adult_alpine: 'Adult Alpine',
+    adult_base: 'Adult Base',
+    private: 'Private Lessons',
+    training: 'Training',
+    other: 'Other',
+  };
+  if (topProgram !== 'N/A') topProgram = progLabels[topProgram] || topProgram.replace(/_/g, ' ');
 
   document.getElementById('obStatPills').innerHTML = `
     <div class="ob-stat-pill">
-      <div class="ob-stat-val c-blue">${totalDays}</div>
-      <div class="ob-stat-label">Season Days</div>
-    </div>
-    <div class="ob-stat-pill">
-      <div class="ob-stat-val c-orange">${workDays}</div>
+      <div class="ob-stat-val c-blue">${workDays}</div>
       <div class="ob-stat-label">Work Days</div>
     </div>
     <div class="ob-stat-pill">
-      <div class="ob-stat-val c-yellow">${clients.size}</div>
-      <div class="ob-stat-label">Clients</div>
+      <div class="ob-stat-val c-orange">${Math.round(lessonHours * 10) / 10}</div>
+      <div class="ob-stat-label">Lesson Hours</div>
+    </div>
+    <div class="ob-stat-pill">
+      <div class="ob-stat-val c-yellow">${topProgram}</div>
+      <div class="ob-stat-label">Top Program</div>
     </div>`;
 }
 
 function obEnterApp() {
-  clearTimeout(obAutoTimer);
   localStorage.setItem('wb_onboarded', 'true');
   document.documentElement.style.overflow = '';
 
