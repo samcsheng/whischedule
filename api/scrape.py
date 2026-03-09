@@ -247,8 +247,13 @@ def fetch_window(session, start_dt, pass_number=None, password=None):
                     if t and "/" in t and ":" in t:
                         l["start_datetime"] = t
                         break
-            if any(details.values()):
-                l["private_details"] = details
+            if l["start_datetime"] and not details.get("startDateTime"):
+                details["startDateTime"] = l["start_datetime"]
+            if l.get("client") and not details.get("guestName"):
+                details["guestName"] = l["client"]
+            # Always attach private_details when privateDetails block exists,
+            # even if sparse, so frontend can render fallback fields.
+            l["private_details"] = details
         lessons.append(l)
     return lessons, session
 

@@ -1537,16 +1537,20 @@ function buildRowsHtml(cards) {
     const hoursHtml = (c.hours > 0 && !c.isSched)
       ? `<div class="lesson-hours ${hrsColor}">${c.hours}<small>hrs</small></div>` : '';
     const pd = c.privateDetails || null;
-    const showPrivate = c.program === 'private' && isPaid(c.assignment) && pd && Object.values(pd).some(v => cleanPrivateText(v));
+    const showPrivate = c.program === 'private' && isPaid(c.assignment) && (
+      (pd && Object.values(pd).some(v => cleanPrivateText(v))) ||
+      cleanPrivateText(c.startDateTime) ||
+      cleanPrivateText(c.client)
+    );
     const privateHtml = showPrivate ? (() => {
-      const reservationId = cleanPrivateText(pd.reservationId);
-      const guestName = cleanPrivateText(pd.guestName);
-      const cityState = cleanPrivateText(pd.cityState);
-      const skillLevel = cleanPrivateText(pd.skillLevel);
-      const startTime = privateStartTime(pd.startDateTime || c.startDateTime || '');
-      const startLocation = cleanPrivateText(pd.startLocation);
-      const lessonComments = cleanPrivateText(pd.lessonComments);
-      const scheduleComments = cleanPrivateText(pd.scheduleComments);
+      const reservationId = cleanPrivateText(pd?.reservationId);
+      const guestName = cleanPrivateText(pd?.guestName) || cleanPrivateText(c.client);
+      const cityState = cleanPrivateText(pd?.cityState);
+      const skillLevel = cleanPrivateText(pd?.skillLevel);
+      const startTime = privateStartTime((pd && pd.startDateTime) || c.startDateTime || '');
+      const startLocation = cleanPrivateText(pd?.startLocation);
+      const lessonComments = cleanPrivateText(pd?.lessonComments);
+      const scheduleComments = cleanPrivateText(pd?.scheduleComments);
       const cells = [
         ['Start Time', startTime],
         ['Skill', skillLevel],
