@@ -40,9 +40,8 @@ body::after { content:''; position:fixed; inset:0; pointer-events:none; z-index:
   background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
   background-size:150px; }
 
-/* ── TABS ── */
-/* ── GLASS FLOATING TAB BAR ── */
-.tabs {
+/* ── BOTTOM BAR WRAPPER — centres tab pill + refresh pill together ── */
+.bottom-bar {
   position: fixed;
   bottom: max(20px, env(safe-area-inset-bottom, 20px));
   left: 50%;
@@ -50,9 +49,12 @@ body::after { content:''; position:fixed; inset:0; pointer-events:none; z-index:
   z-index: 100;
   display: flex;
   align-items: center;
-  padding: 5px;
-  gap: 2px;
-  /* Glass pill */
+  gap: 10px;
+  /* No background — each pill has its own glass */
+}
+
+/* ── GLASS PILL shared styles ── */
+.tabs, .refresh-pill {
   background: rgba(12,24,44,0.55);
   backdrop-filter: blur(28px) saturate(180%);
   -webkit-backdrop-filter: blur(28px) saturate(180%);
@@ -63,7 +65,22 @@ body::after { content:''; position:fixed; inset:0; pointer-events:none; z-index:
     inset 0 -1px 0 rgba(0,0,0,0.2),
     0 8px 32px rgba(0,0,0,0.45),
     0 2px 8px rgba(0,0,0,0.3);
-  /* Height transition for collapse */
+}
+.tabs.collapsed, .refresh-pill.collapsed {
+  background: rgba(12,24,44,0.75);
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,0.15),
+    inset 0 -1px 0 rgba(0,0,0,0.3),
+    0 12px 40px rgba(0,0,0,0.55),
+    0 4px 12px rgba(0,0,0,0.4);
+}
+
+/* ── TABS ── */
+.tabs {
+  display: flex;
+  align-items: center;
+  padding: 5px;
+  gap: 2px;
   height: 58px;
   transition:
     height 0.38s cubic-bezier(0.16,1,0.3,1),
@@ -72,19 +89,12 @@ body::after { content:''; position:fixed; inset:0; pointer-events:none; z-index:
   will-change: height;
   white-space: nowrap;
 }
-.tabs.collapsed {
-  height: 44px;
-  background: rgba(12,24,44,0.75);
-  box-shadow:
-    inset 0 1px 0 rgba(255,255,255,0.15),
-    inset 0 -1px 0 rgba(0,0,0,0.3),
-    0 12px 40px rgba(0,0,0,0.55),
-    0 4px 12px rgba(0,0,0,0.4);
-}
+.tabs.collapsed { height: 44px; }
+
 /* Spring-up when expanding */
 @keyframes tab-nudge {
-  from { transform: translateX(-50%) translateY(5px); }
-  to   { transform: translateX(-50%) translateY(0); }
+  from { transform: translateY(5px); }
+  to   { transform: translateY(0); }
 }
 .tabs.just-appeared {
   animation: tab-nudge 0.38s cubic-bezier(0.16,1,0.3,1) both;
@@ -594,12 +604,8 @@ body::after { content:''; position:fixed; inset:0; pointer-events:none; z-index:
 @keyframes fi { from{opacity:0;transform:translateY(8px)} to{opacity:1;transform:translateY(0)} }
 .d1{animation-delay:.05s}.d2{animation-delay:.1s}.d3{animation-delay:.15s}.d4{animation-delay:.2s}.d5{animation-delay:.25s}
 
-/* ── REFRESH PILL ── matches tab bar glass exactly ── */
+/* ── REFRESH PILL ── */
 .refresh-pill {
-  position: fixed;
-  bottom: max(20px, env(safe-area-inset-bottom, 20px));
-  right: 20px;
-  z-index: 100;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -607,22 +613,14 @@ body::after { content:''; position:fixed; inset:0; pointer-events:none; z-index:
   gap: 3px;
   width: 68px;
   height: 58px;
-  background: rgba(12,24,44,0.55);
-  backdrop-filter: blur(28px) saturate(180%);
-  -webkit-backdrop-filter: blur(28px) saturate(180%);
-  border-radius: 999px;
-  border: 1px solid rgba(255,255,255,0.10);
-  box-shadow:
-    inset 0 1px 0 rgba(255,255,255,0.12),
-    inset 0 -1px 0 rgba(0,0,0,0.2),
-    0 8px 32px rgba(0,0,0,0.45),
-    0 2px 8px rgba(0,0,0,0.3);
+  flex-shrink: 0;
   cursor: pointer;
   color: var(--muted);
   font-size: 11px; font-weight: 600;
   letter-spacing: 0.05em; text-transform: uppercase;
   transition:
     height 0.38s cubic-bezier(0.16,1,0.3,1),
+    width 0.38s cubic-bezier(0.16,1,0.3,1),
     background 0.3s ease,
     color 0.2s ease,
     box-shadow 0.3s ease;
@@ -631,7 +629,7 @@ body::after { content:''; position:fixed; inset:0; pointer-events:none; z-index:
   outline: none;
   -webkit-tap-highlight-color: transparent;
 }
-.refresh-pill:active { background: rgba(255,255,255,0.08); }
+.refresh-pill:active { background: rgba(255,255,255,0.08) !important; }
 .refresh-pill svg {
   width: 20px; height: 20px;
   stroke: currentColor; fill: none; stroke-width: 1.8;
@@ -650,16 +648,7 @@ body::after { content:''; position:fixed; inset:0; pointer-events:none; z-index:
     max-height 0.32s ease,
     transform 0.3s cubic-bezier(0.16,1,0.3,1);
 }
-/* Collapse state — in sync with tab bar */
-.refresh-pill.collapsed {
-  height: 44px;
-  background: rgba(12,24,44,0.75);
-  box-shadow:
-    inset 0 1px 0 rgba(255,255,255,0.15),
-    inset 0 -1px 0 rgba(0,0,0,0.3),
-    0 12px 40px rgba(0,0,0,0.55),
-    0 4px 12px rgba(0,0,0,0.4);
-}
+.refresh-pill.collapsed { height: 44px; width: 44px; }
 .refresh-pill.collapsed .refresh-pill-label {
   opacity: 0;
   max-height: 0;
@@ -673,7 +662,7 @@ body::after { content:''; position:fixed; inset:0; pointer-events:none; z-index:
 /* ── STATUS BUBBLE — glass morphism ── */
 .status-bubble {
   position: fixed;
-  bottom: max(94px, calc(env(safe-area-inset-bottom, 20px) + 74px));
+  bottom: max(90px, calc(env(safe-area-inset-bottom, 20px) + 70px));
   left: 50%;
   transform: translateX(-50%) translateY(20px);
   z-index: 99;
@@ -754,7 +743,7 @@ body::after { content:''; position:fixed; inset:0; pointer-events:none; z-index:
 
 /* ── Quick stats row ── */
 .modal-quick-stats {
-  display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px;
+  display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px;
   margin-bottom: 20px;
 }
 .modal-qstat {
@@ -802,7 +791,7 @@ body::after { content:''; position:fixed; inset:0; pointer-events:none; z-index:
   cursor:pointer; letter-spacing:0.02em; transition:opacity 0.2s, transform 0.15s;
 }
 .modal-btn:active { transform:scale(0.97); }
-.modal-btn-save { background: var(--blue); color:white; }
+.modal-btn-save { background: rgba(59,139,255,0.55); color: rgba(255,255,255,0.9); border: 1px solid rgba(59,139,255,0.4); }
 .modal-btn-cancel { background: rgba(255,255,255,0.06); color:var(--muted); border: 1px solid rgba(255,255,255,0.08); }
 .modal-status { margin-top:10px; font-size:12px; text-align:center; min-height:16px; }
 .modal-status.ok  { color:var(--green); }
@@ -1069,29 +1058,31 @@ body::after { content:''; position:fixed; inset:0; pointer-events:none; z-index:
   </div>
 </div>
 
-<!-- ── TABS ── -->
-<nav class="tabs" id="tabBar">
-  <div class="tab active" onclick="switchTab('schedule')" id="tab-schedule">
-    <svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
-    <span class="tab-label">Schedule</span>
-  </div>
-  <div class="tab" onclick="switchTab('stats')" id="tab-stats">
-    <svg viewBox="0 0 24 24"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
-    <span class="tab-label">Stats</span>
-  </div>
-</nav>
+<!-- ── BOTTOM BAR WRAPPER ── -->
+<div class="bottom-bar" id="bottomBar">
+  <!-- Tab pill -->
+  <nav class="tabs" id="tabBar">
+    <div class="tab active" onclick="switchTab('schedule')" id="tab-schedule">
+      <svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+      <span class="tab-label">Schedule</span>
+    </div>
+    <div class="tab" onclick="switchTab('stats')" id="tab-stats">
+      <svg viewBox="0 0 24 24"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+      <span class="tab-label">Stats</span>
+    </div>
+  </nav>
+  <!-- Refresh pill -->
+  <button class="refresh-pill" id="refreshPill" onclick="triggerRefresh()" title="Refresh schedule">
+    <svg viewBox="0 0 24 24"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
+    <span class="refresh-pill-label">Sync</span>
+  </button>
+</div>
 
 <!-- ── STATUS BUBBLE ── -->
 <div class="status-bubble" id="statusBubble">
   <div class="sb-dot"></div>
   <span id="statusBubbleText"></span>
 </div>
-
-<!-- ── REFRESH PILL ── -->
-<button class="refresh-pill" id="refreshPill" onclick="triggerRefresh()" title="Refresh schedule">
-  <svg viewBox="0 0 24 24"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
-  <span class="refresh-pill-label">Sync</span>
-</button>
 
 <!-- ── PROFILE MODAL ── -->
 <div class="modal-overlay" id="profileModal" onclick="handleOverlayClick(event)">
@@ -1119,17 +1110,11 @@ body::after { content:''; position:fixed; inset:0; pointer-events:none; z-index:
         <div class="modal-qstat-val c-yellow" id="mqPrivate">—</div>
         <div class="modal-qstat-lbl">Private Days</div>
       </div>
-      <div class="modal-qstat">
-        <div class="modal-qstat-val c-green" id="mqNextShift">—</div>
-        <div class="modal-qstat-lbl">Next Shift</div>
-      </div>
     </div>
 
     <!-- Divider -->
     <div class="modal-divider"></div>
 
-    <!-- Credentials -->
-    <div class="modal-section-title">Credentials</div>
     <div class="modal-field">
       <label>Pass Number</label>
       <input type="text" id="inputPassNumber" placeholder="e.g. 110101234567" inputmode="numeric" />
@@ -2044,21 +2029,9 @@ function openProfile() {
     const privateDays = new Set(validKeys.filter(k =>
       byDate[k].some(l => isPaid(l.assignment) && getProgram(l.raw) === 'private')
     )).size;
-    // Next shift = next future day with paid work
-    const futureWorkDays = Object.keys(byDate)
-      .filter(k => k > TODAY_KEY && byDate[k].some(l => isPaid(l.assignment) &&
-        !['off','end','sick','private_admin'].includes(getProgram(l.raw))))
-      .sort();
-    let nextShift = '—';
-    if (futureWorkDays.length) {
-      const d = new Date(futureWorkDays[0] + 'T12:00:00');
-      const diff = Math.round((d - new Date(TODAY_KEY + 'T12:00:00')) / 86400000);
-      nextShift = diff === 1 ? 'Tmrw' : diff <= 7 ? DAYS_SHORT[d.getDay()] : MONTHS_SHORT[d.getMonth()] + ' ' + d.getDate();
-    }
     document.getElementById('mqWorkDays').textContent = workDays;
     document.getElementById('mqHours').textContent    = Math.round(totalHours);
     document.getElementById('mqPrivate').textContent  = privateDays;
-    document.getElementById('mqNextShift').textContent = nextShift;
     document.getElementById('modalQuickStats').style.display = 'grid';
   } else {
     document.getElementById('modalQuickStats').style.display = 'none';
