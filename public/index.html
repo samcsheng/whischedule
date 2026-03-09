@@ -485,7 +485,7 @@ body::after { content:''; position:fixed; inset:0; pointer-events:none; z-index:
 .day-header-date.is-today { color: var(--blue); }
 .lesson-row {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   gap: 12px;
   padding: 10px 16px;
   border-bottom: 1px solid var(--border);
@@ -520,6 +520,13 @@ body::after { content:''; position:fixed; inset:0; pointer-events:none; z-index:
 .lesson-dot.prog-off         { background: var(--dim); }
 .lesson-dot.prog-other       { background: var(--muted); }
 .lesson-main { flex: 1; min-width: 0; }
+.lesson-top {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 10px;
+}
+.lesson-head { min-width: 0; flex: 1; }
 .lesson-title {
   font-size: 13px;
   font-weight: 500;
@@ -530,54 +537,43 @@ body::after { content:''; position:fixed; inset:0; pointer-events:none; z-index:
   margin-bottom: 3px;
 }
 .lesson-pills { display: flex; gap: 4px; flex-wrap: wrap; }
-.lesson-private {
+.lesson-extra {
   margin-top: 6px;
-  border-top: 1px dashed rgba(255,255,255,0.08);
   padding-top: 6px;
-}
-.lesson-private-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 2px 10px;
-}
-.lesson-private-item { min-width: 0; }
-.lesson-private-label {
-  font-size: 9px;
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
-  color: var(--muted);
-  opacity: 0.85;
-}
-.lesson-private-value {
-  font-size: 11px;
-  color: var(--snow);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-.lesson-private-comments {
-  margin-top: 5px;
-  display: grid;
-  gap: 4px;
-}
-.lesson-private-comment {
-  font-size: 10px;
-  line-height: 1.35;
-  color: rgba(232,240,255,0.82);
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
+  border-top: 1px dashed rgba(255,255,255,0.08);
 }
 .lesson-note {
   margin-top: 6px;
   font-size: 10px;
   line-height: 1.35;
   color: rgba(232,240,255,0.82);
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
+}
+.lesson-meta-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 2px 10px;
+}
+.lesson-meta-item { min-width: 0; }
+.lesson-meta-label {
+  font-size: 9px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--muted);
+  opacity: 0.85;
+}
+.lesson-meta-value {
+  font-size: 11px;
+  color: var(--snow);
+  white-space: nowrap;
   overflow: hidden;
+  text-overflow: ellipsis;
+}
+.lesson-comment-full {
+  margin-top: 6px;
+  font-size: 10px;
+  line-height: 1.4;
+  color: rgba(232,240,255,0.9);
+  white-space: pre-wrap;
 }
 .pill {
   font-size: 10px;
@@ -1346,13 +1342,6 @@ function escapeHtml(s) {
 function cleanPrivateText(s) {
   return String(s ?? '').replace(/\uFFFD/g, ' ').replace(/\s+/g, ' ').trim();
 }
-function privateStartTime(s) {
-  const txt = cleanPrivateText(s);
-  if (!txt) return '';
-  const m = txt.match(/\b(\d{1,2}:\d{2})(?::\d{2})?\s*([AP]M)\b/i);
-  if (m) return `${m[1]} ${m[2].toUpperCase()}`;
-  return txt;
-}
 
 // ─────────────────────────────────────────────────────────────────────────────
 // V3 ENGINE
@@ -1531,6 +1520,15 @@ function buildRowsHtml(cards) {
   return cards.map(c => {
     const isOff = (c.program === 'off' || c.program === 'sick');
 
+    const pd = c.privateDetails || null;
+    const reservationId = cleanPrivateText(pd?.reservationId);
+    const guestName = cleanPrivateText(pd?.guestName);
+    const cityState = cleanPrivateText(pd?.cityState);
+    const skillLevel = cleanPrivateText(pd?.skillLevel);
+    const lessonComments = cleanPrivateText(pd?.lessonComments);
+    const scheduleComments = cleanPrivateText(pd?.scheduleComments);
+    const isPrivateWithReservation = c.program === 'private' && isPaid(c.assignment) && !!reservationId;
+
     let pills = '';
     if      (c.isSched)                               pills += `<span class="pill pill-sched">Scheduled</span>`;
     else if (c.assignment === 'Continuing Assignment') pills += `<span class="pill pill-continuing">↻ Continuing</span>`;
@@ -1541,59 +1539,48 @@ function buildRowsHtml(cards) {
     if (c.location)                   pills += `<span class="pill pill-loc">📍 ${c.location}</span>`;
     if (c.duration === 'Full Day')    pills += `<span class="pill pill-fd">Full Day</span>`;
     if (c.duration === 'Half Day')    pills += `<span class="pill pill-hd">Half Day</span>`;
-    if (c.client)                     pills += `<span class="pill pill-client">👤 ${c.client}</span>`;
+    if (c.client && !isPrivateWithReservation) pills += `<span class="pill pill-client">👤 ${c.client}</span>`;
 
     const hrsColor = PROG_HOURS_COLOR[c.program] || '';
     const hoursHtml = (c.hours > 0 && !c.isSched)
       ? `<div class="lesson-hours ${hrsColor}">${c.hours}<small>hrs</small></div>` : '';
-    const pd = c.privateDetails || null;
-    const scheduleComments = cleanPrivateText(pd?.scheduleComments);
-    const showPrivate = c.program === 'private' && isPaid(c.assignment) && (
-      (pd && Object.values(pd).some(v => cleanPrivateText(v))) ||
-      cleanPrivateText(c.startDateTime) ||
-      cleanPrivateText(c.client)
-    );
-    const privateHtml = showPrivate ? (() => {
-      const reservationId = cleanPrivateText(pd?.reservationId);
-      const guestName = cleanPrivateText(pd?.guestName) || cleanPrivateText(c.client);
-      const cityState = cleanPrivateText(pd?.cityState);
-      const skillLevel = cleanPrivateText(pd?.skillLevel);
-      const startTime = privateStartTime((pd && pd.startDateTime) || c.startDateTime || '');
-      const startLocation = cleanPrivateText(pd?.startLocation);
-      const lessonComments = cleanPrivateText(pd?.lessonComments);
-      const cells = [
-        ['Start Time', startTime],
-        ['Skill', skillLevel],
-        ['Start', startLocation],
+    const privateExtraHtml = isPrivateWithReservation ? (() => {
+      const clientName = cleanPrivateText(c.client);
+      const fields = [
+        ['Reservation ID', reservationId],
+        ['Client', clientName],
         ['Guest', guestName],
         ['City/State', cityState],
-        ['Res ID', reservationId],
-      ].filter(([, val]) => val);
-      const gridHtml = cells.map(([label, val]) =>
-        `<div class="lesson-private-item"><div class="lesson-private-label">${escapeHtml(label)}</div><div class="lesson-private-value">${escapeHtml(val)}</div></div>`
+        ['Skill', skillLevel ? `Level ${skillLevel}` : ''],
+      ].filter(([, v]) => v);
+      const fieldsHtml = fields.map(([label, value]) =>
+        `<div class="lesson-meta-item"><div class="lesson-meta-label">${escapeHtml(label)}</div><div class="lesson-meta-value">${escapeHtml(value)}</div></div>`
       ).join('');
-      const commentHtml = [
-        lessonComments ? `<div class="lesson-private-comment"><span class="lesson-private-label">Lesson:</span> ${escapeHtml(lessonComments)}</div>` : '',
-        scheduleComments ? `<div class="lesson-private-comment"><span class="lesson-private-label">Schedule:</span> ${escapeHtml(scheduleComments)}</div>` : '',
-      ].join('');
-      return `<div class="lesson-private">
-        ${gridHtml ? `<div class="lesson-private-grid">${gridHtml}</div>` : ''}
-        ${commentHtml ? `<div class="lesson-private-comments">${commentHtml}</div>` : ''}
+      const commentsHtml = lessonComments
+        ? `<div class="lesson-comment-full"><span class="lesson-meta-label">Lesson Comments:</span> ${escapeHtml(lessonComments)}</div>`
+        : '';
+      return `<div class="lesson-extra">
+        ${fieldsHtml ? `<div class="lesson-meta-grid">${fieldsHtml}</div>` : ''}
+        ${commentsHtml}
       </div>`;
     })() : '';
-    const scheduleNoteHtml = (scheduleComments && !showPrivate)
-      ? `<div class="lesson-note">📝 ${escapeHtml(scheduleComments)}</div>`
+    const normalScheduleCommentHtml = (c.program !== 'private' && scheduleComments)
+      ? `<div class="lesson-extra"><div class="lesson-note">📝 ${escapeHtml(scheduleComments)}</div></div>`
       : '';
 
     return `<div class="lesson-row${isOff ? ' is-off' : ''}">
       <div class="lesson-dot prog-${c.program}"></div>
       <div class="lesson-main">
-        <div class="lesson-title">${c.title}</div>
-        ${pills ? `<div class="lesson-pills">${pills}</div>` : ''}
-        ${privateHtml}
-        ${scheduleNoteHtml}
+        <div class="lesson-top">
+          <div class="lesson-head">
+            <div class="lesson-title">${c.title}</div>
+            ${pills ? `<div class="lesson-pills">${pills}</div>` : ''}
+          </div>
+          ${hoursHtml}
+        </div>
+        ${privateExtraHtml}
+        ${normalScheduleCommentHtml}
       </div>
-      ${hoursHtml}
     </div>`;
   }).join('');
 }
