@@ -569,6 +569,16 @@ body::after { content:''; position:fixed; inset:0; pointer-events:none; z-index:
   -webkit-box-orient: vertical;
   overflow: hidden;
 }
+.lesson-note {
+  margin-top: 6px;
+  font-size: 10px;
+  line-height: 1.35;
+  color: rgba(232,240,255,0.82);
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
 .pill {
   font-size: 10px;
   font-weight: 500;
@@ -1537,6 +1547,7 @@ function buildRowsHtml(cards) {
     const hoursHtml = (c.hours > 0 && !c.isSched)
       ? `<div class="lesson-hours ${hrsColor}">${c.hours}<small>hrs</small></div>` : '';
     const pd = c.privateDetails || null;
+    const scheduleComments = cleanPrivateText(pd?.scheduleComments);
     const showPrivate = c.program === 'private' && isPaid(c.assignment) && (
       (pd && Object.values(pd).some(v => cleanPrivateText(v))) ||
       cleanPrivateText(c.startDateTime) ||
@@ -1550,7 +1561,6 @@ function buildRowsHtml(cards) {
       const startTime = privateStartTime((pd && pd.startDateTime) || c.startDateTime || '');
       const startLocation = cleanPrivateText(pd?.startLocation);
       const lessonComments = cleanPrivateText(pd?.lessonComments);
-      const scheduleComments = cleanPrivateText(pd?.scheduleComments);
       const cells = [
         ['Start Time', startTime],
         ['Skill', skillLevel],
@@ -1571,6 +1581,9 @@ function buildRowsHtml(cards) {
         ${commentHtml ? `<div class="lesson-private-comments">${commentHtml}</div>` : ''}
       </div>`;
     })() : '';
+    const scheduleNoteHtml = (scheduleComments && !showPrivate)
+      ? `<div class="lesson-note">📝 ${escapeHtml(scheduleComments)}</div>`
+      : '';
 
     return `<div class="lesson-row${isOff ? ' is-off' : ''}">
       <div class="lesson-dot prog-${c.program}"></div>
@@ -1578,6 +1591,7 @@ function buildRowsHtml(cards) {
         <div class="lesson-title">${c.title}</div>
         ${pills ? `<div class="lesson-pills">${pills}</div>` : ''}
         ${privateHtml}
+        ${scheduleNoteHtml}
       </div>
       ${hoursHtml}
     </div>`;

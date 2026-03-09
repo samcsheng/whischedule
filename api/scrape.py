@@ -221,22 +221,33 @@ def fetch_window(session, start_dt, pass_number=None, password=None):
         soup = _post_schedule(session, start_dt)
 
     lessons = []
-    for anchor in soup.find_all("a", attrs={"name": lambda v: v and v.startswith("lesson")}):
-        row = anchor.find_next("tr")
-        if not row:
-            continue
+    for row in soup.find_all("tr", class_=lambda c: c in {"row1", "row2"}):
         cells = row.find_all("td", recursive=False)
         if len(cells) < 5:
             continue
+        first_text = _clean_text(cells[0].get_text(" ", strip=True))
+        if "," not in first_text:
+            continue
+
         l = {
-            "date":           cells[0].get_text(strip=True),
-            "hours":          cells[1].get_text(strip=True),
-            "activity":       cells[2].get_text(strip=True),
-            "assignment":     cells[3].get_text(strip=True),
-            "client":         cells[4].get_text(strip=True),
+            "date":           first_text,
+            "hours":          _clean_text(cells[1].get_text(" ", strip=True)),
+            "activity":       _clean_text(cells[2].get_text(" ", strip=True)),
+            "assignment":     _clean_text(cells[3].get_text(" ", strip=True)),
+            "client":         _clean_text(cells[4].get_text(" ", strip=True)),
             "start_datetime": "",
         }
-        priv = anchor.find_next("div", id=lambda i: i and i.startswith("privateDetails"))
+
+        marker = row.find(id=lambda i: i and (i.startswith("privateDetailsText") or i.startswith("detailsText")))
+        lesson_idx = None
+        if marker and marker.get("id"):
+            m = re.search(r"(\d+)$", marker.get("id", ""))
+            if m:
+                lesson_idx = m.group(1)
+        priv = soup.find("div", id=f"privateDetails{lesson_idx}") if lesson_idx else None
+        if not priv:
+            priv = row.find_next("div", id=lambda i: i and i.startswith("privateDetails"))
+
         if priv:
             details = _parse_private_details(priv)
             if details.get("startDateTime"):
