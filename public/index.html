@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
-<meta name="theme-color" content="#060d1a">
+<meta name="theme-color" content="#060d1a" id="themeColorMeta">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -14,9 +14,25 @@
 <link rel="apple-touch-icon" href="/icons/icon-192.png">
 <title>WhisSchedule — Whistler Blackcomb</title>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Inter+Tight:wght@600;700;800&family=DM+Mono:wght@400;500&family=Syne:wght@700;800&display=swap" rel="stylesheet">
+<script>
+(() => {
+  const KEY = 'wb_theme';
+  const DEFAULT_THEME = 'dark';
+  let theme = DEFAULT_THEME;
+  try {
+    const saved = localStorage.getItem(KEY);
+    if (saved === 'dark' || saved === 'light') theme = saved;
+  } catch (e) {}
+  document.documentElement.setAttribute('data-theme', theme);
+  document.documentElement.style.colorScheme = theme;
+  const meta = document.getElementById('themeColorMeta');
+  if (meta && theme === 'light') meta.setAttribute('content', '#edf3fb');
+})();
+</script>
 <style>
 * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
 :root {
+  --theme-color: #060d1a;
   --bg:      #060d1a;
   --surface: #0c1829;
   --card:    #111f35;
@@ -24,6 +40,73 @@
   --snow:    #e8f0ff;
   --muted:   #4a6080;
   --dim:     #1e3050;
+  --tabs-bg: rgba(12,24,44,0.55);
+  --tabs-bg-collapsed: rgba(12,24,44,0.75);
+  --glass-border: rgba(255,255,255,0.10);
+  --glass-highlight: rgba(255,255,255,0.12);
+  --glass-highlight-strong: rgba(255,255,255,0.15);
+  --glass-press: rgba(255,255,255,0.05);
+  --glass-shadow:
+    inset 0 1px 0 var(--glass-highlight),
+    inset 0 -1px 0 rgba(0,0,0,0.2),
+    0 8px 32px rgba(0,0,0,0.45),
+    0 2px 8px rgba(0,0,0,0.3);
+  --glass-shadow-collapsed:
+    inset 0 1px 0 var(--glass-highlight-strong),
+    inset 0 -1px 0 rgba(0,0,0,0.3),
+    0 12px 40px rgba(0,0,0,0.55),
+    0 4px 12px rgba(0,0,0,0.4);
+  --tab-active-bg: rgba(59,139,255,0.18);
+  --tab-active-shadow: inset 0 1px 0 rgba(59,139,255,0.25), inset 0 -1px 0 rgba(0,0,0,0.1);
+  --header-bg: rgba(6,13,26,0.72);
+  --header-divider: rgba(255,255,255,0.05);
+  --header-shadow: 0 8px 40px rgba(0,0,0,0.4);
+  --header-title-shadow: 0 0 32px rgba(59,139,255,0.35);
+  --icon-btn-bg: rgba(255,255,255,0.07);
+  --icon-btn-border: rgba(255,255,255,0.11);
+  --icon-btn-bg-strong: rgba(255,255,255,0.15);
+  --avatar-bg: rgba(255,255,255,0.08);
+  --avatar-border: rgba(255,255,255,0.15);
+  --avatar-text: rgba(255,255,255,0.85);
+  --sync-dot-idle: rgba(255,255,255,0.12);
+  --month-tint: rgba(255,255,255,0.015);
+  --pressed-bg: rgba(255,255,255,0.08);
+  --selected-dot: rgba(255,255,255,0.6);
+  --sticky-bg: rgba(6,13,26,0.9);
+  --row-hover: rgba(255,255,255,0.02);
+  --dashed-border: rgba(255,255,255,0.08);
+  --text-soft: rgba(232,240,255,0.9);
+  --pill-neutral-bg: rgba(255,255,255,0.05);
+  --brow-active: rgba(255,255,255,0.04);
+  --bar-track: rgba(255,255,255,0.06);
+  --heatmap-off: rgba(255,255,255,0.05);
+  --overlay-bg: rgba(6,13,26,0.75);
+  --sheet-bg: rgba(11,22,42,0.92);
+  --sheet-bg-strong: rgba(11,22,42,0.95);
+  --sheet-border: rgba(255,255,255,0.10);
+  --sheet-highlight: rgba(255,255,255,0.10);
+  --handle-bg: rgba(255,255,255,0.12);
+  --panel-bg: rgba(255,255,255,0.04);
+  --panel-border: rgba(255,255,255,0.07);
+  --input-bg: rgba(255,255,255,0.05);
+  --input-border: rgba(255,255,255,0.09);
+  --input-focus-bg: rgba(59,139,255,0.06);
+  --button-secondary-bg: rgba(255,255,255,0.06);
+  --button-secondary-border: rgba(255,255,255,0.08);
+  --skeleton-sheen: rgba(255,255,255,0.03);
+  --spinner-track: rgba(255,255,255,0.3);
+  --prog-season-bg: rgba(255,255,255,0.05);
+  --today-outline: rgba(255,255,255,0.35);
+  --sticky-sheet-bg: rgba(11,22,42,0.92);
+  --sticky-sheet-divider: rgba(255,255,255,0.05);
+  --row-divider-soft: rgba(255,255,255,0.04);
+  --profile-link-bg: rgba(255,255,255,0.06);
+  --profile-link-border: rgba(255,255,255,0.1);
+  --theme-chip-bg: rgba(255,255,255,0.06);
+  --theme-chip-border: rgba(255,255,255,0.1);
+  --theme-chip-active-bg: rgba(59,139,255,0.14);
+  --theme-chip-active-border: rgba(59,139,255,0.28);
+  --theme-chip-active-text: var(--blue);
   --blue:    #3b8bff;
   --orange:  #ff7c42;
   --green:   #2dcc8a;
@@ -35,6 +118,86 @@
   --f-head:  'Inter Tight', sans-serif;
   --f-mono:  'DM Mono', monospace;
   --f-display: 'Syne', 'Inter Tight', sans-serif;
+}
+html[data-theme="light"] {
+  --theme-color: #edf3fb;
+  --bg:      #edf3fb;
+  --surface: #f7fafd;
+  --card:    #ffffff;
+  --border:  rgba(19,44,78,0.12);
+  --snow:    #16253d;
+  --muted:   #5f728d;
+  --dim:     #d9e5f5;
+  --tabs-bg: rgba(255,255,255,0.56);
+  --tabs-bg-collapsed: rgba(255,255,255,0.7);
+  --glass-border: rgba(255,255,255,0.48);
+  --glass-highlight: rgba(255,255,255,0.82);
+  --glass-highlight-strong: rgba(255,255,255,0.96);
+  --glass-press: rgba(20,49,89,0.07);
+  --glass-shadow:
+    inset 0 1px 0 rgba(255,255,255,0.92),
+    inset 0 -1px 0 rgba(122,152,193,0.14),
+    0 18px 40px rgba(84,118,165,0.16),
+    0 3px 12px rgba(84,118,165,0.10);
+  --glass-shadow-collapsed:
+    inset 0 1px 0 rgba(255,255,255,0.98),
+    inset 0 -1px 0 rgba(122,152,193,0.18),
+    0 20px 44px rgba(84,118,165,0.18),
+    0 5px 14px rgba(84,118,165,0.12);
+  --tab-active-bg: rgba(255,255,255,0.54);
+  --tab-active-shadow:
+    inset 0 1px 0 rgba(255,255,255,0.95),
+    inset 0 -1px 0 rgba(122,152,193,0.16),
+    0 8px 18px rgba(84,118,165,0.12);
+  --header-bg: rgba(237,243,251,0.88);
+  --header-divider: rgba(19,44,78,0.08);
+  --header-shadow: 0 10px 30px rgba(32,67,112,0.08);
+  --header-title-shadow: 0 0 20px rgba(59,139,255,0.12);
+  --icon-btn-bg: rgba(20,49,89,0.06);
+  --icon-btn-border: rgba(20,49,89,0.12);
+  --icon-btn-bg-strong: rgba(20,49,89,0.14);
+  --avatar-bg: rgba(20,49,89,0.08);
+  --avatar-border: rgba(20,49,89,0.12);
+  --avatar-text: #16253d;
+  --sync-dot-idle: rgba(20,49,89,0.18);
+  --month-tint: rgba(20,49,89,0.035);
+  --pressed-bg: rgba(20,49,89,0.08);
+  --selected-dot: rgba(255,255,255,0.85);
+  --sticky-bg: rgba(247,250,253,0.94);
+  --row-hover: rgba(20,49,89,0.035);
+  --dashed-border: rgba(20,49,89,0.12);
+  --text-soft: rgba(22,37,61,0.82);
+  --pill-neutral-bg: rgba(20,49,89,0.06);
+  --brow-active: rgba(20,49,89,0.05);
+  --bar-track: rgba(20,49,89,0.09);
+  --heatmap-off: rgba(20,49,89,0.08);
+  --overlay-bg: rgba(16,28,46,0.28);
+  --sheet-bg: rgba(255,255,255,0.94);
+  --sheet-bg-strong: rgba(255,255,255,0.97);
+  --sheet-border: rgba(20,49,89,0.12);
+  --sheet-highlight: rgba(255,255,255,0.96);
+  --handle-bg: rgba(20,49,89,0.18);
+  --panel-bg: rgba(20,49,89,0.04);
+  --panel-border: rgba(20,49,89,0.08);
+  --input-bg: rgba(20,49,89,0.04);
+  --input-border: rgba(20,49,89,0.12);
+  --input-focus-bg: rgba(59,139,255,0.08);
+  --button-secondary-bg: rgba(20,49,89,0.06);
+  --button-secondary-border: rgba(20,49,89,0.10);
+  --skeleton-sheen: rgba(20,49,89,0.05);
+  --spinner-track: rgba(20,49,89,0.2);
+  --prog-season-bg: rgba(20,49,89,0.08);
+  --today-outline: rgba(20,49,89,0.28);
+  --sticky-sheet-bg: rgba(255,255,255,0.94);
+  --sticky-sheet-divider: rgba(20,49,89,0.08);
+  --row-divider-soft: rgba(20,49,89,0.06);
+  --profile-link-bg: rgba(20,49,89,0.06);
+  --profile-link-border: rgba(20,49,89,0.10);
+  --theme-chip-bg: rgba(20,49,89,0.06);
+  --theme-chip-border: rgba(20,49,89,0.12);
+  --theme-chip-active-bg: rgba(59,139,255,0.12);
+  --theme-chip-active-border: rgba(59,139,255,0.22);
+  --theme-chip-active-text: #1f63c7;
 }
 html, body { height: 100%; background: var(--bg); color: var(--snow); font-family: var(--f-ui); overflow-x: hidden; }
 body::after { content:''; position:fixed; inset:0; pointer-events:none; z-index:9999; opacity:0.025;
@@ -53,16 +216,12 @@ body::after { content:''; position:fixed; inset:0; pointer-events:none; z-index:
   align-items: center;
   padding: 5px;
   gap: 2px;
-  background: rgba(12,24,44,0.55);
+  background: var(--tabs-bg);
   backdrop-filter: blur(28px) saturate(180%);
   -webkit-backdrop-filter: blur(28px) saturate(180%);
   border-radius: 999px;
-  border: 1px solid rgba(255,255,255,0.10);
-  box-shadow:
-    inset 0 1px 0 rgba(255,255,255,0.12),
-    inset 0 -1px 0 rgba(0,0,0,0.2),
-    0 8px 32px rgba(0,0,0,0.45),
-    0 2px 8px rgba(0,0,0,0.3);
+  border: 1px solid var(--glass-border);
+  box-shadow: var(--glass-shadow);
   height: 58px;
   transition:
     height 0.38s cubic-bezier(0.16,1,0.3,1),
@@ -73,12 +232,8 @@ body::after { content:''; position:fixed; inset:0; pointer-events:none; z-index:
 }
 .tabs.collapsed {
   height: 44px;
-  background: rgba(12,24,44,0.75);
-  box-shadow:
-    inset 0 1px 0 rgba(255,255,255,0.15),
-    inset 0 -1px 0 rgba(0,0,0,0.3),
-    0 12px 40px rgba(0,0,0,0.55),
-    0 4px 12px rgba(0,0,0,0.4);
+  background: var(--tabs-bg-collapsed);
+  box-shadow: var(--glass-shadow-collapsed);
 }
 /* Spring-up when expanding */
 @keyframes tab-nudge {
@@ -107,11 +262,11 @@ body::after { content:''; position:fixed; inset:0; pointer-events:none; z-index:
     color 0.2s ease,
     width 0.38s cubic-bezier(0.16,1,0.3,1);
 }
-.tab:active { background: rgba(255,255,255,0.05); }
+.tab:active { background: var(--glass-press); }
 .tab.active {
-  background: rgba(59,139,255,0.18);
+  background: var(--tab-active-bg);
   color: var(--blue);
-  box-shadow: inset 0 1px 0 rgba(59,139,255,0.25), inset 0 -1px 0 rgba(0,0,0,0.1);
+  box-shadow: var(--tab-active-shadow);
 }
 .tab svg {
   width: 20px; height: 20px;
@@ -170,12 +325,12 @@ body::after { content:''; position:fixed; inset:0; pointer-events:none; z-index:
   position: sticky;
   top: 0;
   z-index: 10;
-  background: rgba(6, 13, 26, 0.72);
+  background: var(--header-bg);
   backdrop-filter: blur(32px) saturate(200%);
   -webkit-backdrop-filter: blur(32px) saturate(200%);
   box-shadow:
-    inset 0 -1px 0 rgba(255,255,255,0.05),
-    0 8px 40px rgba(0,0,0,0.4);
+    inset 0 -1px 0 var(--header-divider),
+    var(--header-shadow);
   padding-top: env(safe-area-inset-top, 0px);
   flex-shrink: 0;
 }
@@ -197,11 +352,11 @@ body::after { content:''; position:fixed; inset:0; pointer-events:none; z-index:
   font-size: 28px;
   font-weight: 800;
   letter-spacing: -0.02em;
-  color: #fff;
+  color: var(--snow);
   white-space: nowrap;
   line-height: 1;
   /* Subtle blue luminance glow */
-  text-shadow: 0 0 32px rgba(59,139,255,0.35);
+  text-shadow: var(--header-title-shadow);
 }
 .app-header-right {
   display: flex;
@@ -211,14 +366,14 @@ body::after { content:''; position:fixed; inset:0; pointer-events:none; z-index:
 }
 .app-header-refresh {
   width: 34px; height: 34px; border-radius: 50%;
-  background: rgba(255,255,255,0.07);
-  border: 1px solid rgba(255,255,255,0.11);
+  background: var(--icon-btn-bg);
+  border: 1px solid var(--icon-btn-border);
   display: flex; align-items: center; justify-content: center;
   cursor: pointer; color: var(--muted);
   transition: background 0.15s, color 0.15s, transform 0.15s;
   outline: none; -webkit-tap-highlight-color: transparent;
 }
-.app-header-refresh:active { background: rgba(255,255,255,0.15); transform: scale(0.91); }
+.app-header-refresh:active { background: var(--icon-btn-bg-strong); transform: scale(0.91); }
 .app-header-refresh svg {
   width: 15px; height: 15px;
   stroke: currentColor; fill: none; stroke-width: 2;
@@ -229,15 +384,15 @@ body::after { content:''; position:fixed; inset:0; pointer-events:none; z-index:
 
 .app-header-avatar {
   width: 34px; height: 34px; border-radius: 50%;
-  background: rgba(255,255,255,0.08);
-  border: 1px solid rgba(255,255,255,0.15);
+  background: var(--avatar-bg);
+  border: 1px solid var(--avatar-border);
   backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
   display: flex; align-items: center; justify-content: center;
   font-family: var(--f-head); font-size: 14px; font-weight: 700;
-  color: rgba(255,255,255,0.85); cursor: pointer; flex-shrink: 0;
+  color: var(--avatar-text); cursor: pointer; flex-shrink: 0;
   transition: background 0.15s, transform 0.15s;
 }
-.app-header-avatar:active { background: rgba(255,255,255,0.15); transform: scale(0.91); }
+.app-header-avatar:active { background: var(--icon-btn-bg-strong); transform: scale(0.91); }
 
 /*
   Row 2 — sync status
@@ -255,7 +410,7 @@ body::after { content:''; position:fixed; inset:0; pointer-events:none; z-index:
 .app-sync-dot {
   width: 6px; height: 6px; border-radius: 50%;
   flex-shrink: 0;
-  background: rgba(255,255,255,0.12);
+  background: var(--sync-dot-idle);
   transition: background 0.4s;
 }
 .app-sync-dot.syncing { background: var(--blue);   animation: pulse 1.2s ease-in-out infinite; }
@@ -369,7 +524,7 @@ body::after { content:''; position:fixed; inset:0; pointer-events:none; z-index:
 
 /* Alternating tint — odd months slightly lighter */
 .picker-month-block:nth-child(odd) {
-  background: rgba(255,255,255,0.015);
+  background: var(--month-tint);
   border-radius: 8px;
 }
 .picker-month-block:nth-child(even) {
@@ -391,7 +546,7 @@ body::after { content:''; position:fixed; inset:0; pointer-events:none; z-index:
   padding: 6px 0;
   cursor: pointer;
 }
-.picker-day:active .picker-day-bg { background: rgba(255,255,255,0.08); }
+.picker-day:active .picker-day-bg { background: var(--pressed-bg); }
 
 /* The circle — tight around the number only */
 .picker-day-bg {
@@ -434,7 +589,7 @@ body::after { content:''; position:fixed; inset:0; pointer-events:none; z-index:
 .picker-day.today   .picker-day-num { color: var(--blue); }
 .picker-day.selected .picker-day-bg { background: var(--blue); }
 .picker-day.selected .picker-day-num { color: white; }
-.picker-day.selected .picker-day-dot { background: rgba(255,255,255,0.6) !important; }
+.picker-day.selected .picker-day-dot { background: var(--selected-dot) !important; }
 
 /* Pull handle — slim, same height as DOW row, centred */
 .picker-handle {
@@ -469,7 +624,7 @@ body::after { content:''; position:fixed; inset:0; pointer-events:none; z-index:
   gap: 10px;
   position: sticky;
   top: 0;
-  background: rgba(6,13,26,0.9);
+  background: var(--sticky-bg);
   backdrop-filter: blur(10px);
   z-index: 2;
   border-bottom: 1px solid var(--border);
@@ -492,7 +647,7 @@ body::after { content:''; position:fixed; inset:0; pointer-events:none; z-index:
   cursor: pointer;
   transition: background 0.12s;
 }
-.lesson-row:hover { background: rgba(255,255,255,0.02); }
+.lesson-row:hover { background: var(--row-hover); }
 .lesson-row:last-child { border-bottom: none; }
 .lesson-row.is-off { opacity: 0.35; }
 .lesson-dot {
@@ -541,13 +696,13 @@ body::after { content:''; position:fixed; inset:0; pointer-events:none; z-index:
 .lesson-extra {
   margin-top: 10px;
   padding-top: 10px;
-  border-top: 1px dashed rgba(255,255,255,0.08);
+  border-top: 1px dashed var(--dashed-border);
 }
 .lesson-note {
   margin-top: 2px;
   font-size: 11px;
   line-height: 1.5;
-  color: rgba(232,240,255,0.82);
+  color: var(--text-soft);
 }
 .lesson-meta-grid {
   display: grid;
@@ -574,7 +729,7 @@ body::after { content:''; position:fixed; inset:0; pointer-events:none; z-index:
   margin-top: 10px;
   font-size: 12px;
   line-height: 1.5;
-  color: rgba(232,240,255,0.9);
+  color: var(--text-soft);
   white-space: pre-wrap;
 }
 .pill {
@@ -590,7 +745,7 @@ body::after { content:''; position:fixed; inset:0; pointer-events:none; z-index:
 .pill-sched      { background: rgba(74,96,128,0.15); color: var(--muted); }
 .pill-ski        { background: rgba(59,139,255,0.08); color: #7ab8ff; }
 .pill-sb         { background: rgba(255,124,66,0.1);  color: #ffaa7a; }
-.pill-loc        { background: rgba(255,255,255,0.05); color: var(--muted); }
+.pill-loc        { background: var(--pill-neutral-bg); color: var(--muted); }
 .pill-client     { background: rgba(255,197,66,0.1); color: var(--yellow); }
 .pill-fd         { background: rgba(255,197,66,0.1); color: var(--yellow); }
 .pill-hd         { background: rgba(255,197,66,0.06); color: #c9a030; }
@@ -663,12 +818,12 @@ body::after { content:''; position:fixed; inset:0; pointer-events:none; z-index:
 .breakdown { background:var(--card); border:1px solid var(--border); border-radius:16px; padding:16px; }
 .brow { transition: background 0.12s; border-radius: 10px; padding: 4px 4px 4px 4px; margin-bottom: 10px; }
 .brow:last-child { margin-bottom: 0; }
-.brow:active { background: rgba(255,255,255,0.04); }
+.brow:active { background: var(--brow-active); }
 .brow-top { display:flex; justify-content:space-between; margin-bottom:6px; align-items:center; }
 .brow-label { font-size:12px; font-weight:500; display:flex; align-items:center; gap:6px; }
 .brow-dot { width:7px; height:7px; border-radius:50%; flex-shrink:0; }
 .brow-vals { font-family:var(--f-mono); font-size:11px; color:var(--muted); }
-.brow-bar { height:4px; background:rgba(255,255,255,0.06); border-radius:2px; overflow:hidden; }
+.brow-bar { height:4px; background:var(--bar-track); border-radius:2px; overflow:hidden; }
 .brow-fill { height:100%; border-radius:2px; transition:width 1.2s cubic-bezier(0.16,1,0.3,1); }
 
 .heatmap-wrap { background:var(--card); border:1px solid var(--border); border-radius:16px; padding:16px; overflow-x:auto; }
@@ -677,7 +832,7 @@ body::after { content:''; position:fixed; inset:0; pointer-events:none; z-index:
 .hm-grid { display:grid; grid-template-columns:repeat(7,16px); gap:3px; }
 .hm-cell { width:16px; height:16px; border-radius:3px; }
 .hm-empty    { background:transparent; }
-.hm-off      { background:rgba(255,255,255,0.05); }
+.hm-off      { background:var(--heatmap-off); }
 .hm-light    { background:rgba(59,139,255,0.3); }
 .hm-med      { background:rgba(59,139,255,0.6); }
 .hm-full     { background:var(--blue); }
@@ -709,7 +864,7 @@ body::after { content:''; position:fixed; inset:0; pointer-events:none; z-index:
 /* ── PROFILE MODAL ── */
 .modal-overlay {
   position: fixed; inset: 0; z-index: 500;
-  background: rgba(6,13,26,0.75);
+  background: var(--overlay-bg);
   backdrop-filter: blur(16px) saturate(160%);
   -webkit-backdrop-filter: blur(16px) saturate(160%);
   display: flex; align-items: flex-end; justify-content: center;
@@ -718,20 +873,20 @@ body::after { content:''; position:fixed; inset:0; pointer-events:none; z-index:
 .modal-overlay.open { opacity: 1; pointer-events: all; }
 .modal-sheet {
   width: 100%; max-width: 480px;
-  background: rgba(11,22,42,0.92);
+  background: var(--sheet-bg);
   backdrop-filter: blur(40px) saturate(200%);
   -webkit-backdrop-filter: blur(40px) saturate(200%);
   border-radius: 28px 28px 0 0;
-  border: 1px solid rgba(255,255,255,0.10);
+  border: 1px solid var(--sheet-border);
   border-bottom: none;
   box-shadow:
-    inset 0 1px 0 rgba(255,255,255,0.10),
+    inset 0 1px 0 var(--sheet-highlight),
     0 -12px 48px rgba(0,0,0,0.55);
   padding: 12px 20px max(36px, env(safe-area-inset-bottom, 20px));
   transform: translateY(100%); transition: transform 0.32s cubic-bezier(0.16,1,0.3,1);
 }
 .modal-overlay.open .modal-sheet { transform: translateY(0); }
-.modal-handle { width: 36px; height: 4px; border-radius: 2px; background: rgba(255,255,255,0.12); margin: 0 auto 20px; }
+.modal-handle { width: 36px; height: 4px; border-radius: 2px; background: var(--handle-bg); margin: 0 auto 20px; }
 
 /* ── Hero row: avatar + name + pass ── */
 .modal-hero {
@@ -740,11 +895,11 @@ body::after { content:''; position:fixed; inset:0; pointer-events:none; z-index:
 }
 .modal-hero-avatar {
   width: 52px; height: 52px; border-radius: 50%; flex-shrink: 0;
-  background: rgba(255,255,255,0.08);
-  border: 1px solid rgba(255,255,255,0.15);
+  background: var(--avatar-bg);
+  border: 1px solid var(--avatar-border);
   display: flex; align-items: center; justify-content: center;
   font-family: var(--f-head); font-size: 22px; font-weight: 800;
-  color: rgba(255,255,255,0.85);
+  color: var(--avatar-text);
 }
 .modal-hero-info { flex: 1; min-width: 0; }
 .modal-hero-name {
@@ -763,8 +918,8 @@ body::after { content:''; position:fixed; inset:0; pointer-events:none; z-index:
   margin-bottom: 20px;
 }
 .modal-qstat {
-  background: rgba(255,255,255,0.04);
-  border: 1px solid rgba(255,255,255,0.07);
+  background: var(--panel-bg);
+  border: 1px solid var(--panel-border);
   border-radius: 14px; padding: 10px 6px; text-align: center;
 }
 .modal-qstat-val {
@@ -781,7 +936,7 @@ body::after { content:''; position:fixed; inset:0; pointer-events:none; z-index:
 
 /* ── Divider ── */
 .modal-divider {
-  height: 1px; background: rgba(255,255,255,0.07);
+  height: 1px; background: var(--panel-border);
   margin: 0 0 16px;
 }
 .modal-section-title {
@@ -794,11 +949,11 @@ body::after { content:''; position:fixed; inset:0; pointer-events:none; z-index:
 .modal-field label { display:block; font-size:11px; font-weight:600; letter-spacing:0.07em; text-transform:uppercase; color:var(--muted); margin-bottom:6px; }
 .modal-field input {
   width:100%; padding:11px 14px; border-radius:13px;
-  background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.09);
+  background: var(--input-bg); border: 1px solid var(--input-border);
   color:var(--snow); font-size:15px; font-family:var(--f-ui);
   outline:none; transition:border-color 0.2s;
 }
-.modal-field input:focus { border-color: rgba(59,139,255,0.55); background: rgba(59,139,255,0.06); }
+.modal-field input:focus { border-color: rgba(59,139,255,0.55); background: var(--input-focus-bg); }
 .modal-field input::placeholder { color:var(--muted); }
 .modal-actions { display:flex; gap:8px; margin-top:14px; }
 .modal-btn {
@@ -808,7 +963,7 @@ body::after { content:''; position:fixed; inset:0; pointer-events:none; z-index:
 }
 .modal-btn:active { transform:scale(0.97); }
 .modal-btn-save { background: rgba(59,139,255,0.55); color: rgba(255,255,255,0.9); border: 1px solid rgba(59,139,255,0.4); }
-.modal-btn-cancel { background: rgba(255,255,255,0.06); color:var(--muted); border: 1px solid rgba(255,255,255,0.08); }
+.modal-btn-cancel { background: var(--button-secondary-bg); color:var(--muted); border: 1px solid var(--button-secondary-border); }
 .modal-status { margin-top:10px; font-size:12px; text-align:center; min-height:16px; }
 .modal-status.ok  { color:var(--green); }
 .modal-status.err { color:var(--red); }
@@ -830,7 +985,7 @@ body::after { content:''; position:fixed; inset:0; pointer-events:none; z-index:
 
 .skel-row { height: 46px; border-bottom: 1px solid var(--border); overflow: hidden; position: relative; }
 .skel-row::after { content:''; position:absolute; inset:0;
-  background:linear-gradient(90deg,transparent 0%,rgba(255,255,255,0.03) 50%,transparent 100%);
+  background:linear-gradient(90deg,transparent 0%,var(--skeleton-sheen) 50%,transparent 100%);
   animation:shimmer 1.8s infinite; }
 @keyframes shimmer { from{transform:translateX(-100%)} to{transform:translateX(100%)} }
 
@@ -844,6 +999,123 @@ body::after { content:''; position:fixed; inset:0; pointer-events:none; z-index:
   z-index: 1000;
   background: var(--bg);
   transition: opacity 0.5s ease;
+}
+.ob-theme-toggle-wrap {
+  position: absolute;
+  top: max(14px, calc(env(safe-area-inset-top, 0px) + 10px));
+  right: 16px;
+  z-index: 5;
+}
+.theme-toggle-btn {
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  border: 1px solid var(--theme-chip-border);
+  background: var(--theme-chip-bg);
+  color: var(--snow);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  backdrop-filter: blur(16px) saturate(160%);
+  -webkit-backdrop-filter: blur(16px) saturate(160%);
+  box-shadow: 0 10px 30px rgba(0,0,0,0.14);
+  transition: background 0.42s ease, border-color 0.42s ease, color 0.42s ease, box-shadow 0.42s ease, transform 0.18s ease;
+}
+.theme-toggle-btn svg {
+  width: 18px;
+  height: 18px;
+  stroke: currentColor;
+  fill: none;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+.theme-toggle-btn:active { transform: scale(0.96); }
+.theme-segmented {
+  display: flex;
+  gap: 6px;
+  width: 100%;
+}
+.theme-segmented.profile-theme-control {
+  width: 100%;
+  margin: 0;
+  padding: 4px;
+  border-radius: 13px;
+  background: var(--theme-chip-bg);
+  border: 1px solid var(--theme-chip-border);
+  box-shadow: inset 0 1px 0 var(--glass-highlight);
+}
+.theme-segmented.compact { width: auto; }
+.theme-chip {
+  appearance: none;
+  border: 1px solid transparent;
+  background: transparent;
+  color: var(--muted);
+  border-radius: 10px;
+  padding: 11px 18px;
+  min-width: 0;
+  flex: 1;
+  font-family: var(--f-head);
+  font-size: 13px;
+  font-weight: 700;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  cursor: pointer;
+  transition: background 0.42s ease, border-color 0.42s ease, color 0.42s ease, box-shadow 0.42s ease, transform 0.18s ease;
+}
+.theme-chip.compact {
+  padding: 8px 11px;
+  font-size: 12px;
+}
+.theme-chip svg {
+  width: 15px;
+  height: 15px;
+  stroke: currentColor;
+  fill: none;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+.theme-chip.is-active {
+  background: var(--theme-chip-active-bg);
+  border-color: var(--theme-chip-active-border);
+  color: var(--theme-chip-active-text);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.15);
+}
+.theme-chip:active { transform: scale(0.98); }
+.modal-fieldset {
+  margin-bottom: 14px;
+}
+.app-header,
+.tabs,
+.tab,
+.picker-handle,
+.day-list,
+.day-header,
+.lesson-row,
+.bstat,
+.breakdown,
+.heatmap-wrap,
+.hm-legend,
+.client-list,
+.client-row,
+.modal-overlay,
+.modal-sheet,
+.prog-modal-overlay,
+.prog-modal-sheet,
+.prog-month-sticky,
+.prog-day-row,
+.prog-modal-stat,
+.modal-qstat,
+.modal-field input,
+.modal-btn-cancel,
+.ob-wrap,
+.ob-stat-pill,
+.empty-cta {
+  transition: background 0.48s ease, background-color 0.48s ease, border-color 0.48s ease, color 0.48s ease, box-shadow 0.48s ease;
 }
 .ob-wrap.ob-hidden { opacity: 0; pointer-events: none; }
 
@@ -952,7 +1224,7 @@ body::after { content:''; position:fixed; inset:0; pointer-events:none; z-index:
 .ob-cta.ob-loading { background: var(--dim); box-shadow: none; }
 .ob-spinner {
   width: 16px; height: 16px; border-radius: 50%;
-  border: 2px solid rgba(255,255,255,0.3);
+  border: 2px solid var(--spinner-track);
   border-top-color: white;
   animation: spin 0.7s linear infinite;
   flex-shrink: 0;
@@ -992,7 +1264,7 @@ body::after { content:''; position:fixed; inset:0; pointer-events:none; z-index:
 /* ── PROGRAM DETAIL MODAL ── */
 .prog-modal-overlay {
   position: fixed; inset: 0; z-index: 510;
-  background: rgba(6,13,26,0.75);
+  background: var(--overlay-bg);
   backdrop-filter: blur(16px) saturate(160%);
   -webkit-backdrop-filter: blur(16px) saturate(160%);
   display: flex; align-items: flex-end; justify-content: center;
@@ -1003,13 +1275,13 @@ body::after { content:''; position:fixed; inset:0; pointer-events:none; z-index:
 
 .prog-modal-sheet {
   width: 100%; max-width: 480px;
-  background: rgba(11,22,42,0.95);
+  background: var(--sheet-bg-strong);
   backdrop-filter: blur(40px) saturate(200%);
   -webkit-backdrop-filter: blur(40px) saturate(200%);
   border-radius: 28px 28px 0 0;
-  border: 1px solid rgba(255,255,255,0.10);
+  border: 1px solid var(--sheet-border);
   border-bottom: none;
-  box-shadow: inset 0 1px 0 rgba(255,255,255,0.10), 0 -12px 48px rgba(0,0,0,0.55);
+  box-shadow: inset 0 1px 0 var(--sheet-highlight), 0 -12px 48px rgba(0,0,0,0.55);
   /* Full-height sheet with internal scroll */
   max-height: 88vh;
   display: flex; flex-direction: column;
@@ -1025,7 +1297,7 @@ body::after { content:''; position:fixed; inset:0; pointer-events:none; z-index:
 }
 .prog-modal-handle {
   width: 36px; height: 4px; border-radius: 2px;
-  background: rgba(255,255,255,0.12);
+  background: var(--handle-bg);
   position: absolute; left: 50%; transform: translateX(-50%);
   top: 10px;
 }
@@ -1036,12 +1308,12 @@ body::after { content:''; position:fixed; inset:0; pointer-events:none; z-index:
 }
 .prog-modal-close {
   width: 30px; height: 30px; border-radius: 50%;
-  background: rgba(255,255,255,0.08); border: none; cursor: pointer;
+  background: var(--avatar-bg); border: none; cursor: pointer;
   display: flex; align-items: center; justify-content: center;
   color: var(--muted); transition: background 0.15s, color 0.15s;
   flex-shrink: 0;
 }
-.prog-modal-close:hover { background: rgba(255,255,255,0.14); color: var(--snow); }
+.prog-modal-close:hover { background: var(--icon-btn-bg-strong); color: var(--snow); }
 .prog-modal-close svg { width: 14px; height: 14px; stroke: currentColor; fill: none; stroke-width: 2.5; }
 
 /* Stats pills */
@@ -1052,8 +1324,8 @@ body::after { content:''; position:fixed; inset:0; pointer-events:none; z-index:
 }
 .prog-modal-stat {
   flex: 1;
-  background: rgba(255,255,255,0.04);
-  border: 1px solid rgba(255,255,255,0.07);
+  background: var(--panel-bg);
+  border: 1px solid var(--panel-border);
   border-radius: 14px; padding: 10px 6px; text-align: center;
 }
 .prog-modal-stat-val {
@@ -1067,7 +1339,7 @@ body::after { content:''; position:fixed; inset:0; pointer-events:none; z-index:
 
 /* Divider */
 .prog-modal-divider {
-  height: 1px; background: rgba(255,255,255,0.07);
+  height: 1px; background: var(--panel-border);
   margin: 0 20px 0;
   flex-shrink: 0;
 }
@@ -1094,9 +1366,9 @@ body::after { content:''; position:fixed; inset:0; pointer-events:none; z-index:
 .prog-hm-grid { display: grid; grid-template-columns: repeat(7, 14px); gap: 2px; }
 .prog-hm-cell { width: 14px; height: 14px; border-radius: 2px; }
 .prog-hm-empty  { background: transparent; }
-.prog-hm-season { background: rgba(255,255,255,0.05); }  /* in season, not this program */
+.prog-hm-season { background: var(--prog-season-bg); }  /* in season, not this program */
 .prog-hm-active { /* set inline with program colour */ }
-.prog-hm-today  { outline: 1px solid rgba(255,255,255,0.35); outline-offset: 1px; }
+.prog-hm-today  { outline: 1px solid var(--today-outline); outline-offset: 1px; }
 
 /* Scrollable day list */
 .prog-modal-list {
@@ -1107,23 +1379,23 @@ body::after { content:''; position:fixed; inset:0; pointer-events:none; z-index:
 .prog-month-group {}
 .prog-month-sticky {
   position: sticky; top: 0;
-  background: rgba(11,22,42,0.92);
+  background: var(--sticky-sheet-bg);
   backdrop-filter: blur(12px);
   padding: 6px 20px 5px;
   font-size: 10px; font-weight: 700; letter-spacing: 0.09em; text-transform: uppercase;
   color: var(--muted);
-  border-bottom: 1px solid rgba(255,255,255,0.05);
+  border-bottom: 1px solid var(--sticky-sheet-divider);
   z-index: 2;
 }
 .prog-day-row {
   display: flex; align-items: center;
   padding: 11px 20px;
-  border-bottom: 1px solid rgba(255,255,255,0.04);
+  border-bottom: 1px solid var(--row-divider-soft);
   cursor: pointer;
   transition: background 0.12s;
   gap: 12px;
 }
-.prog-day-row:active { background: rgba(255,255,255,0.04); }
+.prog-day-row:active { background: var(--brow-active); }
 .prog-day-row:last-child { border-bottom: none; }
 .prog-day-row.is-future { opacity: 0.6; }
 .prog-day-date {
@@ -1297,6 +1569,19 @@ body::after { content:''; position:fixed; inset:0; pointer-events:none; z-index:
       <label>Pass Number</label>
       <input type="text" id="inputPassNumber" placeholder="e.g. 110101234567" inputmode="numeric" />
     </div>
+    <div class="modal-fieldset">
+      <div class="modal-section-title">Appearance</div>
+      <div class="theme-segmented profile-theme-control" data-theme-controls="profile">
+        <button type="button" class="theme-chip" data-theme-option="dark" onclick="setTheme('dark')">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M21 12.79A9 9 0 1 1 11.21 3c0 .31-.03.62-.03.94A7.5 7.5 0 0 0 20.06 12c.32 0 .63-.02.94-.03Z"></path></svg>
+          <span>Dark</span>
+        </button>
+        <button type="button" class="theme-chip" data-theme-option="light" onclick="setTheme('light')">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4"></circle><path d="M12 2v2"></path><path d="M12 20v2"></path><path d="M4.93 4.93l1.41 1.41"></path><path d="M17.66 17.66l1.41 1.41"></path><path d="M2 12h2"></path><path d="M20 12h2"></path><path d="M4.93 19.07l1.41-1.41"></path><path d="M17.66 6.34l1.41-1.41"></path></svg>
+          <span>Light</span>
+        </button>
+      </div>
+    </div>
     <div class="modal-actions">
       <button class="modal-btn modal-btn-cancel" onclick="closeProfile()">Cancel</button>
       <button class="modal-btn modal-btn-save" onclick="saveCredentials()">Save</button>
@@ -1309,11 +1594,72 @@ body::after { content:''; position:fixed; inset:0; pointer-events:none; z-index:
 // ─────────────────────────────────────────────────────────────────────────────
 // CONSTANTS & HELPERS
 // ─────────────────────────────────────────────────────────────────────────────
+const THEMES = { dark: 'dark', light: 'light' };
+const THEME_STORAGE_KEY = 'wb_theme';
 const MONTHS_SHORT = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
 const MONTHS_LONG  = ['January','February','March','April','May','June','July','August','September','October','November','December'];
 const DAYS_SHORT   = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
 const DAYS_LONG    = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
 const TODAY_KEY = (() => { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`; })();
+
+function loadTheme() {
+  try {
+    const saved = localStorage.getItem(THEME_STORAGE_KEY);
+    if (saved === THEMES.dark || saved === THEMES.light) return saved;
+  } catch (e) {}
+  const attr = document.documentElement.getAttribute('data-theme');
+  return attr === THEMES.light ? THEMES.light : THEMES.dark;
+}
+
+function renderThemeControls() {
+  const theme = loadTheme();
+  document.querySelectorAll('[data-theme-option]').forEach(el => {
+    el.classList.toggle('is-active', el.getAttribute('data-theme-option') === theme);
+    el.setAttribute('aria-pressed', el.classList.contains('is-active') ? 'true' : 'false');
+  });
+  const toggle = document.getElementById('onboardingThemeToggle');
+  if (toggle) {
+    const nextLabel = theme === THEMES.dark ? 'Switch to light theme' : 'Switch to dark theme';
+    toggle.setAttribute('aria-label', nextLabel);
+    toggle.setAttribute('title', nextLabel);
+    toggle.innerHTML = theme === THEMES.dark
+      ? '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4"></circle><path d="M12 2v2"></path><path d="M12 20v2"></path><path d="M4.93 4.93l1.41 1.41"></path><path d="M17.66 17.66l1.41 1.41"></path><path d="M2 12h2"></path><path d="M20 12h2"></path><path d="M4.93 19.07l1.41-1.41"></path><path d="M17.66 6.34l1.41-1.41"></path></svg>'
+      : '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M21 12.79A9 9 0 1 1 11.21 3c0 .31-.03.62-.03.94A7.5 7.5 0 0 0 20.06 12c.32 0 .63-.02.94-.03Z"></path></svg>';
+  }
+}
+
+function applyTheme(theme) {
+  const nextTheme = theme === THEMES.light ? THEMES.light : THEMES.dark;
+  document.documentElement.setAttribute('data-theme', nextTheme);
+  document.documentElement.style.colorScheme = nextTheme;
+  try {
+    localStorage.setItem(THEME_STORAGE_KEY, nextTheme);
+  } catch (e) {}
+  const meta = document.getElementById('themeColorMeta');
+  if (meta) {
+    meta.setAttribute('content', getComputedStyle(document.documentElement).getPropertyValue('--theme-color').trim());
+  }
+  renderThemeControls();
+}
+
+function setTheme(theme) {
+  applyTheme(theme);
+}
+
+function toggleTheme() {
+  applyTheme(loadTheme() === THEMES.dark ? THEMES.light : THEMES.dark);
+}
+
+function resolveThemeColor(value) {
+  if (!value || !value.startsWith('var(')) return value;
+  const match = value.match(/var\((--[^)]+)\)/);
+  if (!match) return value;
+  return getComputedStyle(document.documentElement).getPropertyValue(match[1]).trim() || value;
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  applyTheme(loadTheme());
+});
 
 function toKey(d) { return d.toISOString().slice(0, 10); }
 
@@ -1428,7 +1774,38 @@ function getProgram(raw, assignment = 'Assignment') {
 // DATA
 // ─────────────────────────────────────────────────────────────────────────────
 let SEASON_END_KEY = null;
+let SEASON_START_KEY = null;
 const byDate = {};
+
+function getSeasonStartKey() {
+  const keys = Object.keys(byDate).sort();
+  if (!keys.length) return null;
+  return SEASON_START_KEY || keys[0];
+}
+
+function getSeasonEndKey() {
+  const keys = Object.keys(byDate).sort();
+  if (!keys.length) return null;
+  return SEASON_END_KEY || keys[keys.length - 1];
+}
+
+function getSeasonMonthRange() {
+  const startKey = getSeasonStartKey();
+  const endKey = getSeasonEndKey();
+  if (!startKey || !endKey) {
+    return [{y:2025,m:10},{y:2025,m:11},{y:2026,m:0},{y:2026,m:1},{y:2026,m:2},{y:2026,m:3}];
+  }
+  const out = [];
+  const start = new Date(startKey + 'T12:00:00');
+  const end = new Date(endKey + 'T12:00:00');
+  const cur = new Date(start.getFullYear(), start.getMonth(), 1);
+  const stop = new Date(end.getFullYear(), end.getMonth(), 1);
+  while (cur <= stop) {
+    out.push({ y: cur.getFullYear(), m: cur.getMonth() });
+    cur.setMonth(cur.getMonth() + 1);
+  }
+  return out;
+}
 
 // ─────────────────────────────────────────────────────────────────────────────
 // BUILD DAY VIEW
@@ -1606,8 +1983,9 @@ let _programmaticScrollTimer = null;
 function computeDayKeys() {
   const keys = Object.keys(byDate).sort();
   if (!keys.length) return [];
-  const minKey = keys[0];
-  const maxKey = (SEASON_END_KEY && SEASON_END_KEY >= minKey) ? SEASON_END_KEY : keys[keys.length-1];
+  const minKey = getSeasonStartKey() || keys[0];
+  const maxKey = getSeasonEndKey() || keys[keys.length - 1];
+  if (maxKey < minKey) return [minKey];
   const out = [];
   for (let d = new Date(minKey+'T12:00:00'), end = new Date(maxKey+'T12:00:00'); d <= end; d.setDate(d.getDate()+1))
     out.push(toKey(d));
@@ -1697,12 +2075,14 @@ function renderPickerDow() {
 function dayCell(key, num) {
   const lessons    = byDate[key] || [];
   const isFuture   = key > TODAY_KEY;
+  const isBeforeStart = SEASON_START_KEY && key < SEASON_START_KEY;
   const isAfterEnd = SEASON_END_KEY && key > SEASON_END_KEY;
+  const isOutsideSeason = isBeforeStart || isAfterEnd;
   const NON_WORK   = new Set(['off','end','sick','admin']);
 
   // Determine dot colour from dominant program
   let dotClass = '';
-  if (!isAfterEnd) {
+  if (!isOutsideSeason) {
     const candidates = lessons.filter(l =>
       isFuture || key === TODAY_KEY
         ? (isPaid(l.assignment) || isSched(l.raw))
@@ -1725,9 +2105,9 @@ function dayCell(key, num) {
     'picker-day',
     key === selectedKey ? 'selected' : '',
     key === TODAY_KEY && key !== selectedKey ? 'today' : '',
-    !hasWork && !isAfterEnd ? 'is-off' : '',
+    !hasWork && !isOutsideSeason ? 'is-off' : '',
     key < TODAY_KEY && key !== selectedKey ? 'past' : '',
-    isAfterEnd ? 'faded' : '',
+    isOutsideSeason ? 'faded' : '',
     dotClass,
   ].filter(Boolean).join(' ');
 
@@ -1808,6 +2188,14 @@ function renderPickerWeek() {
 }
 
 function computeFallbackKeys() {
+  const startKey = getSeasonStartKey();
+  const endKey = getSeasonEndKey();
+  if (startKey && endKey) {
+    const out = [];
+    for (let d = new Date(startKey + 'T12:00:00'), end = new Date(endKey + 'T12:00:00'); d <= end; d.setDate(d.getDate()+1))
+      out.push(toKey(d));
+    return out;
+  }
   const out = [];
   for (let d = new Date(2025,10,1), end = new Date(2026,3,30); d <= end; d.setDate(d.getDate()+1))
     out.push(toKey(d));
@@ -1815,10 +2203,7 @@ function computeFallbackKeys() {
 }
 
 function renderPickerMonth() {
-  const seasonMonths = [
-    {y:2025,m:10},{y:2025,m:11},
-    {y:2026,m:0},{y:2026,m:1},{y:2026,m:2},{y:2026,m:3},
-  ];
+  const seasonMonths = getSeasonMonthRange();
 
   let html = '';
   seasonMonths.forEach(({y, m}) => {
@@ -2034,7 +2419,11 @@ function buildStats() {
     return;
   }
 
-  const validKeys = Object.keys(byDate).filter(k => !SEASON_END_KEY || k < SEASON_END_KEY);
+  const seasonStart = getSeasonStartKey();
+  const seasonEnd = getSeasonEndKey();
+  const validKeys = Object.keys(byDate).filter(k =>
+    (!seasonStart || k >= seasonStart) && (!seasonEnd || k <= seasonEnd)
+  );
   const workDayKeys = validKeys.filter(k =>
     byDate[k].some(l => { if (!isPaid(l.assignment)) return false;
       const p = getProgram(l.raw); return !['off','end','sick','other'].includes(p); }));
@@ -2057,8 +2446,8 @@ function buildStats() {
   }); });
 
   const allKeys = Object.keys(byDate).sort();
-  const s = new Date(allKeys[0]+'T12:00:00');
-  const e = new Date((SEASON_END_KEY||allKeys[allKeys.length-1])+'T12:00:00');
+  const s = new Date((seasonStart || allKeys[0])+'T12:00:00');
+  const e = new Date((seasonEnd || allKeys[allKeys.length-1])+'T12:00:00');
   document.getElementById('bigStats').innerHTML = `
     <div class="bstat"><div class="bstat-val c-blue">${workDayKeys.length}</div><div class="bstat-label">Work Days</div></div>
     <div class="bstat"><div class="bstat-val c-orange">${Math.round(lessonHrs)}</div><div class="bstat-label">Lesson Hours</div></div>
@@ -2090,17 +2479,18 @@ function buildStats() {
     </div>`;
   }).join('') || '<p style="color:var(--muted);padding:16px;font-size:13px">No lesson hours recorded yet.</p>';
 
-  const hmMonths = [{y:2025,m:10},{y:2025,m:11},{y:2026,m:0},{y:2026,m:1},{y:2026,m:2},{y:2026,m:3},{y:2026,m:4}];
+  const hmMonths = getSeasonMonthRange();
   document.getElementById('heatmap').innerHTML = hmMonths.map(({y,m}) => {
     const first=new Date(y,m,1), days=new Date(y,m+1,0).getDate();
     let cells='';
     for(let p=0;p<first.getDay();p++) cells+=`<div class="hm-cell hm-empty"></div>`;
     for(let d=1;d<=days;d++){
       const key=toKey(new Date(y,m,d)); const ls=byDate[key]||[];
-      const afterEnd=SEASON_END_KEY&&key>SEASON_END_KEY;
+      const beforeStart=seasonStart&&key<seasonStart;
+      const afterEnd=seasonEnd&&key>seasonEnd;
       let cls='hm-cell ';
-      if(afterEnd){cls+='hm-empty';}
-      else if(key===SEASON_END_KEY){cls+='hm-end';}
+      if(beforeStart||afterEnd){cls+='hm-empty';}
+      else if(seasonEnd && key===seasonEnd){cls+='hm-end';}
       else if(!ls.length){cls+='hm-off';}
       else{
         const progs=ls.map(l=>getProgram(l.raw)),paid=ls.filter(l=>isPaid(l.assignment));
@@ -2140,7 +2530,11 @@ function buildStats() {
 // PROGRAM DETAIL MODAL
 // ─────────────────────────────────────────────────────────────────────────────
 function openProgModal(progKey, label, color) {
-  const validKeys = Object.keys(byDate).sort().filter(k => !SEASON_END_KEY || k <= SEASON_END_KEY);
+  const seasonStart = getSeasonStartKey();
+  const seasonEnd = getSeasonEndKey();
+  const validKeys = Object.keys(byDate).sort().filter(k =>
+    (!seasonStart || k >= seasonStart) && (!seasonEnd || k <= seasonEnd)
+  );
 
   // Days + hours for this program
   const progDays = []; // [{key, hours, isFuture}]
@@ -2171,18 +2565,7 @@ function openProgModal(progKey, label, color) {
   document.getElementById('progModalTitle').textContent = label;
 
   // Resolve CSS variable colours to actual hex values for reliable inline use
-  const CSS_VAR_MAP = {
-    'var(--blue)':   '#3b8bff',
-    'var(--orange)': '#ff7c42',
-    'var(--green)':  '#2dcc8a',
-    'var(--purple)': '#9b7dff',
-    'var(--yellow)': '#ffc542',
-    'var(--red)':    '#ff4d6d',
-    'var(--teal)':   '#2dccc4',
-    'var(--muted)':  '#4a6080',
-    'var(--snow)':   '#e8f0ff',
-  };
-  const resolvedColor = CSS_VAR_MAP[color] || color;
+  const resolvedColor = resolveThemeColor(color);
   const statStyle = `color:${resolvedColor}`;
 
   document.getElementById('progModalStats').innerHTML = `
@@ -2213,11 +2596,8 @@ function openProgModal(progKey, label, color) {
       cells += `<div class="prog-hm-cell prog-hm-empty"></div>`;
     for (let d = 1; d <= days; d++) {
       const key = toKey(new Date(y, m, d));
-      const allDayKeys = Object.keys(byDate).sort();
-      const seasonStart = allDayKeys[0] || key;
-      const seasonEnd   = SEASON_END_KEY || allDayKeys[allDayKeys.length-1] || key;
-      const inSeason = key >= seasonStart && key <= seasonEnd;
-      const afterEnd = key > seasonEnd;
+      const inSeason = (!seasonStart || key >= seasonStart) && (!seasonEnd || key <= seasonEnd);
+      const afterEnd = seasonEnd && key > seasonEnd;
       let cls = 'prog-hm-cell ';
       let style = '';
       if (!inSeason || afterEnd) {
@@ -2282,20 +2662,7 @@ function progDayClick(key) {
   setTimeout(() => selectDay(key), 80);
 }
 function _getSeasonMonths() {
-  if (!Object.keys(byDate).length) {
-    return [{y:2025,m:10},{y:2025,m:11},{y:2026,m:0},{y:2026,m:1},{y:2026,m:2},{y:2026,m:3}];
-  }
-  const keys = Object.keys(byDate).sort();
-  const first = new Date(keys[0] + 'T12:00:00');
-  const last  = new Date((SEASON_END_KEY || keys[keys.length-1]) + 'T12:00:00');
-  const months = [];
-  const cur = new Date(first.getFullYear(), first.getMonth(), 1);
-  const end = new Date(last.getFullYear(), last.getMonth(), 1);
-  while (cur <= end) {
-    months.push({ y: cur.getFullYear(), m: cur.getMonth() });
-    cur.setMonth(cur.getMonth() + 1);
-  }
-  return months;
+  return getSeasonMonthRange();
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -2375,6 +2742,7 @@ function loadCredentials() {
   return { passNumber: localStorage.getItem('wb_passNumber')||'', password: '$noW2526' };
 }
 function openProfile() {
+  renderThemeControls();
   const c = loadCredentials();
   document.getElementById('inputPassNumber').value = c.passNumber;
   document.getElementById('modalStatus').textContent = '';
@@ -2398,7 +2766,11 @@ function openProfile() {
   // Populate quick stats from cached data
   const hasData = Object.keys(byDate).length > 0;
   if (hasData) {
-    const validKeys = Object.keys(byDate).filter(k => !SEASON_END_KEY || k < SEASON_END_KEY);
+    const seasonStart = getSeasonStartKey();
+    const seasonEnd = getSeasonEndKey();
+    const validKeys = Object.keys(byDate).filter(k =>
+      (!seasonStart || k >= seasonStart) && (!seasonEnd || k <= seasonEnd)
+    );
     const workDays = validKeys.filter(k =>
       byDate[k].some(l => isPaid(l.assignment) && !['off','end','sick','other'].includes(getProgram(l.raw)))
     ).length;
@@ -2631,6 +3003,7 @@ async function triggerRefresh(silent = false) {
 
 function ingestLessons(lessons) {
   Object.keys(byDate).forEach(k => delete byDate[k]);
+  SEASON_START_KEY = null;
   SEASON_END_KEY = null;
   lessons.forEach(l => {
     const d = new Date(l.date.replace(/^[A-Za-z]+,\s*/,''));
@@ -2641,15 +3014,23 @@ function ingestLessons(lessons) {
       raw:(l.activity||'').trim(), assignment:(l.assignment||'').trim(), client:(l.client||'').trim(),
       privateDetails:(l.private_details || null), startDateTime:(l.start_datetime || '') });
   });
-  Object.keys(byDate).sort().forEach(key => {
-    if (!SEASON_END_KEY && byDate[key].some(l => getProgram(l.raw)==='end')) SEASON_END_KEY = key;
-  });
+  const keys = Object.keys(byDate).sort();
+  SEASON_START_KEY = keys.find(key =>
+    byDate[key].some(l => {
+      const p = getProgram(l.raw);
+      return p !== 'off' && p !== 'end';
+    })
+  ) || keys[0] || null;
+  SEASON_END_KEY = keys.find(key =>
+    byDate[key].some(l => getProgram(l.raw) === 'end')
+  ) || keys[keys.length - 1] || null;
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
 // INIT
 // ─────────────────────────────────────────────────────────────────────────────
 window.addEventListener('load', () => {
+  applyTheme(loadTheme());
   renderPickerDow();
 
   // Show onboarding for first-time users; skip if already done
@@ -2703,6 +3084,9 @@ window.addEventListener('load', () => {
 
 <!-- ── ONBOARDING OVERLAY ── -->
 <div class="ob-wrap" id="obWrap">
+  <div class="ob-theme-toggle-wrap">
+    <button class="theme-toggle-btn" id="onboardingThemeToggle" type="button" onclick="toggleTheme()" aria-label="Toggle theme"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4"></circle><path d="M12 2v2"></path><path d="M12 20v2"></path><path d="M4.93 4.93l1.41 1.41"></path><path d="M17.66 17.66l1.41 1.41"></path><path d="M2 12h2"></path><path d="M20 12h2"></path><path d="M4.93 19.07l1.41-1.41"></path><path d="M17.66 6.34l1.41-1.41"></path></svg></button>
+  </div>
 
   <!-- Screen 1: Landing -->
   <div class="ob-screen ob-active" id="obScreen1">
@@ -2721,7 +3105,7 @@ window.addEventListener('load', () => {
   <div class="ob-screen" id="obScreen2">
     <div class="ob-screen-inner">
       <div class="ob-heading">Enter your pass number</div>
-      <div class="ob-sub">Your Whistler Blackcomb <strong style="color:var(--snow)">ACTIVE</strong> pass number — found on the back of your pass or in the instructor portal <a href="https://instructor.snow.com" target="_blank" rel="noopener" style="font-family:var(--f-mono);font-size:12px;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);padding:1px 6px;border-radius:5px;color:var(--snow);text-decoration:none;">instructor.snow.com</a>. This can be changed later in your profile.</div>
+      <div class="ob-sub">Your Whistler Blackcomb <strong style="color:var(--snow)">ACTIVE</strong> pass number — found on the back of your pass or in the instructor portal <a href="https://instructor.snow.com" target="_blank" rel="noopener" style="font-family:var(--f-mono);font-size:12px;background:var(--profile-link-bg);border:1px solid var(--profile-link-border);padding:1px 6px;border-radius:5px;color:var(--snow);text-decoration:none;">instructor.snow.com</a>. This can be changed later in your profile.</div>
       <div class="ob-form">
         <div class="ob-field">
           <label>Pass Number</label>
@@ -2854,10 +3238,8 @@ function obBuildSuccess(data) {
 
   // Stat pills — compute from ingested data
   const dataKeys = Object.keys(byDate).sort();
-  const firstKey = dataKeys.find(k =>
-    byDate[k].some(l => (l.raw || '').trim() && getProgram(l.raw) !== 'off')
-  ) || null;
-  const lastKey  = SEASON_END_KEY || dataKeys[dataKeys.length - 1] || null;
+  const firstKey = getSeasonStartKey() || null;
+  const lastKey  = getSeasonEndKey() || dataKeys[dataKeys.length - 1] || null;
   const validKeys = dataKeys.filter(k => (!firstKey || k >= firstKey) && (!lastKey || k <= lastKey));
 
   const workDays = validKeys.filter(k =>
@@ -2865,24 +3247,18 @@ function obBuildSuccess(data) {
   ).length;
 
   let lessonHours = 0;
-  const programCounts = {};
+  const progHours = {};
   validKeys.forEach(k => byDate[k].forEach(l => {
     const prog = getProgram(l.raw);
-    if (isPaid(l.assignment) && !['off','end','sick','other'].includes(prog)) {
-      lessonHours += (Number(l.hours) || 0);
-      programCounts[prog] = (programCounts[prog] || 0) + 1;
-    }
+    if (!isPaid(l.assignment)) return;
+    if (['off','end','sick','other'].includes(prog)) return;
+    if (prog === 'other' && /term process/i.test(l.raw)) return;
+    const hours = Number(l.hours) || 0;
+    lessonHours += hours;
+    progHours[prog] = (progHours[prog] || 0) + hours;
   }));
 
   let topProgram = 'N/A';
-  let topCount = 0;
-  Object.keys(programCounts).forEach(p => {
-    const c = programCounts[p];
-    if (c > topCount) {
-      topCount = c;
-      topProgram = p;
-    }
-  });
   const progLabels = {
     schools: 'Schools',
     wvsbc: 'WVSBC',
@@ -2899,7 +3275,8 @@ function obBuildSuccess(data) {
     training: 'Training',
     other: 'Other',
   };
-  if (topProgram !== 'N/A') topProgram = progLabels[topProgram] || topProgram.replace(/_/g, ' ');
+  const topProgramKey = Object.keys(progHours).sort((a, b) => (progHours[b] || 0) - (progHours[a] || 0))[0];
+  if (topProgramKey) topProgram = progLabels[topProgramKey] || topProgramKey.replace(/_/g, ' ');
 
   document.getElementById('obStatPills').innerHTML = `
     <div class="ob-stat-pill">
