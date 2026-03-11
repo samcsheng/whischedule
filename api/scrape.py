@@ -10,6 +10,7 @@ from datetime import date, timedelta
 from http.server import BaseHTTPRequestHandler
 import re
 from time import sleep
+from concurrent.futures import ThreadPoolExecutor, as_completed
 
 BASE_URL  = "https://instructor.snow.com"
 LOGIN_URL = f"{BASE_URL}/snow/instructorTools.asp"
@@ -261,29 +262,48 @@ def fetch_window(session, start_dt, pass_number=None, password=None):
     return lessons, session
 
 
+def _fetch_window_fresh(start_dt, pass_number, password):
+    """Login with a fresh session and fetch one window. Safe to call from threads."""
+    session, _ = login(pass_number, password)
+    lessons, _ = fetch_window(session, start_dt, pass_number, password)
+    return lessons
+
+
 def scrape_season(pass_number, password):
-    session, instructor_name = login(pass_number, password)
-    all_lessons = {}
+    # Do one login up front to validate credentials and grab the instructor name.
+    _, instructor_name = login(pass_number, password)
+
+    windows = []
     cur = SEASON_START
     while cur <= SEASON_END:
-        try:
-            lessons, session = fetch_window(session, cur, pass_number, password)
-            for l in lessons:
-                priv = l.get("private_details") or {}
-                key = (
-                    l.get("date", ""),
-                    l.get("activity", ""),
-                    l.get("assignment", ""),
-                    l.get("client", ""),
-                    priv.get("reservationId", ""),
-                    priv.get("startDateTime", ""),
-                    l.get("start_datetime", ""),
-                )
-                if key not in all_lessons:
-                    all_lessons[key] = l
-        except Exception:
-            pass
+        windows.append(cur)
         cur += timedelta(days=WINDOW_DAYS)
+
+    all_lessons = {}
+
+    # Fetch all windows in parallel. max_workers=5 balances speed vs. portal
+    # rate-limiting — tune down to 3 if the portal starts rejecting logins.
+    with ThreadPoolExecutor(max_workers=5) as executor:
+        futures = {executor.submit(_fetch_window_fresh, w, pass_number, password): w for w in windows}
+        for future in as_completed(futures):
+            try:
+                lessons = future.result()
+                for l in lessons:
+                    priv = l.get("private_details") or {}
+                    key = (
+                        l.get("date", ""),
+                        l.get("activity", ""),
+                        l.get("assignment", ""),
+                        l.get("client", ""),
+                        priv.get("reservationId", ""),
+                        priv.get("startDateTime", ""),
+                        l.get("start_datetime", ""),
+                    )
+                    if key not in all_lessons:
+                        all_lessons[key] = l
+            except Exception:
+                pass
+
     return sorted(all_lessons.values(), key=lambda l: l["date"]), instructor_name
 
 
