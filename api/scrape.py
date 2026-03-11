@@ -262,16 +262,29 @@ def fetch_window(session, start_dt, pass_number=None, password=None):
     return lessons, session
 
 
-def _fetch_window_fresh(start_dt, pass_number, password):
-    """Login with a fresh session and fetch one window. Safe to call from threads."""
-    session, _ = login(pass_number, password)
-    lessons, _ = fetch_window(session, start_dt, pass_number, password)
+def _session_from_cookies(cookies):
+    """Spin up a fresh requests.Session pre-loaded with cookies from a prior login.
+    Each thread gets its own Session object so there's no shared mutable state,
+    but we only hit the login endpoint once for the entire scrape.
+    """
+    s = _new_session()
+    for cookie in cookies:
+        s.cookies.set(cookie.name, cookie.value, domain=cookie.domain, path=cookie.path)
+    return s
+
+
+def _fetch_window_with_cookies(start_dt, cookies):
+    """Fetch one window using pre-built cookies. No login needed."""
+    session = _session_from_cookies(cookies)
+    lessons, _ = fetch_window(session, start_dt)
     return lessons
 
 
 def scrape_season(pass_number, password):
-    # Do one login up front to validate credentials and grab the instructor name.
-    _, instructor_name = login(pass_number, password)
+    # Single login — extract cookies and instructor name, then share cookies
+    # across all parallel window fetches instead of logging in per-thread.
+    auth_session, instructor_name = login(pass_number, password)
+    cookies = list(auth_session.cookies)
 
     windows = []
     cur = SEASON_START
@@ -281,10 +294,8 @@ def scrape_season(pass_number, password):
 
     all_lessons = {}
 
-    # Fetch all windows in parallel. max_workers=5 balances speed vs. portal
-    # rate-limiting — tune down to 3 if the portal starts rejecting logins.
-    with ThreadPoolExecutor(max_workers=5) as executor:
-        futures = {executor.submit(_fetch_window_fresh, w, pass_number, password): w for w in windows}
+    with ThreadPoolExecutor(max_workers=6) as executor:
+        futures = {executor.submit(_fetch_window_with_cookies, w, cookies): w for w in windows}
         for future in as_completed(futures):
             try:
                 lessons = future.result()
