@@ -1,6 +1,6 @@
 {
-{  "name": "WhisSchedule",
-  "short_name": "WhisSchedule",
+  "name": "WhiSchedule",
+  "short_name": "WhiSchedule",
   "description": "Schedule viewer for Whistler Blackcomb instructors.",
   "id": "/",
   "start_url": "/",

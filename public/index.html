@@ -968,6 +968,93 @@ body::after { content:''; position:fixed; inset:0; pointer-events:none; z-index:
 .modal-status.ok  { color:var(--green); }
 .modal-status.err { color:var(--red); }
 
+/* ── INSTALL CTAs (Profile + Modals) ── */
+.modal-link {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px 12px 12px 14px;
+  border-radius: 16px;
+  background: var(--panel-bg);
+  border: 1px solid var(--panel-border);
+  color: var(--snow);
+  cursor: pointer;
+  transition: transform 0.15s, background 0.3s, border-color 0.3s, opacity 0.2s;
+}
+.modal-link:active { transform: scale(0.99); }
+.modal-link[disabled] { opacity: 0.55; cursor: default; }
+.modal-link-left { display:flex; align-items:center; gap:10px; min-width: 0; }
+.modal-link-ico {
+  width: 30px; height: 30px; border-radius: 12px;
+  background: rgba(59,139,255,0.14);
+  border: 1px solid rgba(59,139,255,0.22);
+  display:flex; align-items:center; justify-content:center;
+  flex-shrink: 0;
+}
+.modal-link-ico svg { width: 16px; height: 16px; stroke: rgba(232,240,255,0.85); stroke-width: 2; fill: none; stroke-linecap: round; stroke-linejoin: round; }
+.modal-link-title { font-family: var(--f-head); font-size: 14px; font-weight: 800; letter-spacing: 0.02em; white-space: nowrap; overflow:hidden; text-overflow: ellipsis; }
+.modal-link-sub { font-size: 11px; color: var(--muted); margin-top: 2px; white-space: nowrap; overflow:hidden; text-overflow: ellipsis; }
+.modal-link-right {
+  font-family: var(--f-mono);
+  font-size: 11px;
+  color: rgba(232,240,255,0.75);
+  padding: 6px 9px;
+  border-radius: 999px;
+  border: 1px solid rgba(255,255,255,0.10);
+  background: rgba(255,255,255,0.05);
+  flex-shrink: 0;
+}
+.install-help-kbd {
+  font-family: var(--f-mono);
+  font-size: 11px;
+  padding: 2px 6px;
+  border-radius: 8px;
+  background: rgba(255,255,255,0.06);
+  border: 1px solid rgba(255,255,255,0.10);
+  color: rgba(232,240,255,0.82);
+}
+.install-bullets { margin-top: 12px; display:flex; flex-direction:column; gap:10px; }
+.install-bullet { display:flex; gap:10px; align-items:flex-start; }
+.install-dot {
+  width: 22px; height: 22px; border-radius: 8px;
+  background: rgba(255,197,66,0.10);
+  border: 1px solid rgba(255,197,66,0.18);
+  display:flex; align-items:center; justify-content:center;
+  color: var(--yellow);
+  flex-shrink: 0;
+  font-family: var(--f-head);
+  font-size: 12px;
+  font-weight: 900;
+}
+.install-bullet p { margin: 0; font-size: 12px; line-height: 1.55; color: rgba(232,240,255,0.82); }
+.install-h1 { font-family: var(--f-head); font-size: 18px; font-weight: 900; letter-spacing: 0.01em; }
+.install-sub { margin-top: 6px; font-size: 12px; color: var(--muted); line-height: 1.6; }
+.install-hero {
+  display:flex;
+  gap: 12px;
+  align-items: center;
+  margin-bottom: 12px;
+}
+.install-hero-badge {
+  width: 44px; height: 44px; border-radius: 18px;
+  background: rgba(45,204,138,0.12);
+  border: 1px solid rgba(45,204,138,0.18);
+  display:flex; align-items:center; justify-content:center;
+  font-size: 20px;
+  flex-shrink: 0;
+}
+.install-pill-row { margin-top: 12px; display:flex; gap:8px; flex-wrap: wrap; }
+.install-pill {
+  font-size: 11px;
+  color: rgba(232,240,255,0.82);
+  padding: 7px 10px;
+  border-radius: 999px;
+  background: rgba(255,255,255,0.05);
+  border: 1px solid rgba(255,255,255,0.10);
+}
+
 /* ── EMPTY STATES ── */
 .empty-state {
   text-align:center; padding:56px 28px 40px;
@@ -1000,6 +1087,71 @@ body::after { content:''; position:fixed; inset:0; pointer-events:none; z-index:
   background: var(--bg);
   transition: opacity 0.5s ease;
 }
+.ob-install-hint {
+  position: fixed;
+  left: 14px;
+  right: 14px;
+  bottom: max(14px, calc(env(safe-area-inset-bottom, 0px) + 10px));
+  z-index: 6;
+  display: none;
+  gap: 12px;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 12px 12px 14px;
+  border-radius: 18px;
+  background: rgba(12,24,44,0.72);
+  border: 1px solid rgba(255,255,255,0.10);
+  box-shadow: 0 18px 48px rgba(0,0,0,0.45);
+  backdrop-filter: blur(18px) saturate(170%);
+  -webkit-backdrop-filter: blur(18px) saturate(170%);
+}
+.ob-install-hint.is-visible { display: flex; }
+.ob-install-hint-text { min-width: 0; }
+.ob-install-hint-title {
+  font-family: var(--f-head);
+  font-size: 13px;
+  font-weight: 800;
+  color: var(--snow);
+  letter-spacing: 0.02em;
+}
+.ob-install-hint-sub {
+  margin-top: 3px;
+  font-size: 11px;
+  color: rgba(232,240,255,0.75);
+  line-height: 1.35;
+  max-width: 56ch;
+}
+.ob-install-hint-actions { display:flex; gap:8px; flex-shrink: 0; align-items:center; }
+.ob-install-hint-btn {
+  border: 1px solid rgba(59,139,255,0.35);
+  background: rgba(59,139,255,0.22);
+  color: rgba(255,255,255,0.92);
+  padding: 9px 12px;
+  border-radius: 14px;
+  font-family: var(--f-head);
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.03em;
+  cursor: pointer;
+  transition: transform 0.15s, opacity 0.2s, background 0.3s, border-color 0.3s;
+}
+.ob-install-hint-btn:active { transform: scale(0.98); }
+.ob-install-hint-btn[disabled] { opacity: 0.55; cursor: default; }
+.ob-install-hint-dismiss {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  border: 1px solid rgba(255,255,255,0.10);
+  background: rgba(255,255,255,0.06);
+  color: rgba(232,240,255,0.75);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  cursor:pointer;
+  transition: transform 0.15s, opacity 0.2s;
+}
+.ob-install-hint-dismiss:active { transform: scale(0.96); }
+.ob-install-hint-dismiss svg { width: 16px; height: 16px; stroke: currentColor; stroke-width: 2.2; fill: none; stroke-linecap: round; }
 .ob-theme-toggle-wrap {
   position: absolute;
   top: max(14px, calc(env(safe-area-inset-top, 0px) + 10px));
@@ -1582,11 +1734,63 @@ body::after { content:''; position:fixed; inset:0; pointer-events:none; z-index:
         </button>
       </div>
     </div>
+    <div class="modal-fieldset">
+      <div class="modal-section-title">App</div>
+      <button class="modal-link" id="installCtaBtn" type="button" onclick="handleInstallCtaClick()">
+        <span class="modal-link-left">
+          <span class="modal-link-ico" aria-hidden="true">
+            <svg viewBox="0 0 24 24"><path d="M12 16v-9"/><path d="M8.5 10.5 12 7l3.5 3.5"/><path d="M5 16.5c0 2 1.5 3.5 3.5 3.5h7c2 0 3.5-1.5 3.5-3.5"/><path d="M5 16.5v-1.5"/><path d="M19 16.5v-1.5"/></svg>
+          </span>
+          <span style="min-width:0">
+            <div class="modal-link-title" id="installCtaTitle">Install WhisSchedule</div>
+            <div class="modal-link-sub" id="installCtaSub">Add to your Home Screen for quick access</div>
+          </span>
+        </span>
+        <span class="modal-link-right" id="installCtaRight">Install</span>
+      </button>
+    </div>
     <div class="modal-actions">
       <button class="modal-btn modal-btn-cancel" onclick="closeProfile()">Cancel</button>
       <button class="modal-btn modal-btn-save" onclick="saveCredentials()">Save</button>
     </div>
     <div class="modal-status" id="modalStatus"></div>
+</div>
+</div>
+
+<!-- ── INSTALL HELP MODAL ── -->
+<div class="modal-overlay" id="installHelpModal" onclick="handleInstallOverlayClick(event, 'installHelpModal')">
+  <div class="modal-sheet">
+    <div class="modal-handle"></div>
+    <div class="install-hero">
+      <div class="install-hero-badge">📲</div>
+      <div style="min-width:0">
+        <div class="install-h1" id="installHelpTitle">Install WhisSchedule</div>
+        <div class="install-sub" id="installHelpSub">Get one-tap access and a faster, app-like experience.</div>
+      </div>
+    </div>
+    <div id="installHelpBody"></div>
+    <div class="modal-actions">
+      <button class="modal-btn modal-btn-cancel" onclick="closeInstallModal('installHelpModal')">Not now</button>
+      <button class="modal-btn modal-btn-save" id="installHelpPrimaryBtn" onclick="handleInstallPrimaryAction()">Install</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── INSTALL WELCOME MODAL ── -->
+<div class="modal-overlay" id="installWelcomeModal" onclick="handleInstallOverlayClick(event, 'installWelcomeModal')">
+  <div class="modal-sheet">
+    <div class="modal-handle"></div>
+    <div class="install-hero">
+      <div class="install-hero-badge">🏔️</div>
+      <div style="min-width:0">
+        <div class="install-h1" id="installWelcomeTitle">Welcome to WhisSchedule</div>
+        <div class="install-sub" id="installWelcomeSub">A quick tour, now that you’ve installed the app.</div>
+      </div>
+    </div>
+    <div id="installWelcomeBody"></div>
+    <div class="modal-actions">
+      <button class="modal-btn modal-btn-save" onclick="closeInstallWelcome()">Let’s go</button>
+    </div>
   </div>
 </div>
 
@@ -1690,6 +1894,344 @@ function escapeHtml(s) {
 function cleanPrivateText(s) {
   return String(s ?? '').replace(/\uFFFD/g, ' ').replace(/\s+/g, ' ').trim();
 }
+
+// ─────────────────────────────────────────────────────────────────────────────
+// PWA INSTALL
+// ─────────────────────────────────────────────────────────────────────────────
+const PWA_INSTALL_KEYS = {
+  installed: 'wb_pwa_installed',
+  installedAt: 'wb_pwa_installed_at',
+  installedVia: 'wb_pwa_installed_via',
+  intro: 'wb_install_intro',
+  introSeen: 'wb_install_intro_seen',
+  obHintDismissed: 'wb_ob_install_hint_dismissed',
+};
+
+let deferredInstallPrompt = null;
+
+function isIOS() {
+  const ua = navigator.userAgent || '';
+  return /iphone|ipad|ipod/i.test(ua) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+}
+
+function isStandalone() {
+  return (window.matchMedia && window.matchMedia('(display-mode: standalone)').matches) || window.navigator.standalone === true;
+}
+
+function isProbablyAndroid() {
+  const ua = navigator.userAgent || '';
+  return /android/i.test(ua);
+}
+
+function safeLocalGet(key) {
+  try { return localStorage.getItem(key); } catch (e) { return null; }
+}
+function safeLocalSet(key, value) {
+  try { localStorage.setItem(key, value); } catch (e) {}
+}
+
+function ensureInstallIntroStored() {
+  const existing = safeLocalGet(PWA_INSTALL_KEYS.intro);
+  if (existing) return;
+  const payload = {
+    v: 1,
+    title: 'Welcome to WhisSchedule',
+    subtitle: 'Your Whistler Blackcomb schedule, beautifully organised.',
+    bullets: [
+      { k: '1', t: 'Fast launch', d: 'Save it to your Home Screen for one-tap access all season.' },
+      { k: '2', t: 'Works offline', d: 'If you lose signal, your last synced schedule is still available.' },
+      { k: '3', t: 'Sync when you return', d: 'Open the app and it’ll refresh automatically when you’re back online.' },
+    ],
+    pills: ['Offline ready', 'One tap', 'Auto sync'],
+  };
+  safeLocalSet(PWA_INSTALL_KEYS.intro, JSON.stringify(payload));
+}
+
+function markInstalled(via) {
+  if (safeLocalGet(PWA_INSTALL_KEYS.installed) === 'true') return;
+  safeLocalSet(PWA_INSTALL_KEYS.installed, 'true');
+  safeLocalSet(PWA_INSTALL_KEYS.installedAt, String(Date.now()));
+  safeLocalSet(PWA_INSTALL_KEYS.installedVia, via || 'unknown');
+  ensureInstallIntroStored();
+  safeLocalSet(PWA_INSTALL_KEYS.introSeen, 'false');
+}
+
+function openInstallModal(id) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  el.classList.add('open');
+}
+function closeInstallModal(id) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  el.classList.remove('open');
+}
+function handleInstallOverlayClick(e, id) {
+  if (!e || !id) return;
+  if (e.target && e.target.id === id) {
+    if (id === 'installWelcomeModal') closeInstallWelcome();
+    else closeInstallModal(id);
+  }
+}
+
+function renderInstallHelp() {
+  const body = document.getElementById('installHelpBody');
+  const primaryBtn = document.getElementById('installHelpPrimaryBtn');
+  if (!body || !primaryBtn) return;
+
+  const standalone = isStandalone();
+  const installed = safeLocalGet(PWA_INSTALL_KEYS.installed) === 'true' || standalone;
+  const canPrompt = !!deferredInstallPrompt;
+
+  if (installed) {
+    primaryBtn.textContent = 'Done';
+    primaryBtn.disabled = true;
+    body.innerHTML = `
+      <div class="install-sub">You’re already running the installed app. 🎉</div>
+      <div class="install-pill-row">
+        <div class="install-pill">Standalone mode</div>
+        <div class="install-pill">Faster access</div>
+      </div>`;
+    return;
+  }
+
+  primaryBtn.disabled = false;
+
+  if (isIOS()) {
+    primaryBtn.textContent = 'Got it';
+    body.innerHTML = `
+      <div class="install-sub">iOS doesn’t show an install pop-up. Add it to your Home Screen:</div>
+      <div class="install-bullets">
+        <div class="install-bullet">
+          <div class="install-dot">1</div>
+          <p>Tap the <span class="install-help-kbd">Share</span> button in Safari.</p>
+        </div>
+        <div class="install-bullet">
+          <div class="install-dot">2</div>
+          <p>Choose <span class="install-help-kbd">Add to Home Screen</span>.</p>
+        </div>
+        <div class="install-bullet">
+          <div class="install-dot">3</div>
+          <p>Open WhisSchedule from your Home Screen.</p>
+        </div>
+      </div>`;
+    return;
+  }
+
+  if (canPrompt) {
+    primaryBtn.textContent = 'Install';
+    body.innerHTML = `
+      <div class="install-sub">Tap <span class="install-help-kbd">Install</span> to add WhisSchedule as an app.</div>
+      <div class="install-pill-row">
+        <div class="install-pill">Home Screen icon</div>
+        <div class="install-pill">Standalone</div>
+        <div class="install-pill">Offline cache</div>
+      </div>`;
+    return;
+  }
+
+  primaryBtn.textContent = 'Got it';
+  body.innerHTML = `
+    <div class="install-sub">If you don’t see an install button yet, use your browser menu:</div>
+    <div class="install-bullets">
+      <div class="install-bullet">
+        <div class="install-dot">1</div>
+        <p>Open the browser menu (<span class="install-help-kbd">⋮</span>).</p>
+      </div>
+      <div class="install-bullet">
+        <div class="install-dot">2</div>
+        <p>Tap <span class="install-help-kbd">Install app</span> or <span class="install-help-kbd">Add to Home screen</span>.</p>
+      </div>
+    </div>`;
+}
+
+async function promptInstall() {
+  if (!deferredInstallPrompt) {
+    openInstallHelp();
+    return;
+  }
+  try {
+    const promptEvent = deferredInstallPrompt;
+    deferredInstallPrompt = null; // can’t be used again once prompted
+    updateInstallCtas();
+    promptEvent.prompt();
+    if (promptEvent.userChoice) await promptEvent.userChoice;
+  } catch (e) {
+    openInstallHelp();
+  }
+}
+
+function openInstallHelp() {
+  renderInstallHelp();
+  openInstallModal('installHelpModal');
+}
+
+function renderInstallWelcomeFromStorage() {
+  const title = document.getElementById('installWelcomeTitle');
+  const sub   = document.getElementById('installWelcomeSub');
+  const body  = document.getElementById('installWelcomeBody');
+  if (!title || !sub || !body) return;
+
+  let payload = null;
+  try { payload = JSON.parse(safeLocalGet(PWA_INSTALL_KEYS.intro) || 'null'); } catch (e) { payload = null; }
+  if (!payload) payload = { title: 'Welcome to WhisSchedule', subtitle: 'Your schedule, beautifully organised.', bullets: [], pills: [] };
+
+  title.textContent = payload.title || 'Welcome to WhisSchedule';
+  sub.textContent   = payload.subtitle || 'Your schedule, beautifully organised.';
+
+  const bullets = Array.isArray(payload.bullets) ? payload.bullets : [];
+  const pills   = Array.isArray(payload.pills) ? payload.pills : [];
+
+  const bulletHtml = bullets.length ? `
+    <div class="install-bullets">
+      ${bullets.map(b => `
+        <div class="install-bullet">
+          <div class="install-dot">${escapeHtml(b.k || '•')}</div>
+          <p><strong style="color:var(--snow)">${escapeHtml(b.t || '')}</strong> — ${escapeHtml(b.d || '')}</p>
+        </div>`).join('')}
+    </div>` : '';
+
+  const pillHtml = pills.length ? `
+    <div class="install-pill-row">
+      ${pills.map(p => `<div class="install-pill">${escapeHtml(p)}</div>`).join('')}
+    </div>` : '';
+
+  body.innerHTML = `${bulletHtml}${pillHtml}`;
+}
+
+function maybeShowInstallWelcome() {
+  if (safeLocalGet(PWA_INSTALL_KEYS.introSeen) === 'true') return;
+  renderInstallWelcomeFromStorage();
+  openInstallModal('installWelcomeModal');
+}
+
+function closeInstallWelcome() {
+  safeLocalSet(PWA_INSTALL_KEYS.introSeen, 'true');
+  closeInstallModal('installWelcomeModal');
+}
+
+function updateInstallCtas() {
+  const installed = (safeLocalGet(PWA_INSTALL_KEYS.installed) === 'true') || isStandalone();
+  const canPrompt = !!deferredInstallPrompt;
+
+  const ctaBtn = document.getElementById('installCtaBtn');
+  const ctaTitle = document.getElementById('installCtaTitle');
+  const ctaSub = document.getElementById('installCtaSub');
+  const ctaRight = document.getElementById('installCtaRight');
+  if (ctaBtn && ctaTitle && ctaSub && ctaRight) {
+    if (installed) {
+      ctaBtn.disabled = true;
+      ctaTitle.textContent = 'WhisSchedule is installed';
+      ctaSub.textContent = 'You’re running the app version';
+      ctaRight.textContent = 'Installed';
+    } else if (isIOS()) {
+      ctaBtn.disabled = false;
+      ctaTitle.textContent = 'Install WhisSchedule';
+      ctaSub.textContent = 'Add to Home Screen (Safari Share menu)';
+      ctaRight.textContent = 'How';
+    } else if (canPrompt) {
+      ctaBtn.disabled = false;
+      ctaTitle.textContent = 'Install WhisSchedule';
+      ctaSub.textContent = 'Get one-tap access and offline cache';
+      ctaRight.textContent = 'Install';
+    } else {
+      ctaBtn.disabled = false;
+      ctaTitle.textContent = 'Install WhisSchedule';
+      ctaSub.textContent = isProbablyAndroid() ? 'Use your browser menu → Install app' : 'See install steps';
+      ctaRight.textContent = 'Info';
+    }
+  }
+
+  const hint = document.getElementById('obInstallHint');
+  const hintSub = document.getElementById('obInstallHintSub');
+  const hintBtn = document.getElementById('obInstallHintBtn');
+  if (hint && hintSub && hintBtn) {
+    const dismissed = safeLocalGet(PWA_INSTALL_KEYS.obHintDismissed) === 'true';
+    const screen1 = document.getElementById('obScreen1');
+    const obScreen1Active = !!(screen1 && screen1.classList.contains('ob-active'));
+
+    if (installed || dismissed || !obScreen1Active) {
+      hint.classList.remove('is-visible');
+    } else {
+      hint.classList.add('is-visible');
+      if (isIOS()) {
+        hintSub.textContent = 'Tip: Add it to your Home Screen for one‑tap access (Safari → Share → Add to Home Screen).';
+        hintBtn.textContent = 'How to install';
+        hintBtn.disabled = false;
+      } else if (canPrompt) {
+        hintSub.textContent = 'Tip: Install the app for faster launch, offline cache, and one‑tap access.';
+        hintBtn.textContent = 'Install app';
+        hintBtn.disabled = false;
+      } else {
+        hintSub.textContent = isProbablyAndroid()
+          ? 'Tip: Install via your browser menu (⋮ → Install app / Add to Home screen).'
+          : 'Tip: Install via your browser menu for a more app-like experience.';
+        hintBtn.textContent = 'See steps';
+        hintBtn.disabled = false;
+      }
+    }
+  }
+}
+
+function handleInstallPrimaryAction() {
+  if (isIOS() || !deferredInstallPrompt) {
+    closeInstallModal('installHelpModal');
+    return;
+  }
+  closeInstallModal('installHelpModal');
+  promptInstall();
+}
+
+function handleInstallHintAction() {
+  if (safeLocalGet(PWA_INSTALL_KEYS.installed) === 'true' || isStandalone()) return;
+  if (isIOS()) { openInstallHelp(); return; }
+  if (deferredInstallPrompt) { promptInstall(); return; }
+  openInstallHelp();
+}
+
+function dismissObInstallHint() {
+  safeLocalSet(PWA_INSTALL_KEYS.obHintDismissed, 'true');
+  const hint = document.getElementById('obInstallHint');
+  if (hint) hint.classList.remove('is-visible');
+}
+
+function handleInstallCtaClick() {
+  if (safeLocalGet(PWA_INSTALL_KEYS.installed) === 'true' || isStandalone()) {
+    openInstallHelp();
+    return;
+  }
+  if (isIOS()) { openInstallHelp(); return; }
+  if (deferredInstallPrompt) { promptInstall(); return; }
+  openInstallHelp();
+}
+
+function initPwaInstall() {
+  if (isStandalone()) markInstalled('standalone');
+  updateInstallCtas();
+
+  if (isStandalone()) {
+    ensureInstallIntroStored();
+    if (safeLocalGet(PWA_INSTALL_KEYS.introSeen) !== 'true') maybeShowInstallWelcome();
+  }
+}
+
+window.addEventListener('beforeinstallprompt', (e) => {
+  e.preventDefault();
+  deferredInstallPrompt = e;
+  updateInstallCtas();
+});
+
+window.addEventListener('appinstalled', () => {
+  deferredInstallPrompt = null;
+  markInstalled('appinstalled');
+  updateInstallCtas();
+  ensureInstallIntroStored();
+  maybeShowInstallWelcome();
+});
+
+document.addEventListener('DOMContentLoaded', () => {
+  initPwaInstall();
+});
 
 // ─────────────────────────────────────────────────────────────────────────────
 // V3 ENGINE
@@ -3088,6 +3630,20 @@ window.addEventListener('load', () => {
     <button class="theme-toggle-btn" id="onboardingThemeToggle" type="button" onclick="toggleTheme()" aria-label="Toggle theme"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4"></circle><path d="M12 2v2"></path><path d="M12 20v2"></path><path d="M4.93 4.93l1.41 1.41"></path><path d="M17.66 17.66l1.41 1.41"></path><path d="M2 12h2"></path><path d="M20 12h2"></path><path d="M4.93 19.07l1.41-1.41"></path><path d="M17.66 6.34l1.41-1.41"></path></svg></button>
   </div>
 
+  <!-- Install hint (Screen 1 only) -->
+  <div class="ob-install-hint" id="obInstallHint" role="note" aria-live="polite">
+    <div class="ob-install-hint-text">
+      <div class="ob-install-hint-title">Install as an app</div>
+      <div class="ob-install-hint-sub" id="obInstallHintSub">Tip: Install for faster launch and one‑tap access.</div>
+    </div>
+    <div class="ob-install-hint-actions">
+      <button class="ob-install-hint-btn" id="obInstallHintBtn" type="button" onclick="handleInstallHintAction()">Install</button>
+      <button class="ob-install-hint-dismiss" type="button" onclick="dismissObInstallHint()" aria-label="Dismiss install hint">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M18 6 6 18"></path><path d="M6 6l12 12"></path></svg>
+      </button>
+    </div>
+  </div>
+
   <!-- Screen 1: Landing -->
   <div class="ob-screen ob-active" id="obScreen1">
     <div class="ob-screen-inner">
@@ -3148,6 +3704,8 @@ function obInit() {
   }
   document.documentElement.style.overflow = 'hidden';
   obStartSnow();
+  // Ensure the install hint state is correct on first render
+  setTimeout(() => updateInstallCtas(), 0);
   return true;
 }
 
@@ -3159,6 +3717,8 @@ function obGoTo(screenNum) {
   current.classList.remove('ob-active');
   setTimeout(() => current.classList.remove('ob-exit-left'), 400);
   next.classList.add('ob-active');
+  // Install hint only belongs on screen 1
+  setTimeout(() => updateInstallCtas(), 0);
   if (screenNum === 2) setTimeout(() => document.getElementById('obPassNumber').focus(), 420);
 }
 
