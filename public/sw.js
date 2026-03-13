@@ -1,6 +1,6 @@
 /* global self */
 
-const CACHE_NAME = 'whisschedule-pwa-v1';
+const CACHE_NAME = 'whisschedule-pwa-v2';
 
 const PRECACHE_URLS = [
   '/',
@@ -15,7 +15,8 @@ self.addEventListener('install', (event) => {
   event.waitUntil(
     caches
       .open(CACHE_NAME)
-      .then((cache) => cache.addAll(PRECACHE_URLS))
+      // allSettled so a single failed fetch doesn't abort the whole SW install
+      .then((cache) => Promise.allSettled(PRECACHE_URLS.map((url) => cache.add(url))))
       .then(() => self.skipWaiting())
   );
 });
