@@ -2263,6 +2263,48 @@ document.addEventListener('DOMContentLoaded', () => {
 // ─────────────────────────────────────────────────────────────────────────────
 // V3 ENGINE
 // ─────────────────────────────────────────────────────────────────────────────
+
+// Program definitions — single source of truth for key, label, and color.
+const PROGRAM_DEFS = [
+  {key:'schools',       label:'Schools',           color:'var(--blue)'},
+  {key:'wvsbc',         label:'WVSBC',             color:'#6eb5ff'},
+  {key:'wcb',           label:'WCB',               color:'var(--purple)'},
+  {key:'club',          label:'Club / Roundhouse', color:'var(--purple)'},
+  {key:'adaptive',      label:'Adaptive',          color:'#a78bfa'},
+  {key:'never_ever',    label:'Never Ever',        color:'#60d4f0'},
+  {key:'womens_camps',  label:"Women's Camps",     color:'#ff8cc8'},
+  {key:'daily',         label:'Kids Daily',        color:'var(--teal)'},
+  {key:'teens',         label:'Teens Daily',       color:'var(--teal)'},
+  {key:'adult_alpine',  label:'Adult Alpine',      color:'#7dd3a8'},
+  {key:'adult_base',    label:'Adult Base',        color:'#f09a54'},
+  {key:'private',       label:'Private Lessons',   color:'var(--yellow)'},
+  {key:'training',      label:'Training',          color:'var(--green)'},
+  {key:'amdp',          label:'AMDP',              color:'#c084fc'},
+  {key:'ama',           label:'AMA',               color:'#c084fc'},
+  {key:'rdp',           label:'RDP',               color:'#c084fc'},
+  {key:'wfc',           label:'WFC',               color:'#c084fc'},
+  {key:'kinder',        label:'Kinder',            color:'#86efac'},
+  {key:'minis',         label:'Minis',             color:'#86efac'},
+  {key:'vkp',           label:'VKP',               color:'#86efac'},
+  {key:'adventure_camp',label:'Adventure Camp',    color:'#fb923c'},
+  {key:'charity',       label:'Charity',           color:'#f472b6'},
+  {key:'map',           label:'MAP',               color:'#94a3b8'},
+  {key:'sdp',           label:'SDP',               color:'#94a3b8'},
+  {key:'ex_can',        label:'Ex Can',            color:'#94a3b8'},
+  {key:'other',         label:'Other',             color:'var(--muted)'},
+];
+
+const NON_WORK_PROGRAMS = new Set(['off', 'end', 'sick', 'unavailable']);
+
+function progColor(prog) {
+  const def = PROGRAM_DEFS.find(p => p.key === prog);
+  return def ? def.color : 'var(--muted)';
+}
+function progLabel(prog) {
+  const def = PROGRAM_DEFS.find(p => p.key === prog);
+  return def ? def.label : prog.replace(/_/g, ' ');
+}
+
 function isPaid(a) {
   return a === 'Assignment' || a === 'Continuing Assignment' || a === 'Private Request';
 }
