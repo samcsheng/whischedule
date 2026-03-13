@@ -1498,6 +1498,59 @@ body::after { content:''; position:fixed; inset:0; pointer-events:none; z-index:
   width: 14px; height: 14px; flex-shrink: 0; opacity: 0.3;
   stroke: var(--snow); fill: none; stroke-width: 2;
 }
+
+/* ── INSTALL UI LIGHT MODE ── */
+html[data-theme="light"] .ob-install-hint {
+  background: rgba(255,255,255,0.88);
+  border-color: rgba(20,49,89,0.14);
+  box-shadow: 0 8px 32px rgba(84,118,165,0.18), 0 2px 8px rgba(84,118,165,0.10);
+}
+html[data-theme="light"] .ob-install-hint-sub {
+  color: rgba(22,37,61,0.72);
+}
+html[data-theme="light"] .ob-install-hint-btn {
+  border-color: rgba(59,139,255,0.45);
+  background: rgba(59,139,255,0.14);
+  color: #1f63c7;
+}
+html[data-theme="light"] .ob-install-hint-dismiss {
+  border-color: rgba(20,49,89,0.14);
+  background: rgba(20,49,89,0.06);
+  color: rgba(22,37,61,0.6);
+}
+html[data-theme="light"] .modal-link-ico {
+  background: rgba(59,139,255,0.10);
+  border-color: rgba(59,139,255,0.20);
+}
+html[data-theme="light"] .modal-link-ico svg {
+  stroke: #1f63c7;
+}
+html[data-theme="light"] .modal-link-right {
+  color: rgba(22,37,61,0.65);
+  border-color: rgba(20,49,89,0.14);
+  background: rgba(20,49,89,0.05);
+}
+html[data-theme="light"] .install-help-kbd {
+  background: rgba(20,49,89,0.07);
+  border-color: rgba(20,49,89,0.14);
+  color: rgba(22,37,61,0.82);
+}
+html[data-theme="light"] .install-dot {
+  background: rgba(255,197,66,0.14);
+  border-color: rgba(200,140,0,0.22);
+  color: #b07d00;
+}
+html[data-theme="light"] .install-bullet p {
+  color: rgba(22,37,61,0.82);
+}
+html[data-theme="light"] .install-pill {
+  color: rgba(22,37,61,0.78);
+  background: rgba(20,49,89,0.06);
+  border-color: rgba(20,49,89,0.13);
+}
+html[data-theme="light"] .install-h1 {
+  color: #16253d;
+}
 </style>
 <script>
   window.va = window.va || function () { (window.vaq = window.vaq || []).push(arguments); };
@@ -2021,18 +2074,19 @@ function updateInstallCtas() {
       hint.classList.add('is-visible');
       if (isIOS()) {
         hintSub.textContent = 'Tip: Add it to your Home Screen for one‑tap access (Safari → Share → Add to Home Screen).';
+        hintBtn.style.display = '';
         hintBtn.textContent = 'How to install';
         hintBtn.disabled = false;
       } else if (canPrompt) {
         hintSub.textContent = 'Tip: Install the app for faster launch, offline cache, and one‑tap access.';
+        hintBtn.style.display = '';
         hintBtn.textContent = 'Install app';
         hintBtn.disabled = false;
       } else {
         hintSub.textContent = isProbablyAndroid()
           ? 'Tip: Install via your browser menu (⋮ → Install app / Add to Home screen).'
           : 'Tip: Install via your browser menu for a more app-like experience.';
-        hintBtn.textContent = 'See steps';
-        hintBtn.disabled = false;
+        hintBtn.style.display = 'none';
       }
     }
   }
@@ -2071,6 +2125,13 @@ function handleInstallCtaClick() {
 }
 
 function initPwaInstall() {
+  // Clear stale installed flag when visiting in a normal browser tab.
+  // There is no web API for "app uninstalled", so the flag can get stuck
+  // as 'true' after the user removes the PWA — which permanently hides
+  // the install prompt. Reset it whenever we're not actually standalone.
+  if (!isStandalone()) {
+    try { localStorage.removeItem(PWA_INSTALL_KEYS.installed); } catch (e) {}
+  }
   if (isStandalone()) markInstalled('standalone');
   updateInstallCtas();
 
@@ -3835,7 +3896,7 @@ function obStartSnow() {
 
 <script>
   if ('serviceWorker' in navigator) {
-    window.addEventListener('load', () => { navigator.serviceWorker.register('/sw.js').catch(()=>{}); });
+    window.addEventListener('load', () => { navigator.serviceWorker.register('/sw.js').catch((e) => console.warn('[SW] registration failed:', e)); });
   }
 </script>
 <script>
