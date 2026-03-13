@@ -691,18 +691,6 @@ body::after { content:''; position:fixed; inset:0; pointer-events:none; z-index:
 .lesson-dot.prog-map,
 .lesson-dot.prog-sdp,
 .lesson-dot.prog-ex_can      { background: #94a3b8; }
-.lesson-time {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-end;
-  justify-content: center;
-  min-width: 52px;
-  padding-right: 6px;
-  gap: 1px;
-  flex-shrink: 0;
-}
-.lesson-time-start { font-size: 14px; color: var(--fg); line-height: 1.2; white-space: nowrap; }
-.lesson-time-dur   { font-size: 12px; color: var(--muted); line-height: 1.2; white-space: nowrap; }
 .lesson-main { flex: 1; min-width: 0; }
 .lesson-top {
   display: flex;
@@ -2436,34 +2424,6 @@ function getProgHrsColor(prog) {
   return colorMap[progColor(prog)] || '';
 }
 
-function fmtDuration(hours) {
-  if (!hours || hours <= 0) return '';
-  const totalMin = Math.round(hours * 60);
-  const h = Math.floor(totalMin / 60);
-  const m = totalMin % 60;
-  if (h && m) return `${h}h ${m}m`;
-  if (h) return `${h}h`;
-  return `${m}m`;
-}
-
-function fmtStartTime(dt) {
-  if (!dt) return '';
-  // ISO format: "2025-03-10T09:30"
-  const isoM = dt.match(/T(\d{1,2}):(\d{2})/);
-  if (isoM) {
-    let h = parseInt(isoM[1], 10);
-    const min = isoM[2];
-    const ampm = h >= 12 ? 'PM' : 'AM';
-    h = h % 12 || 12;
-    return `${h}:${min} ${ampm}`;
-  }
-  // US format: "3/10/2025 9:30 AM" or "3/12/2026 7:50:00 AM" (with optional seconds)
-  const usM = dt.match(/\d+\/\d+\/\d+\s+(\d{1,2}):(\d{2})(?::\d{2})?\s*(AM|PM)/i);
-  if (usM) {
-    return `${parseInt(usM[1], 10)}:${usM[2]} ${usM[3].toUpperCase()}`;
-  }
-  return '';
-}
 
 function buildRowsHtml(cards) {
   return cards.map(c => {
@@ -2493,12 +2453,6 @@ function buildRowsHtml(cards) {
     if (c.duration === 'Full Day')    pills += `<span class="pill pill-fd">Full Day</span>`;
     if (c.duration === 'Half Day')    pills += `<span class="pill pill-hd">Half Day</span>`;
     if (c.client && !isPrivateWithReservation) pills += `<span class="pill pill-client">👤 ${c.client}</span>`;
-
-    const startTime = fmtStartTime(c.startDateTime);
-    const durLabel = c.hours > 0 ? fmtDuration(c.hours) : (c.duration || '');
-    const timeHtml = (startTime && !c.isSched)
-      ? `<div class="lesson-time"><span class="lesson-time-start">${startTime}</span>${durLabel ? `<span class="lesson-time-dur">${durLabel}</span>` : ''}</div>`
-      : '';
 
     const hrsColor = getProgHrsColor(c.program);
     const hoursHtml = (c.hours > 0 && !c.isSched)
@@ -2532,7 +2486,7 @@ function buildRowsHtml(cards) {
       : '';
 
     return `<div class="lesson-row${isOff ? ' is-off' : ''}">
-      ${timeHtml}<div class="lesson-dot prog-${c.program}"></div>
+      <div class="lesson-dot prog-${c.program}"></div>
       <div class="lesson-main">
         <div class="lesson-top">
           <div class="lesson-head">
