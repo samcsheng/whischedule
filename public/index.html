@@ -1209,7 +1209,15 @@ body::after { content:''; position:fixed; inset:0; pointer-events:none; z-index:
 .modal-btn-cancel,
 .ob-wrap,
 .ob-stat-pill,
-.empty-cta {
+.empty-cta,
+.ob-install-hint,
+.ob-install-hint-sub,
+.ob-install-hint-btn,
+.ob-install-hint-dismiss,
+.modal-link,
+.modal-link-ico,
+.modal-link-ico svg,
+.modal-link-right {
   transition: background 0.48s ease, background-color 0.48s ease, border-color 0.48s ease, color 0.48s ease, box-shadow 0.48s ease;
 }
 .ob-wrap.ob-hidden { opacity: 0; pointer-events: none; }
@@ -1512,56 +1520,56 @@ body::after { content:''; position:fixed; inset:0; pointer-events:none; z-index:
 }
 
 /* ── INSTALL UI LIGHT MODE ── */
+/* The base CSS for install elements uses hardcoded dark-mode rgba values.
+   Overrides below use the same CSS variables as the rest of the light theme
+   so colours and transitions stay consistent with the design system. */
 html[data-theme="light"] .ob-install-hint {
-  background: rgba(255,255,255,0.88);
-  border-color: rgba(20,49,89,0.14);
-  box-shadow: 0 8px 32px rgba(84,118,165,0.18), 0 2px 8px rgba(84,118,165,0.10);
+  background: var(--sheet-bg);
+  border-color: var(--sheet-border);
+  box-shadow: 0 8px 32px rgba(84,118,165,0.14), 0 2px 8px rgba(84,118,165,0.08);
 }
 html[data-theme="light"] .ob-install-hint-sub {
-  color: rgba(22,37,61,0.72);
+  color: var(--muted);
 }
 html[data-theme="light"] .ob-install-hint-btn {
-  border-color: rgba(59,139,255,0.45);
-  background: rgba(59,139,255,0.14);
-  color: #1f63c7;
+  border-color: var(--theme-chip-active-border);
+  background: var(--theme-chip-active-bg);
+  color: var(--theme-chip-active-text);
 }
 html[data-theme="light"] .ob-install-hint-dismiss {
-  border-color: rgba(20,49,89,0.14);
-  background: rgba(20,49,89,0.06);
-  color: rgba(22,37,61,0.6);
+  border-color: var(--border);
+  background: var(--panel-bg);
+  color: var(--muted);
 }
 html[data-theme="light"] .modal-link-ico {
   background: rgba(59,139,255,0.10);
-  border-color: rgba(59,139,255,0.20);
+  border-color: rgba(59,139,255,0.18);
 }
 html[data-theme="light"] .modal-link-ico svg {
-  stroke: #1f63c7;
+  stroke: var(--theme-chip-active-text);
 }
 html[data-theme="light"] .modal-link-right {
-  color: rgba(22,37,61,0.65);
-  border-color: rgba(20,49,89,0.14);
-  background: rgba(20,49,89,0.05);
+  color: var(--muted);
+  border-color: var(--border);
+  background: var(--panel-bg);
 }
 html[data-theme="light"] .install-help-kbd {
-  background: rgba(20,49,89,0.07);
-  border-color: rgba(20,49,89,0.14);
-  color: rgba(22,37,61,0.82);
+  background: var(--panel-bg);
+  border-color: var(--border);
+  color: var(--text-soft);
 }
 html[data-theme="light"] .install-dot {
-  background: rgba(255,197,66,0.14);
-  border-color: rgba(200,140,0,0.22);
-  color: #b07d00;
+  background: rgba(255,197,66,0.15);
+  border-color: rgba(180,120,0,0.25);
+  color: #8a5e00;
 }
 html[data-theme="light"] .install-bullet p {
-  color: rgba(22,37,61,0.82);
+  color: var(--text-soft);
 }
 html[data-theme="light"] .install-pill {
-  color: rgba(22,37,61,0.78);
-  background: rgba(20,49,89,0.06);
-  border-color: rgba(20,49,89,0.13);
-}
-html[data-theme="light"] .install-h1 {
-  color: #16253d;
+  color: var(--text-soft);
+  background: var(--panel-bg);
+  border-color: var(--border);
 }
 </style>
 <script>
