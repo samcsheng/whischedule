@@ -2448,13 +2448,21 @@ function fmtDuration(hours) {
 
 function fmtStartTime(dt) {
   if (!dt) return '';
-  const m = dt.match(/T(\d{1,2}):(\d{2})/);
-  if (!m) return '';
-  let h = parseInt(m[1], 10);
-  const min = m[2];
-  const ampm = h >= 12 ? 'PM' : 'AM';
-  h = h % 12 || 12;
-  return `${h}:${min} ${ampm}`;
+  // ISO format: "2025-03-10T09:30"
+  const isoM = dt.match(/T(\d{1,2}):(\d{2})/);
+  if (isoM) {
+    let h = parseInt(isoM[1], 10);
+    const min = isoM[2];
+    const ampm = h >= 12 ? 'PM' : 'AM';
+    h = h % 12 || 12;
+    return `${h}:${min} ${ampm}`;
+  }
+  // US format: "3/10/2025 9:30 AM"
+  const usM = dt.match(/\d+\/\d+\/\d+\s+(\d{1,2}):(\d{2})\s*(AM|PM)/i);
+  if (usM) {
+    return `${parseInt(usM[1], 10)}:${usM[2]} ${usM[3].toUpperCase()}`;
+  }
+  return '';
 }
 
 function buildRowsHtml(cards) {
