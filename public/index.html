@@ -580,7 +580,20 @@ body::after { content:''; position:fixed; inset:0; pointer-events:none; z-index:
 .picker-day.dot-womens_camps .picker-day-dot { background: #ff8cc8; }
 .picker-day.dot-adult_alpine .picker-day-dot { background: #7dd3a8; }
 .picker-day.dot-adult_base   .picker-day-dot { background: #f09a54; }
-.picker-day.dot-sick       .picker-day-dot { background: var(--red); }
+.picker-day.dot-sick           .picker-day-dot { background: var(--red); }
+.picker-day.dot-unavailable    .picker-day-dot { background: var(--red); opacity: 0.5; }
+.picker-day.dot-amdp           .picker-day-dot,
+.picker-day.dot-ama            .picker-day-dot,
+.picker-day.dot-rdp            .picker-day-dot,
+.picker-day.dot-wfc            .picker-day-dot { background: #c084fc; }
+.picker-day.dot-kinder         .picker-day-dot,
+.picker-day.dot-minis          .picker-day-dot,
+.picker-day.dot-vkp            .picker-day-dot { background: #86efac; }
+.picker-day.dot-adventure_camp .picker-day-dot { background: #fb923c; }
+.picker-day.dot-charity        .picker-day-dot { background: #f472b6; }
+.picker-day.dot-map            .picker-day-dot,
+.picker-day.dot-sdp            .picker-day-dot,
+.picker-day.dot-ex_can         .picker-day-dot { background: #94a3b8; }
 
 /* States */
 .picker-day.is-off  { opacity: 0.25; }
@@ -673,7 +686,21 @@ body::after { content:''; position:fixed; inset:0; pointer-events:none; z-index:
 .lesson-dot.prog-adult_base  { background: #f09a54; }
 .lesson-dot.prog-sick        { background: var(--red); }
 .lesson-dot.prog-off         { background: var(--dim); }
+.lesson-dot.prog-unavailable { background: var(--red); opacity: 0.5; }
 .lesson-dot.prog-other       { background: var(--muted); }
+/* Flaik programs */
+.lesson-dot.prog-amdp,
+.lesson-dot.prog-ama,
+.lesson-dot.prog-rdp,
+.lesson-dot.prog-wfc         { background: #c084fc; }
+.lesson-dot.prog-kinder,
+.lesson-dot.prog-minis,
+.lesson-dot.prog-vkp         { background: #86efac; }
+.lesson-dot.prog-adventure_camp { background: #fb923c; }
+.lesson-dot.prog-charity     { background: #f472b6; }
+.lesson-dot.prog-map,
+.lesson-dot.prog-sdp,
+.lesson-dot.prog-ex_can      { background: #94a3b8; }
 .lesson-main { flex: 1; min-width: 0; }
 .lesson-top {
   display: flex;
@@ -2360,19 +2387,28 @@ function buildDayView(key) {
   if (isAfterEnd)  return [];
 
   const cards = [];
-  const PROG_REMAP = { daily_kids:'daily', teens_daily:'teens', adult_alpine:'adult_alpine', adult_base:'adult_base', never_ever:'never_ever', womens_camps:'womens_camps' };
 
   if (isFuture) {
+    // Pass 1: surface non-work meta rows (sick, unavailable, off) — these were
+    // previously invisible on future days because the guard required isSched or
+    // isPaid, which these rows never satisfy.
+    const sickRow    = raw.find(l => /called in sick/i.test(l.raw));
+    const unavailRow = raw.find(l => /contacted.*unavailable|unavailable.*contact/i.test(l.raw));
+    const offRow     = raw.find(l => /regular day off|called off|time off/i.test(l.raw));
+    if (sickRow)    cards.push({ title:'Called in Sick', program:'sick',        isSched:false, hours:null });
+    if (unavailRow) cards.push({ title:'Unavailable',    program:'unavailable', isSched:false, hours:null });
+    if (offRow && !sickRow && !unavailRow)
+                    cards.push({ title:'Day Off',        program:'off',         isSched:false, hours:null });
+
+    // Pass 2: work rows (assigned or scheduled)
     const seenTitles = new Set();
     raw.forEach(l => {
       const isSchedRow = isSched(l.raw);
       const isAssigned = isPaid(l.assignment);
       if (!isSchedRow && !isAssigned) return;
-      const { program: rawProg } = classifyRow(l.raw, l.assignment);
-      if (!rawProg || ['off','end','sick','admin'].includes(rawProg)) return;
-      const prog = PROG_REMAP[rawProg] || rawProg;
+      const prog = getProgram(l.raw, l.assignment);
+      if (NON_WORK_PROGRAMS.has(prog)) return;
       const title = cleanTitle(l.raw);
-      // Keep private rows one-to-one; dedupe only non-private scheduled labels.
       if (prog !== 'private') {
         if (seenTitles.has(title)) return;
         seenTitles.add(title);
@@ -2382,16 +2418,15 @@ function buildDayView(key) {
         assignment:isAssigned ? l.assignment : null, client:l.client||null, duration:getPrivateDuration(l.raw),
         privateDetails:l.privateDetails||null, startDateTime:l.startDateTime||'' });
     });
-    if (!cards.length && raw.some(l => /regular day off/i.test(l.raw)))
-      cards.push({ title:'Day Off', program:'off', isSched:false, hours:null });
 
   } else {
     const isToday = key === TODAY_KEY;
-    const paidPrograms  = new Set();
+    const paidPrograms = new Set();
 
+    // Paid past/today rows
     raw.forEach(l => {
       if (!isPaid(l.assignment)) return;
-      const prog = getProgram(l.raw);
+      const prog = getProgram(l.raw, l.assignment);
       if (['off','end'].includes(prog)) return;
       paidPrograms.add(prog);
       cards.push({ title:cleanTitle(l.raw), program:prog, discipline:getDiscipline(l.raw),
@@ -2400,23 +2435,24 @@ function buildDayView(key) {
         privateDetails:l.privateDetails||null, startDateTime:l.startDateTime||'' });
     });
 
+    // Today: also show scheduled (not-yet-assigned) rows
     if (isToday) {
       const seenSched = new Set();
       raw.forEach(l => {
         if (!isSched(l.raw)) return;
-        const { program: schedProg } = classifyRow(l.raw, l.assignment);
-        if (!schedProg || ['off','end','sick','admin'].includes(schedProg)) return;
-        if (paidPrograms.has(schedProg)) return;
+        const prog = getProgram(l.raw, l.assignment);
+        if (NON_WORK_PROGRAMS.has(prog)) return;
+        if (paidPrograms.has(prog)) return;
         const title = cleanTitle(l.raw);
         if (seenSched.has(title)) return;
         seenSched.add(title);
-        const displayProg = PROG_REMAP[schedProg] || schedProg;
-        cards.push({ title, program:displayProg, discipline:getDiscipline(l.raw),
+        cards.push({ title, program:prog, discipline:getDiscipline(l.raw),
           location:getLocation(l.raw), isSched:true, hours:null, assignment:null,
           client:null, duration:getPrivateDuration(l.raw), privateDetails:null, startDateTime:l.startDateTime||'' });
       });
     }
 
+    // Fallback: no paid work — show off/sick status
     if (!cards.length) {
       const sickRow = raw.find(l => /sick/i.test(l.raw));
       const offRow  = raw.find(l => /regular day off|called off|time off/i.test(l.raw));
@@ -2430,12 +2466,14 @@ function buildDayView(key) {
 // ─────────────────────────────────────────────────────────────────────────────
 // RENDER — LESSON ROWS
 // ─────────────────────────────────────────────────────────────────────────────
-const PROG_HOURS_COLOR = {
-  schools:'c-blue', daily:'c-teal', teens:'c-teal', club:'c-purple',
-  wvsbc:'c-blue', wcb:'c-purple', adaptive:'c-violet', never_ever:'c-sky',
-  womens_camps:'c-pink', adult_alpine:'c-teal2', adult_base:'c-orange',
-  private:'c-yellow', training:'c-green',
-};
+// Color class for hours figure — derived from PROGRAM_DEFS.
+function getProgHrsColor(prog) {
+  const colorMap = {
+    'var(--yellow)':'c-yellow', 'var(--blue)':'c-blue', 'var(--teal)':'c-teal',
+    'var(--purple)':'c-purple', 'var(--green)':'c-green',
+  };
+  return colorMap[progColor(prog)] || '';
+}
 
 function buildRowsHtml(cards) {
   return cards.map(c => {
@@ -2466,7 +2504,7 @@ function buildRowsHtml(cards) {
     if (c.duration === 'Half Day')    pills += `<span class="pill pill-hd">Half Day</span>`;
     if (c.client && !isPrivateWithReservation) pills += `<span class="pill pill-client">👤 ${c.client}</span>`;
 
-    const hrsColor = PROG_HOURS_COLOR[c.program] || '';
+    const hrsColor = getProgHrsColor(c.program);
     const hoursHtml = (c.hours > 0 && !c.isSched)
       ? `<div class="lesson-hours ${hrsColor}">${c.hours}<small>hrs</small></div>` : '';
     const privateExtraHtml = isPrivateWithReservation ? (() => {
@@ -2620,7 +2658,7 @@ function dayCell(key, num) {
   const isBeforeStart = SEASON_START_KEY && key < SEASON_START_KEY;
   const isAfterEnd = SEASON_END_KEY && key > SEASON_END_KEY;
   const isOutsideSeason = isBeforeStart || isAfterEnd;
-  const NON_WORK   = new Set(['off','end','sick','admin']);
+  const NON_WORK   = new Set(['off','end','sick','unavailable']);
 
   // Determine dot colour from dominant program
   let dotClass = '';
@@ -2630,15 +2668,21 @@ function dayCell(key, num) {
         ? (isPaid(l.assignment) || isSched(l.raw))
         : isPaid(l.assignment)
     );
-    const progOrder = ['private','schools','daily','teens','club','wvsbc','wcb',
-      'adaptive','never_ever','womens_camps','adult_alpine','adult_base','training','sick'];
+    const progOrder = ['private','schools','daily','teens','club','wvsbc',
+      'adaptive','never_ever','womens_camps','adult_alpine','adult_base',
+      'adventure_camp','kinder','minis','vkp','charity','amdp','ama','rdp','wfc',
+      'map','sdp','ex_can','training','sick'];
     for (const prog of progOrder) {
-      const found = candidates.find(l => {
-        const p = getProgram(l.raw);
-        const mapped = ({daily_kids:'daily',teens_daily:'teens'}[p]||p);
-        return mapped === prog && !NON_WORK.has(mapped);
-      });
+      const found = candidates.find(l => getProgram(l.raw, l.assignment) === prog && !NON_WORK.has(prog));
       if (found) { dotClass = 'dot-' + prog; break; }
+    }
+    // Fallback: any paid non-work row not in known list (dynamic slug)
+    if (!dotClass) {
+      const fallback = candidates.find(l => {
+        const p = getProgram(l.raw, l.assignment);
+        return !NON_WORK.has(p) && p !== 'other';
+      });
+      if (fallback) dotClass = 'dot-other';
     }
   }
 
@@ -2966,20 +3010,21 @@ function buildStats() {
   const validKeys = Object.keys(byDate).filter(k =>
     (!seasonStart || k >= seasonStart) && (!seasonEnd || k <= seasonEnd)
   );
+  // Work day = any paid row that isn't a non-work category.
+  // 'other' intentionally absent: Charity, AMDP etc. ARE work days.
   const workDayKeys = validKeys.filter(k =>
-    byDate[k].some(l => { if (!isPaid(l.assignment)) return false;
-      const p = getProgram(l.raw); return !['off','end','sick','other'].includes(p); }));
+    byDate[k].some(l => isPaid(l.assignment) && !NON_WORK_PROGRAMS.has(getProgram(l.raw, l.assignment))));
+  // Hours by program — all paid non-off rows; dynamic 'prog_*' keys included.
   const progHours = {};
   validKeys.forEach(k => { byDate[k].forEach(l => {
     if (!isPaid(l.assignment)) return;
-    const prog = getProgram(l.raw);
+    const prog = getProgram(l.raw, l.assignment);
     if (['off','end'].includes(prog)) return;
-    if (prog === 'other' && /term process/i.test(l.raw)) return;
     progHours[prog] = (progHours[prog] || 0) + l.hours;
   }); });
   const lessonHrs = Object.values(progHours).reduce((a,b)=>a+b,0);
   const privateDayKeys = new Set(validKeys.filter(k =>
-    byDate[k].some(l => isPaid(l.assignment) && getProgram(l.raw) === 'private')));
+    byDate[k].some(l => isPaid(l.assignment) && getProgram(l.raw, l.assignment) === 'private')));
   const clients = {};
   validKeys.forEach(k => { byDate[k].forEach(l => {
     if (!l.client || !isPaid(l.assignment)) return;
@@ -2996,14 +3041,13 @@ function buildStats() {
     <div class="bstat"><div class="bstat-val c-yellow">${privateDayKeys.size}</div><div class="bstat-label">Private Days</div></div>
     <div class="bstat"><div class="bstat-val c-purple">${Object.keys(clients).length}</div><div class="bstat-label">Clients</div></div>`;
 
+  // Known programs first (display order from PROGRAM_DEFS), then any dynamic
+  // prog_* slugs found in this season's data appended at the end.
+  const knownKeys = new Set(PROGRAM_DEFS.map(p => p.key));
+  const dynamicKeys = Object.keys(progHours).filter(k => !knownKeys.has(k) && k !== 'other');
   const programs = [
-    {key:'schools',label:'Schools',color:'var(--blue)'},{key:'wvsbc',label:'WVSBC',color:'#6eb5ff'},
-    {key:'wcb',label:'WCB',color:'var(--purple)'},{key:'club',label:'Club / Roundhouse',color:'var(--purple)'},
-    {key:'adaptive',label:'Adaptive',color:'#a78bfa'},{key:'never_ever',label:'Never Ever',color:'#60d4f0'},
-    {key:'womens_camps',label:"Women's Camps",color:'#ff8cc8'},{key:'daily',label:'Kids Daily',color:'var(--teal)'},
-    {key:'teens',label:'Teens Daily',color:'var(--teal)'},{key:'adult_alpine',label:'Adult Alpine',color:'#7dd3a8'},
-    {key:'adult_base',label:'Adult Base',color:'#f09a54'},{key:'private',label:'Private Lessons',color:'var(--yellow)'},
-    {key:'training',label:'Training',color:'var(--green)'},{key:'other',label:'Other',color:'var(--muted)'},
+    ...PROGRAM_DEFS.map(p => ({ key:p.key, label:p.label, color:p.color })),
+    ...dynamicKeys.map(k => ({ key:k, label:progLabel(k), color:progColor(k) })),
   ];
 
   const activePrograms = programs.filter(p=>(progHours[p.key]||0)>0).sort((a,b)=>(progHours[b.key]||0)-(progHours[a.key]||0));
@@ -3035,13 +3079,13 @@ function buildStats() {
       else if(seasonEnd && key===seasonEnd){cls+='hm-end';}
       else if(!ls.length){cls+='hm-off';}
       else{
-        const progs=ls.map(l=>getProgram(l.raw)),paid=ls.filter(l=>isPaid(l.assignment));
-        const NON_WORK_H=new Set(['off','end','sick']);
-        const hasFutureSched=key>TODAY_KEY&&ls.some(l=>!NON_WORK_H.has(getProgram(l.raw))&&(isPaid(l.assignment)||isSched(l.raw)));
+        const progs=ls.map(l=>getProgram(l.raw,l.assignment)),paid=ls.filter(l=>isPaid(l.assignment));
+        const NON_WORK_H=new Set(['off','end','sick','unavailable']);
+        const hasFutureSched=key>TODAY_KEY&&ls.some(l=>!NON_WORK_H.has(getProgram(l.raw,l.assignment))&&(isPaid(l.assignment)||isSched(l.raw)));
         if(ls.some(l=>/time off/i.test(l.raw)))cls+='hm-off';
         else if(progs.includes('sick'))cls+='hm-sick';
         else if(hasFutureSched)cls+='hm-sched';
-        else if(progs.includes('private')&&paid.filter(l=>getProgram(l.raw)==='private').length)cls+='hm-private';
+        else if(progs.includes('private')&&paid.filter(l=>getProgram(l.raw,l.assignment)==='private').length)cls+='hm-private';
         else if(progs.includes('training')&&paid.length)cls+='hm-training';
         else if(progs.every(p=>p==='off'))cls+='hm-off';
         else{const h=paid.reduce((s,l)=>s+l.hours,0);cls+=h>=7?'hm-full':h>=4?'hm-med':h>0?'hm-light':'hm-off';}
@@ -3082,7 +3126,7 @@ function openProgModal(progKey, label, color) {
   const progDays = []; // [{key, hours, isFuture}]
   validKeys.forEach(k => {
     const ls = byDate[k] || [];
-    const rows = ls.filter(l => isPaid(l.assignment) && getProgram(l.raw) === progKey);
+    const rows = ls.filter(l => isPaid(l.assignment) && getProgram(l.raw, l.assignment) === progKey);
     if (!rows.length) return;
     const hours = rows.reduce((s,l) => s + l.hours, 0);
     progDays.push({ key: k, hours: parseFloat(hours.toFixed(2)), isFuture: k > TODAY_KEY });
@@ -3093,9 +3137,8 @@ function openProgModal(progKey, label, color) {
     (() => { const ph = {};
       validKeys.forEach(k => { (byDate[k]||[]).forEach(l => {
         if (!isPaid(l.assignment)) return;
-        const p = getProgram(l.raw);
-        if (['off','end','sick','other'].includes(p)) return;
-        if (p === 'other' && /term process/i.test(l.raw)) return;
+        const p = getProgram(l.raw, l.assignment);
+        if (['off','end'].includes(p)) return;
         ph[p] = (ph[p]||0) + l.hours;
       }); });
       return ph;
@@ -3314,14 +3357,14 @@ function openProfile() {
       (!seasonStart || k >= seasonStart) && (!seasonEnd || k <= seasonEnd)
     );
     const workDays = validKeys.filter(k =>
-      byDate[k].some(l => isPaid(l.assignment) && !['off','end','sick','other'].includes(getProgram(l.raw)))
+      byDate[k].some(l => isPaid(l.assignment) && !NON_WORK_PROGRAMS.has(getProgram(l.raw, l.assignment)))
     ).length;
     const totalHours = validKeys.reduce((sum, k) => {
-      return sum + byDate[k].filter(l => isPaid(l.assignment) && !['off','end','sick'].includes(getProgram(l.raw)))
+      return sum + byDate[k].filter(l => isPaid(l.assignment) && !['off','end'].includes(getProgram(l.raw, l.assignment)))
                              .reduce((s, l) => s + l.hours, 0);
     }, 0);
     const privateDays = new Set(validKeys.filter(k =>
-      byDate[k].some(l => isPaid(l.assignment) && getProgram(l.raw) === 'private')
+      byDate[k].some(l => isPaid(l.assignment) && getProgram(l.raw, l.assignment) === 'private')
     )).size;
     document.getElementById('mqWorkDays').textContent = workDays;
     document.getElementById('mqHours').textContent    = Math.round(totalHours);
@@ -3559,12 +3602,12 @@ function ingestLessons(lessons) {
   const keys = Object.keys(byDate).sort();
   SEASON_START_KEY = keys.find(key =>
     byDate[key].some(l => {
-      const p = getProgram(l.raw);
+      const p = getProgram(l.raw, l.assignment);
       return p !== 'off' && p !== 'end';
     })
   ) || keys[0] || null;
   SEASON_END_KEY = keys.find(key =>
-    byDate[key].some(l => getProgram(l.raw) === 'end')
+    byDate[key].some(l => getProgram(l.raw, l.assignment) === 'end')
   ) || keys[keys.length - 1] || null;
 }
 
@@ -3803,16 +3846,15 @@ function obBuildSuccess(data) {
   const validKeys = dataKeys.filter(k => (!firstKey || k >= firstKey) && (!lastKey || k <= lastKey));
 
   const workDays = validKeys.filter(k =>
-    byDate[k].some(l => isPaid(l.assignment) && !['off','end','sick','other'].includes(getProgram(l.raw)))
+    byDate[k].some(l => isPaid(l.assignment) && !NON_WORK_PROGRAMS.has(getProgram(l.raw, l.assignment)))
   ).length;
 
   let lessonHours = 0;
   const progHours = {};
   validKeys.forEach(k => byDate[k].forEach(l => {
-    const prog = getProgram(l.raw);
+    const prog = getProgram(l.raw, l.assignment);
     if (!isPaid(l.assignment)) return;
-    if (['off','end','sick','other'].includes(prog)) return;
-    if (prog === 'other' && /term process/i.test(l.raw)) return;
+    if (['off','end'].includes(prog)) return;
     const hours = Number(l.hours) || 0;
     lessonHours += hours;
     progHours[prog] = (progHours[prog] || 0) + hours;
