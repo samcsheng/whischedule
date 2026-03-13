@@ -1847,6 +1847,11 @@ function isProbablyAndroid() {
   return /android/i.test(ua);
 }
 
+function isProbablyDesktopChrome() {
+  const ua = navigator.userAgent || '';
+  return !isIOS() && !isProbablyAndroid() && /Chrome\//.test(ua) && !/Edg\/|OPR\//.test(ua);
+}
+
 function safeLocalGet(key) {
   try { return localStorage.getItem(key); } catch (e) { return null; }
 }
@@ -1954,19 +1959,38 @@ function renderInstallHelp() {
     return;
   }
 
-  primaryBtn.textContent = 'Got it';
-  body.innerHTML = `
-    <div class="install-sub">If you don’t see an install button yet, use your browser menu:</div>
-    <div class="install-bullets">
-      <div class="install-bullet">
-        <div class="install-dot">1</div>
-        <p>Open the browser menu (<span class="install-help-kbd">⋮</span>).</p>
-      </div>
-      <div class="install-bullet">
-        <div class="install-dot">2</div>
-        <p>Tap <span class="install-help-kbd">Install app</span> or <span class="install-help-kbd">Add to Home screen</span>.</p>
-      </div>
-    </div>`;
+  primaryBtn.textContent = ‘Got it’;
+  if (isProbablyDesktopChrome()) {
+    body.innerHTML = `
+      <div class="install-sub">Chrome shows an install icon in the address bar once it verifies the app. If you don’t see it yet:</div>
+      <div class="install-bullets">
+        <div class="install-bullet">
+          <div class="install-dot">1</div>
+          <p>Reload the page once — Chrome checks installability after the first load.</p>
+        </div>
+        <div class="install-bullet">
+          <div class="install-dot">2</div>
+          <p>Look for the <span class="install-help-kbd">⊕</span> install icon at the right end of Chrome’s address bar and click it.</p>
+        </div>
+        <div class="install-bullet">
+          <div class="install-dot">3</div>
+          <p>Or open the Chrome menu (<span class="install-help-kbd">⋮</span>) and choose <span class="install-help-kbd">Install WhisSchedule…</span></p>
+        </div>
+      </div>`;
+  } else {
+    body.innerHTML = `
+      <div class="install-sub">If you don’t see an install button yet, use your browser menu:</div>
+      <div class="install-bullets">
+        <div class="install-bullet">
+          <div class="install-dot">1</div>
+          <p>Open the browser menu (<span class="install-help-kbd">⋮</span>).</p>
+        </div>
+        <div class="install-bullet">
+          <div class="install-dot">2</div>
+          <p>Tap <span class="install-help-kbd">Install app</span> or <span class="install-help-kbd">Add to Home screen</span>.</p>
+        </div>
+      </div>`;
+  }
 }
 
 async function promptInstall() {
@@ -2061,7 +2085,7 @@ function updateInstallCtas() {
     } else {
       ctaBtn.disabled = false;
       ctaTitle.textContent = 'Install WhisSchedule';
-      ctaSub.textContent = isProbablyAndroid() ? 'Use your browser menu → Install app' : 'See install steps';
+      ctaSub.textContent = isProbablyAndroid() ? 'Use your browser menu → Install app' : isProbablyDesktopChrome() ? 'Check Chrome\'s address bar for the install icon' : 'See install steps';
       ctaRight.textContent = 'Info';
     }
   }
@@ -2091,8 +2115,14 @@ function updateInstallCtas() {
       } else {
         hintSub.textContent = isProbablyAndroid()
           ? 'Tip: Install via your browser menu (⋮ → Install app / Add to Home screen).'
-          : 'Tip: Install via your browser menu for a more app-like experience.';
-        hintBtn.style.display = 'none';
+          : isProbablyDesktopChrome()
+            ? 'Tip: Reload the page once, then look for the ⊕ install icon in Chrome\'s address bar.'
+            : 'Tip: Install via your browser menu for a more app-like experience.';
+        hintBtn.style.display = isProbablyDesktopChrome() ? '' : 'none';
+        if (isProbablyDesktopChrome()) {
+          hintBtn.textContent = 'How to install';
+          hintBtn.disabled = false;
+        }
       }
     }
   }
