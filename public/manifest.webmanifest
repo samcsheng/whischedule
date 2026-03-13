@@ -1,5 +1,5 @@
 {
-{  "name": "WhisSchedule",
+  "name": "WhisSchedule",
   "short_name": "WhisSchedule",
   "description": "Schedule viewer for Whistler Blackcomb instructors.",
   "id": "/",
@@ -50,17 +50,17 @@
   "screenshots": [
     {
       "src": "/pwa/screenshot-wide.png",
-      "sizes": "1280x720",
+      "sizes": "1863x1280",
       "type": "image/png",
       "form_factor": "wide"
     },
     {
       "src": "/pwa/screenshot-mobile.png",
       "sizes": "720x1280",
-      "type": "image/png"
+      "type": "image/png",
+      "form_factor": "narrow"
     }
   ],
-  "orientation": "portrait",
   "categories": ["productivity", "utilities"],
   "prefer_related_applications": false
 }
