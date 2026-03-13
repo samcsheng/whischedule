@@ -2457,8 +2457,8 @@ function fmtStartTime(dt) {
     h = h % 12 || 12;
     return `${h}:${min} ${ampm}`;
   }
-  // US format: "3/10/2025 9:30 AM"
-  const usM = dt.match(/\d+\/\d+\/\d+\s+(\d{1,2}):(\d{2})\s*(AM|PM)/i);
+  // US format: "3/10/2025 9:30 AM" or "3/12/2026 7:50:00 AM" (with optional seconds)
+  const usM = dt.match(/\d+\/\d+\/\d+\s+(\d{1,2}):(\d{2})(?::\d{2})?\s*(AM|PM)/i);
   if (usM) {
     return `${parseInt(usM[1], 10)}:${usM[2]} ${usM[3].toUpperCase()}`;
   }
