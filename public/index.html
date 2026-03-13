@@ -3,7 +3,8 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
-<meta name="theme-color" content="#060d1a" id="themeColorMeta">
+<meta name="theme-color" content="#060d1a" media="(prefers-color-scheme: dark)">
+<meta name="theme-color" content="#edf3fb" media="(prefers-color-scheme: light)">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -14,21 +15,6 @@
 <link rel="apple-touch-icon" href="/icons/icon-192.png">
 <title>WhisSchedule — Whistler Blackcomb</title>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Inter+Tight:wght@600;700;800&family=DM+Mono:wght@400;500&family=Syne:wght@700;800&display=swap" rel="stylesheet">
-<script>
-(() => {
-  const KEY = 'wb_theme';
-  const DEFAULT_THEME = 'dark';
-  let theme = DEFAULT_THEME;
-  try {
-    const saved = localStorage.getItem(KEY);
-    if (saved === 'dark' || saved === 'light') theme = saved;
-  } catch (e) {}
-  document.documentElement.setAttribute('data-theme', theme);
-  document.documentElement.style.colorScheme = theme;
-  const meta = document.getElementById('themeColorMeta');
-  if (meta && theme === 'light') meta.setAttribute('content', '#edf3fb');
-})();
-</script>
 <style>
 * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
 :root {
@@ -118,8 +104,10 @@
   --f-head:  'Inter Tight', sans-serif;
   --f-mono:  'DM Mono', monospace;
   --f-display: 'Syne', 'Inter Tight', sans-serif;
+  color-scheme: dark;
 }
-html[data-theme="light"] {
+@media (prefers-color-scheme: light) {
+:root {
   --theme-color: #edf3fb;
   --bg:      #edf3fb;
   --surface: #f7fafd;
@@ -198,6 +186,8 @@ html[data-theme="light"] {
   --theme-chip-active-bg: rgba(59,139,255,0.12);
   --theme-chip-active-border: rgba(59,139,255,0.22);
   --theme-chip-active-text: #1f63c7;
+  color-scheme: light;
+}
 }
 html, body { height: 100%; background: var(--bg); color: var(--snow); font-family: var(--f-ui); overflow-x: hidden; }
 body::after { content:''; position:fixed; inset:0; pointer-events:none; z-index:9999; opacity:0.025;
@@ -1179,92 +1169,6 @@ body::after { content:''; position:fixed; inset:0; pointer-events:none; z-index:
 }
 .ob-install-hint-dismiss:active { transform: scale(0.96); }
 .ob-install-hint-dismiss svg { width: 16px; height: 16px; stroke: currentColor; stroke-width: 2.2; fill: none; stroke-linecap: round; }
-.ob-theme-toggle-wrap {
-  position: absolute;
-  top: max(14px, calc(env(safe-area-inset-top, 0px) + 10px));
-  right: 16px;
-  z-index: 5;
-}
-.theme-toggle-btn {
-  width: 42px;
-  height: 42px;
-  border-radius: 50%;
-  border: 1px solid var(--theme-chip-border);
-  background: var(--theme-chip-bg);
-  color: var(--snow);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  backdrop-filter: blur(16px) saturate(160%);
-  -webkit-backdrop-filter: blur(16px) saturate(160%);
-  box-shadow: 0 10px 30px rgba(0,0,0,0.14);
-  transition: background 0.42s ease, border-color 0.42s ease, color 0.42s ease, box-shadow 0.42s ease, transform 0.18s ease;
-}
-.theme-toggle-btn svg {
-  width: 18px;
-  height: 18px;
-  stroke: currentColor;
-  fill: none;
-  stroke-width: 2;
-  stroke-linecap: round;
-  stroke-linejoin: round;
-}
-.theme-toggle-btn:active { transform: scale(0.96); }
-.theme-segmented {
-  display: flex;
-  gap: 6px;
-  width: 100%;
-}
-.theme-segmented.profile-theme-control {
-  width: 100%;
-  margin: 0;
-  padding: 4px;
-  border-radius: 13px;
-  background: var(--theme-chip-bg);
-  border: 1px solid var(--theme-chip-border);
-  box-shadow: inset 0 1px 0 var(--glass-highlight);
-}
-.theme-segmented.compact { width: auto; }
-.theme-chip {
-  appearance: none;
-  border: 1px solid transparent;
-  background: transparent;
-  color: var(--muted);
-  border-radius: 10px;
-  padding: 11px 18px;
-  min-width: 0;
-  flex: 1;
-  font-family: var(--f-head);
-  font-size: 13px;
-  font-weight: 700;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  cursor: pointer;
-  transition: background 0.42s ease, border-color 0.42s ease, color 0.42s ease, box-shadow 0.42s ease, transform 0.18s ease;
-}
-.theme-chip.compact {
-  padding: 8px 11px;
-  font-size: 12px;
-}
-.theme-chip svg {
-  width: 15px;
-  height: 15px;
-  stroke: currentColor;
-  fill: none;
-  stroke-width: 2;
-  stroke-linecap: round;
-  stroke-linejoin: round;
-}
-.theme-chip.is-active {
-  background: var(--theme-chip-active-bg);
-  border-color: var(--theme-chip-active-border);
-  color: var(--theme-chip-active-text);
-  box-shadow: inset 0 1px 0 rgba(255,255,255,0.15);
-}
-.theme-chip:active { transform: scale(0.98); }
 .modal-fieldset {
   margin-bottom: 14px;
 }
@@ -1749,19 +1653,6 @@ body::after { content:''; position:fixed; inset:0; pointer-events:none; z-index:
       <input type="text" id="inputPassNumber" placeholder="e.g. 110101234567" inputmode="numeric" />
     </div>
     <div class="modal-fieldset">
-      <div class="modal-section-title">Appearance</div>
-      <div class="theme-segmented profile-theme-control" data-theme-controls="profile">
-        <button type="button" class="theme-chip" data-theme-option="dark" onclick="setTheme('dark')">
-          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M21 12.79A9 9 0 1 1 11.21 3c0 .31-.03.62-.03.94A7.5 7.5 0 0 0 20.06 12c.32 0 .63-.02.94-.03Z"></path></svg>
-          <span>Dark</span>
-        </button>
-        <button type="button" class="theme-chip" data-theme-option="light" onclick="setTheme('light')">
-          <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4"></circle><path d="M12 2v2"></path><path d="M12 20v2"></path><path d="M4.93 4.93l1.41 1.41"></path><path d="M17.66 17.66l1.41 1.41"></path><path d="M2 12h2"></path><path d="M20 12h2"></path><path d="M4.93 19.07l1.41-1.41"></path><path d="M17.66 6.34l1.41-1.41"></path></svg>
-          <span>Light</span>
-        </button>
-      </div>
-    </div>
-    <div class="modal-fieldset">
       <div class="modal-section-title">App</div>
       <button class="modal-link" id="installCtaBtn" type="button" onclick="handleInstallCtaClick()">
         <span class="modal-link-left">
@@ -1825,61 +1716,12 @@ body::after { content:''; position:fixed; inset:0; pointer-events:none; z-index:
 // ─────────────────────────────────────────────────────────────────────────────
 // CONSTANTS & HELPERS
 // ─────────────────────────────────────────────────────────────────────────────
-const THEMES = { dark: 'dark', light: 'light' };
-const THEME_STORAGE_KEY = 'wb_theme';
 const MONTHS_SHORT = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
 const MONTHS_LONG  = ['January','February','March','April','May','June','July','August','September','October','November','December'];
 const DAYS_SHORT   = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
 const DAYS_LONG    = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
 const TODAY_KEY = (() => { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`; })();
 
-function loadTheme() {
-  try {
-    const saved = localStorage.getItem(THEME_STORAGE_KEY);
-    if (saved === THEMES.dark || saved === THEMES.light) return saved;
-  } catch (e) {}
-  const attr = document.documentElement.getAttribute('data-theme');
-  return attr === THEMES.light ? THEMES.light : THEMES.dark;
-}
-
-function renderThemeControls() {
-  const theme = loadTheme();
-  document.querySelectorAll('[data-theme-option]').forEach(el => {
-    el.classList.toggle('is-active', el.getAttribute('data-theme-option') === theme);
-    el.setAttribute('aria-pressed', el.classList.contains('is-active') ? 'true' : 'false');
-  });
-  const toggle = document.getElementById('onboardingThemeToggle');
-  if (toggle) {
-    const nextLabel = theme === THEMES.dark ? 'Switch to light theme' : 'Switch to dark theme';
-    toggle.setAttribute('aria-label', nextLabel);
-    toggle.setAttribute('title', nextLabel);
-    toggle.innerHTML = theme === THEMES.dark
-      ? '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4"></circle><path d="M12 2v2"></path><path d="M12 20v2"></path><path d="M4.93 4.93l1.41 1.41"></path><path d="M17.66 17.66l1.41 1.41"></path><path d="M2 12h2"></path><path d="M20 12h2"></path><path d="M4.93 19.07l1.41-1.41"></path><path d="M17.66 6.34l1.41-1.41"></path></svg>'
-      : '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M21 12.79A9 9 0 1 1 11.21 3c0 .31-.03.62-.03.94A7.5 7.5 0 0 0 20.06 12c.32 0 .63-.02.94-.03Z"></path></svg>';
-  }
-}
-
-function applyTheme(theme) {
-  const nextTheme = theme === THEMES.light ? THEMES.light : THEMES.dark;
-  document.documentElement.setAttribute('data-theme', nextTheme);
-  document.documentElement.style.colorScheme = nextTheme;
-  try {
-    localStorage.setItem(THEME_STORAGE_KEY, nextTheme);
-  } catch (e) {}
-  const meta = document.getElementById('themeColorMeta');
-  if (meta) {
-    meta.setAttribute('content', getComputedStyle(document.documentElement).getPropertyValue('--theme-color').trim());
-  }
-  renderThemeControls();
-}
-
-function setTheme(theme) {
-  applyTheme(theme);
-}
-
-function toggleTheme() {
-  applyTheme(loadTheme() === THEMES.dark ? THEMES.light : THEMES.dark);
-}
 
 function resolveThemeColor(value) {
   if (!value || !value.startsWith('var(')) return value;
@@ -1887,10 +1729,6 @@ function resolveThemeColor(value) {
   if (!match) return value;
   return getComputedStyle(document.documentElement).getPropertyValue(match[1]).trim() || value;
 }
-
-document.addEventListener('DOMContentLoaded', () => {
-  applyTheme(loadTheme());
-});
 
 function toKey(d) { return d.toISOString().slice(0, 10); }
 
@@ -3369,7 +3207,6 @@ function loadCredentials() {
   return { passNumber: localStorage.getItem('wb_passNumber')||'', password: '$noW2526' };
 }
 function openProfile() {
-  renderThemeControls();
   const c = loadCredentials();
   document.getElementById('inputPassNumber').value = c.passNumber;
   document.getElementById('modalStatus').textContent = '';
@@ -3657,7 +3494,6 @@ function ingestLessons(lessons) {
 // INIT
 // ─────────────────────────────────────────────────────────────────────────────
 window.addEventListener('load', () => {
-  applyTheme(loadTheme());
   renderPickerDow();
 
   // Show onboarding for first-time users; skip if already done
@@ -3711,10 +3547,6 @@ window.addEventListener('load', () => {
 
 <!-- ── ONBOARDING OVERLAY ── -->
 <div class="ob-wrap" id="obWrap">
-  <div class="ob-theme-toggle-wrap">
-    <button class="theme-toggle-btn" id="onboardingThemeToggle" type="button" onclick="toggleTheme()" aria-label="Toggle theme"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4"></circle><path d="M12 2v2"></path><path d="M12 20v2"></path><path d="M4.93 4.93l1.41 1.41"></path><path d="M17.66 17.66l1.41 1.41"></path><path d="M2 12h2"></path><path d="M20 12h2"></path><path d="M4.93 19.07l1.41-1.41"></path><path d="M17.66 6.34l1.41-1.41"></path></svg></button>
-  </div>
-
   <!-- Install hint (Screen 1 only) -->
   <div class="ob-install-hint" id="obInstallHint" role="note" aria-live="polite">
     <div class="ob-install-hint-text">
