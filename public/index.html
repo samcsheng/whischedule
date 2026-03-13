@@ -2287,6 +2287,13 @@ function handleInstallCtaClick() {
 }
 
 function initPwaInstall() {
+  // Clear stale installed flag when visiting in a normal browser tab.
+  // There is no web API for "app uninstalled", so the flag can get stuck
+  // as 'true' after the user removes the PWA — which permanently hides
+  // the install prompt. Reset it whenever we're not actually standalone.
+  if (!isStandalone()) {
+    try { localStorage.removeItem(PWA_INSTALL_KEYS.installed); } catch (e) {}
+  }
   if (isStandalone()) markInstalled('standalone');
   updateInstallCtas();
 
@@ -4057,7 +4064,7 @@ function obStartSnow() {
 
 <script>
   if ('serviceWorker' in navigator) {
-    window.addEventListener('load', () => { navigator.serviceWorker.register('/sw.js').catch(()=>{}); });
+    window.addEventListener('load', () => { navigator.serviceWorker.register('/sw.js').catch((e) => console.warn('[SW] registration failed:', e)); });
   }
 </script>
 <script>
