@@ -580,39 +580,18 @@ body::after { content:''; position:fixed; inset:0; pointer-events:none; z-index:
   color: var(--snow);
 }
 
-/* Dot below circle — coloured by program */
+/* Indicator bars below circle — coloured by program, supports multiple */
+.picker-day-dots {
+  display: flex; gap: 2px; align-items: center; justify-content: center;
+  min-height: 5px;
+}
 .picker-day-dot {
-  width: 4px; height: 4px; border-radius: 50%;
+  height: 5px; border-radius: 3px; flex: 1;
+  max-width: 18px; min-width: 5px;
   background: transparent;
   flex-shrink: 0;
+  position: relative; overflow: hidden;
 }
-/* Dot colours matching heatmap */
-.picker-day.dot-schools    .picker-day-dot { background: var(--blue); }
-.picker-day.dot-daily      .picker-day-dot,
-.picker-day.dot-teens      .picker-day-dot { background: var(--teal); }
-.picker-day.dot-club       .picker-day-dot,
-.picker-day.dot-wvsbc      .picker-day-dot { background: var(--purple); }
-.picker-day.dot-private    .picker-day-dot { background: var(--yellow); }
-.picker-day.dot-training   .picker-day-dot { background: var(--green); }
-.picker-day.dot-adaptive   .picker-day-dot { background: #a78bfa; }
-.picker-day.dot-never_ever .picker-day-dot { background: #60d4f0; }
-.picker-day.dot-womens_camps .picker-day-dot { background: #ff8cc8; }
-.picker-day.dot-adult_alpine .picker-day-dot { background: #7dd3a8; }
-.picker-day.dot-adult_base   .picker-day-dot { background: #f09a54; }
-.picker-day.dot-sick           .picker-day-dot { background: var(--red); }
-.picker-day.dot-unavailable    .picker-day-dot { background: var(--red); opacity: 0.5; }
-.picker-day.dot-amdp           .picker-day-dot,
-.picker-day.dot-ama            .picker-day-dot,
-.picker-day.dot-rdp            .picker-day-dot,
-.picker-day.dot-wfc            .picker-day-dot { background: #c084fc; }
-.picker-day.dot-kinder         .picker-day-dot,
-.picker-day.dot-minis          .picker-day-dot,
-.picker-day.dot-vkp            .picker-day-dot { background: #86efac; }
-.picker-day.dot-adventure_camp .picker-day-dot { background: #fb923c; }
-.picker-day.dot-charity        .picker-day-dot { background: #f472b6; }
-.picker-day.dot-map            .picker-day-dot,
-.picker-day.dot-sdp            .picker-day-dot,
-.picker-day.dot-ex_can         .picker-day-dot { background: #94a3b8; }
 
 /* States */
 .picker-day.is-off  { opacity: 0.25; }
@@ -623,20 +602,15 @@ body::after { content:''; position:fixed; inset:0; pointer-events:none; z-index:
 .picker-day.selected .picker-day-num { color: white; }
 .picker-day.selected .picker-day-dot { background: var(--selected-dot) !important; }
 
-/* Future day dot — hatched overlay to indicate "not yet happened" */
-.picker-day.is-future:not(.selected) .picker-day-dot {
-  position: relative;
-  overflow: hidden;
-}
+/* Future day indicators — hatched overlay to indicate "not yet happened" */
 .picker-day.is-future:not(.selected) .picker-day-dot::after {
   content: '';
   position: absolute; inset: 0;
   background: repeating-linear-gradient(
     45deg,
-    rgba(255,255,255,0.08) 0px, rgba(255,255,255,0.08) 1.5px,
-    rgba(0,0,0,0.35) 1.5px, rgba(0,0,0,0.35) 3px
+    rgba(255,255,255,0.08) 0px, rgba(255,255,255,0.08) 3px,
+    rgba(0,0,0,0.35) 3px, rgba(0,0,0,0.35) 6px
   );
-  border-radius: inherit;
 }
 
 /* Pull handle — slim, same height as DOW row, centred */
@@ -2726,47 +2700,55 @@ function dayCell(key, num) {
   const isOutsideSeason = isBeforeStart || isAfterEnd;
   const NON_WORK   = new Set(['off','end','sick','unavailable']);
 
-  // Determine dot colour from dominant program
-  let dotClass = '';
+  // Collect ordered distinct programs for this day (max 3 shown)
+  const progOrder = ['private','schools','daily','teens','club','wvsbc',
+    'adaptive','never_ever','womens_camps','adult_alpine','adult_base',
+    'adventure_camp','kinder','minis','vkp','charity','amdp','ama','rdp','wfc',
+    'map','sdp','ex_can','training','sick'];
+  let dayProgs = [];
   if (!isOutsideSeason) {
     const candidates = lessons.filter(l =>
       isFuture || key === TODAY_KEY
         ? (isPaid(l.assignment) || isSched(l.raw))
         : isPaid(l.assignment)
     );
-    const progOrder = ['private','schools','daily','teens','club','wvsbc',
-      'adaptive','never_ever','womens_camps','adult_alpine','adult_base',
-      'adventure_camp','kinder','minis','vkp','charity','amdp','ama','rdp','wfc',
-      'map','sdp','ex_can','training','sick'];
+    const seen = new Set();
     for (const prog of progOrder) {
-      const found = candidates.find(l => getProgram(l.raw, l.assignment) === prog && !NON_WORK.has(prog));
-      if (found) { dotClass = 'dot-' + prog; break; }
+      if (seen.size >= 3) break;
+      if (NON_WORK.has(prog)) continue;
+      if (candidates.find(l => getProgram(l.raw, l.assignment) === prog)) {
+        seen.add(prog); dayProgs.push(prog);
+      }
     }
-    // Fallback: any paid non-work row not in known list (dynamic slug)
-    if (!dotClass) {
+    // Fallback: dynamic slug not in known list
+    if (!dayProgs.length) {
       const fallback = candidates.find(l => {
         const p = getProgram(l.raw, l.assignment);
         return !NON_WORK.has(p) && p !== 'other';
       });
-      if (fallback) dotClass = 'dot-other';
+      if (fallback) dayProgs.push('other');
     }
   }
 
-  const hasWork = !!dotClass;
+  const hasWork = dayProgs.length > 0;
+  const isSelected = key === selectedKey;
   const cls = [
     'picker-day',
-    key === selectedKey ? 'selected' : '',
-    key === TODAY_KEY && key !== selectedKey ? 'today' : '',
+    isSelected ? 'selected' : '',
+    key === TODAY_KEY && !isSelected ? 'today' : '',
     !hasWork && !isOutsideSeason ? 'is-off' : '',
-    key < TODAY_KEY && key !== selectedKey ? 'past' : '',
+    key < TODAY_KEY && !isSelected ? 'past' : '',
     isOutsideSeason ? 'faded' : '',
     isFuture && hasWork ? 'is-future' : '',
-    dotClass,
   ].filter(Boolean).join(' ');
+
+  const dotsHtml = hasWork
+    ? dayProgs.map(p => `<span class="picker-day-dot" style="background:${progColor(p)}"></span>`).join('')
+    : `<span class="picker-day-dot"></span>`;
 
   return `<div class="${cls}" onclick="selectDay('${key}')">
     <div class="picker-day-bg"><span class="picker-day-num">${num}</span></div>
-    <span class="picker-day-dot"></span>
+    <span class="picker-day-dots">${dotsHtml}</span>
   </div>`;
 }
 
@@ -2800,7 +2782,7 @@ function renderPickerWeek() {
         weekCells += dayCell(key, d.getDate());
         if (key === selectedKey) selectedSnapIndex = snapIndex;
       } else {
-        weekCells += `<div class="picker-day faded"><div class="picker-day-bg"><span class="picker-day-num">${d.getDate()}</span></div><span class="picker-day-dot"></span></div>`;
+        weekCells += `<div class="picker-day faded"><div class="picker-day-bg"><span class="picker-day-num">${d.getDate()}</span></div><span class="picker-day-dots"><span class="picker-day-dot"></span></span></div>`;
       }
     }
     html += `<div class="picker-week-snap">${weekCells}</div>`;
@@ -2866,7 +2848,7 @@ function renderPickerMonth() {
     // Blank cells before month start
     let cells = [];
     for (let p = 0; p < first.getDay(); p++)
-      cells.push(`<div class="picker-day faded"><div class="picker-day-bg"><span class="picker-day-num"></span></div><span class="picker-day-dot"></span></div>`);
+      cells.push(`<div class="picker-day faded"><div class="picker-day-bg"><span class="picker-day-num"></span></div><span class="picker-day-dots"><span class="picker-day-dot"></span></span></div>`);
     for (let d = 1; d <= days; d++)
       cells.push(dayCell(toKey(new Date(y, m, d)), d));
 
@@ -2875,7 +2857,7 @@ function renderPickerMonth() {
     for (let i = 0; i < cells.length; i += 7) {
       const row = cells.slice(i, i+7);
       while (row.length < 7)
-        row.push(`<div class="picker-day faded"><div class="picker-day-bg"><span class="picker-day-num"></span></div><span class="picker-day-dot"></span></div>`);
+        row.push(`<div class="picker-day faded"><div class="picker-day-bg"><span class="picker-day-num"></span></div><span class="picker-day-dots"><span class="picker-day-dot"></span></span></div>`);
       rowsHtml += `<div class="picker-month-week-row">${row.join('')}</div>`;
     }
 
