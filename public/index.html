@@ -2089,32 +2089,32 @@ function closeInstallWelcome() {
 }
 
 function updateInstallCtas() {
-  const ctaBtn = document.getElementById(‘installCtaBtn’);
-  const ctaTitle = document.getElementById(‘installCtaTitle’);
-  const ctaSub = document.getElementById(‘installCtaSub’);
-  const ctaRight = document.getElementById(‘installCtaRight’);
+  const ctaBtn = document.getElementById('installCtaBtn');
+  const ctaTitle = document.getElementById('installCtaTitle');
+  const ctaSub = document.getElementById('installCtaSub');
+  const ctaRight = document.getElementById('installCtaRight');
   if (ctaBtn && ctaTitle && ctaSub && ctaRight) {
     ctaBtn.disabled = false;
-    ctaTitle.textContent = ‘Install WhisSchedule’;
-    ctaSub.textContent = ‘Add to your Home Screen for quick access’;
-    ctaRight.textContent = ‘Install’;
+    ctaTitle.textContent = 'Install WhisSchedule';
+    ctaSub.textContent = 'Add to your Home Screen for quick access';
+    ctaRight.textContent = 'Install';
   }
 
-  const hint = document.getElementById(‘obInstallHint’);
-  const hintSub = document.getElementById(‘obInstallHintSub’);
-  const hintBtn = document.getElementById(‘obInstallHintBtn’);
+  const hint = document.getElementById('obInstallHint');
+  const hintSub = document.getElementById('obInstallHintSub');
+  const hintBtn = document.getElementById('obInstallHintBtn');
   if (hint && hintSub && hintBtn) {
-    const dismissed = safeLocalGet(PWA_INSTALL_KEYS.obHintDismissed) === ‘true’;
-    const screen1 = document.getElementById(‘obScreen1’);
-    const obScreen1Active = !!(screen1 && screen1.classList.contains(‘ob-active’));
+    const dismissed = safeLocalGet(PWA_INSTALL_KEYS.obHintDismissed) === 'true';
+    const screen1 = document.getElementById('obScreen1');
+    const obScreen1Active = !!(screen1 && screen1.classList.contains('ob-active'));
 
     if (dismissed || !obScreen1Active) {
-      hint.classList.remove(‘is-visible’);
+      hint.classList.remove('is-visible');
     } else {
-      hint.classList.add(‘is-visible’);
-      hintSub.textContent = ‘Tip: Install for faster launch and one‑tap access.’;
-      hintBtn.style.display = ‘’;
-      hintBtn.textContent = ‘Install’;
+      hint.classList.add('is-visible');
+      hintSub.textContent = 'Tip: Install for faster launch and one‑tap access.';
+      hintBtn.style.display = '';
+      hintBtn.textContent = 'Install';
       hintBtn.disabled = false;
     }
   }
