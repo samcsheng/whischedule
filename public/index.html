@@ -536,6 +536,7 @@ body::after { content:''; position:fixed; inset:0; pointer-events:none; z-index:
   scrollbar-width: none;
   -webkit-overflow-scrolling: touch;
   transition: max-height 0.35s cubic-bezier(0.16,1,0.3,1);
+  scroll-snap-type: y mandatory;
 }
 .picker-month-grid::-webkit-scrollbar { display: none; }
 .picker-area.expanded .picker-month-grid { max-height: 280px; }
@@ -553,6 +554,7 @@ body::after { content:''; position:fixed; inset:0; pointer-events:none; z-index:
 .picker-month-week-row {
   display: grid;
   grid-template-columns: repeat(7, 1fr);
+  scroll-snap-align: center;
 }
 
 /* Day cell — column layout: circle num on top, dot below */
@@ -2934,10 +2936,14 @@ function goToToday() {
     requestAnimationFrame(() => {
       const grid = document.getElementById('pickerMonthGrid');
       const selEl = grid && grid.querySelector('.picker-day.selected');
-      if (selEl) {
-        const block = selEl.closest('.picker-month-block');
-        if (block) grid.scrollTop = block.offsetTop;
-      }
+      if (!selEl) return;
+      const weekRow = selEl.closest('.picker-month-week-row');
+      if (!weekRow) return;
+      // Scroll so today's week row is centred in the grid
+      const gridRect = grid.getBoundingClientRect();
+      const rowRect  = weekRow.getBoundingClientRect();
+      const rowTopInGrid = rowRect.top - gridRect.top + grid.scrollTop;
+      grid.scrollTop = rowTopInGrid - (grid.clientHeight / 2) + (weekRow.offsetHeight / 2);
     });
   } else {
     renderPickerWeek();
