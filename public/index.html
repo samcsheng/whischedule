@@ -1576,7 +1576,7 @@ html[data-theme="light"] {
         <button class="app-header-refresh" id="refreshBtn" onclick="triggerRefresh()" title="Sync schedule">
           <svg viewBox="0 0 24 24"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
         </button>
-        <div class="app-header-avatar" id="topAvatar" onclick="openProfile()">S</div>
+        <div class="app-header-avatar" id="topAvatar" data-haptic="light" onclick="openProfile()">S</div>
       </div>
     </div>
     <div class="app-header-sync-bar">
@@ -1589,7 +1589,7 @@ html[data-theme="light"] {
   <div class="picker-area" id="pickerArea">
     <div class="picker-month-row">
       <div class="picker-month-label" id="pickerMonthLabel">—</div>
-      <button class="picker-today-btn" onclick="goToToday()">Today</button>
+      <button class="picker-today-btn" data-haptic="medium" onclick="goToToday()">Today</button>
     </div>
     <div class="picker-grid-wrap">
       <!-- DOW header — always visible -->
@@ -1600,7 +1600,7 @@ html[data-theme="light"] {
       <div class="picker-month-grid" id="pickerMonthGrid"></div>
     </div>
     <!-- Pull handle -->
-    <div class="picker-handle" id="pickerHandle" onclick="togglePicker()">
+    <div class="picker-handle" id="pickerHandle" data-haptic="light" onclick="togglePicker()">
       <svg viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg>
     </div>
   </div>
@@ -1622,7 +1622,7 @@ html[data-theme="light"] {
         <button class="app-header-refresh" onclick="triggerRefresh()" title="Sync schedule">
           <svg viewBox="0 0 24 24"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
         </button>
-        <div class="app-header-avatar" onclick="openProfile()">S</div>
+        <div class="app-header-avatar" data-haptic="light" onclick="openProfile()">S</div>
       </div>
     </div>
     <div class="app-header-sync-bar">
@@ -1644,11 +1644,11 @@ html[data-theme="light"] {
 
 <!-- ── TAB BAR ── -->
 <nav class="tabs" id="tabBar">
-  <div class="tab active" onclick="switchTab('schedule')" id="tab-schedule">
+  <div class="tab active" data-haptic="light" onclick="switchTab('schedule')" id="tab-schedule">
     <svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
     <span class="tab-label">Schedule</span>
   </div>
-  <div class="tab" onclick="switchTab('stats')" id="tab-stats">
+  <div class="tab" data-haptic="light" onclick="switchTab('stats')" id="tab-stats">
     <svg viewBox="0 0 24 24"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
     <span class="tab-label">Stats</span>
   </div>
@@ -1662,7 +1662,7 @@ html[data-theme="light"] {
     </div>
     <div class="prog-modal-header">
       <div class="prog-modal-title" id="progModalTitle">Program</div>
-      <button class="prog-modal-close" onclick="closeProgModal()">
+      <button class="prog-modal-close" data-haptic="light" onclick="closeProgModal()">
         <svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
       </button>
     </div>
@@ -1727,7 +1727,7 @@ html[data-theme="light"] {
       </button>
     </div>
     <div class="modal-actions">
-      <button class="modal-btn modal-btn-cancel" onclick="closeProfile()">Cancel</button>
+      <button class="modal-btn modal-btn-cancel" data-haptic="light" onclick="closeProfile()">Cancel</button>
       <button class="modal-btn modal-btn-save" onclick="saveCredentials()">Save</button>
     </div>
     <div class="modal-status" id="modalStatus"></div>
@@ -1784,12 +1784,16 @@ const TODAY_KEY = (() => { const d = new Date(); return `${d.getFullYear()}-${St
 // ─────────────────────────────────────────────────────────────────────────────
 // HAPTIC FEEDBACK
 // ─────────────────────────────────────────────────────────────────────────────
-// Patterns (ms): 'light'=10, 'medium'=18, 'heavy'=30, 'success'=[10,80,20], 'error'=[30,60,30]
+// Patterns (ms): 'light'=50, 'medium'=80, 'heavy'=150, 'success'=[50,80,80], 'error'=[100,80,100]
 function haptic(type = 'light') {
   if (!navigator.vibrate) return;
-  const patterns = { light: 10, medium: 18, heavy: 30, success: [10, 80, 20], error: [30, 60, 30] };
+  const patterns = { light: 50, medium: 80, heavy: 150, success: [50, 80, 80], error: [100, 80, 100] };
   navigator.vibrate(patterns[type] ?? type);
 }
+document.addEventListener('pointerdown', function(e) {
+  const el = e.target.closest('[data-haptic]');
+  if (el) haptic(el.dataset.haptic);
+}, { passive: true });
 
 
 function resolveThemeColor(value) {
@@ -2614,7 +2618,6 @@ let weekOffset     = 0;
 let selectedKey    = TODAY_KEY;
 
 function togglePicker() {
-  haptic('light');
   pickerExpanded = !pickerExpanded;
   document.getElementById('pickerArea').classList.toggle('expanded', pickerExpanded);
   if (pickerExpanded) {
@@ -2686,7 +2689,7 @@ function dayCell(key, num) {
     dotClass,
   ].filter(Boolean).join(' ');
 
-  return `<div class="${cls}" onclick="selectDay('${key}')">
+  return `<div class="${cls}" data-haptic="light" onclick="selectDay('${key}')">
     <div class="picker-day-bg"><span class="picker-day-num">${num}</span></div>
     <span class="picker-day-dot"></span>
   </div>`;
@@ -2834,7 +2837,6 @@ function renderPicker() {
 // NAVIGATION
 // ─────────────────────────────────────────────────────────────────────────────
 function selectDay(key) {
-  haptic('light');
   selectedKey = clampSelectedKey(key);
   weekOffset  = computeWeekOffsetForKey(selectedKey);
   if (pickerExpanded) {
@@ -2867,7 +2869,6 @@ function shiftWeek(dir) {
 }
 
 function goToToday() {
-  haptic('medium');
   const target = dayKeys && dayKeys.includes(TODAY_KEY) ? TODAY_KEY
     : (dayKeys.length ? (TODAY_KEY < dayKeys[0] ? dayKeys[0] : dayKeys[dayKeys.length-1]) : TODAY_KEY);
   selectedKey = target;
@@ -3047,7 +3048,7 @@ function buildStats() {
   document.getElementById('breakdown').innerHTML = activePrograms.map(p => {
     const h = progHours[p.key]; const pct = Math.round((h/maxH)*100);
     const sharePct = Math.round((h / totalLessonHrs) * 100);
-    return `<div class="brow" style="cursor:pointer" onclick="openProgModal('${p.key}','${p.label.replace(/'/g,"\\'")}','${p.color}')">
+    return `<div class="brow" style="cursor:pointer" data-haptic="light" onclick="openProgModal('${p.key}','${p.label.replace(/'/g,"\\'")}','${p.color}')">
       <div class="brow-top">
         <span class="brow-label"><span class="brow-dot" style="background:${p.color}"></span>${p.label}</span>
         <span class="brow-vals">${h.toFixed(1)}h <span style="opacity:0.5;margin-left:3px">${sharePct}%</span></span>
@@ -3107,7 +3108,6 @@ function buildStats() {
 // PROGRAM DETAIL MODAL
 // ─────────────────────────────────────────────────────────────────────────────
 function openProgModal(progKey, label, color) {
-  haptic('light');
   const seasonStart = getSeasonStartKey();
   const seasonEnd = getSeasonEndKey();
   const validKeys = Object.keys(byDate).sort().filter(k =>
@@ -3227,7 +3227,6 @@ function openProgModal(progKey, label, color) {
 }
 
 function closeProgModal() {
-  haptic('light');
   document.getElementById('progModal').classList.remove('open');
 }
 function handleProgModalOverlay(e) {
@@ -3247,7 +3246,6 @@ function _getSeasonMonths() {
 // TABS
 // ─────────────────────────────────────────────────────────────────────────────
 function switchTab(tab) {
-  haptic('light');
   document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
   document.querySelectorAll('.tab').forEach(t  => t.classList.remove('active'));
   document.getElementById('page-' + tab).classList.add('active');
@@ -3321,7 +3319,6 @@ function loadCredentials() {
   return { passNumber: localStorage.getItem('wb_passNumber')||'', password: '$noW2526' };
 }
 function openProfile() {
-  haptic('light');
   const c = loadCredentials();
   document.getElementById('inputPassNumber').value = c.passNumber;
   document.getElementById('modalStatus').textContent = '';
@@ -3370,7 +3367,7 @@ function openProfile() {
 
   document.getElementById('profileModal').classList.add('open');
 }
-function closeProfile() { haptic('light'); document.getElementById('profileModal').classList.remove('open'); }
+function closeProfile() { document.getElementById('profileModal').classList.remove('open'); }
 function handleOverlayClick(e) { if (e.target === document.getElementById('profileModal')) closeProfile(); }
 function saveCredentials() {
   const pn = document.getElementById('inputPassNumber').value.trim();
@@ -3672,8 +3669,8 @@ window.addEventListener('load', () => {
       <div class="ob-install-hint-sub" id="obInstallHintSub">Tip: Install for faster launch and one‑tap access.</div>
     </div>
     <div class="ob-install-hint-actions">
-      <button class="ob-install-hint-btn" id="obInstallHintBtn" type="button" onclick="handleInstallHintAction()">Install</button>
-      <button class="ob-install-hint-dismiss" type="button" onclick="dismissObInstallHint()" aria-label="Dismiss install hint">
+      <button class="ob-install-hint-btn" id="obInstallHintBtn" type="button" data-haptic="light" onclick="handleInstallHintAction()">Install</button>
+      <button class="ob-install-hint-dismiss" type="button" data-haptic="light" onclick="dismissObInstallHint()" aria-label="Dismiss install hint">
         <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M18 6 6 18"></path><path d="M6 6l12 12"></path></svg>
       </button>
     </div>
@@ -3686,7 +3683,7 @@ window.addEventListener('load', () => {
       <div class="ob-logo">🏔️</div>
       <div class="ob-app-name">WhisSchedule</div>
       <div class="ob-tagline">Your Whistler Blackcomb schedule, beautifully organised</div>
-      <button class="ob-cta" style="max-width:240px" onclick="obGoTo(2)">
+      <button class="ob-cta" style="max-width:240px" data-haptic="medium" onclick="obGoTo(2)">
         Get Started <span>→</span>
       </button>
     </div>
@@ -3703,7 +3700,7 @@ window.addEventListener('load', () => {
           <input class="ob-input" id="obPassNumber" type="text" inputmode="numeric" placeholder="e.g. 110101234567" />
         </div>
         <div class="ob-status" id="obStatus"></div>
-        <button class="ob-cta" id="obConnectBtn" onclick="obConnect()">
+        <button class="ob-cta" id="obConnectBtn" data-haptic="medium" onclick="obConnect()">
           Load My Schedule →
         </button>
       </div>
@@ -3717,7 +3714,7 @@ window.addEventListener('load', () => {
       <div class="ob-welcome-name" id="obWelcomeName">Welcome! 👋</div>
       <div class="ob-welcome-sub">WhisSchedule is ready</div>
       <div class="ob-stat-pills" id="obStatPills"></div>
-      <button class="ob-cta" style="max-width:260px" onclick="obEnterApp()">
+      <button class="ob-cta" style="max-width:260px" data-haptic="medium" onclick="obEnterApp()">
         View My Schedule →
       </button>
     </div>
