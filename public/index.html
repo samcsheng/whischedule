@@ -904,6 +904,7 @@ body::after { content:''; position:fixed; inset:0; pointer-events:none; z-index:
 .client-stat-hrs { font-family:var(--f-mono); font-size:11px; color:var(--muted); }
 .client-modal-hero { display:flex; align-items:center; gap:10px; flex:1; min-width:0; }
 .client-modal-avatar { width:34px; height:34px; border-radius:50%; background:linear-gradient(135deg,rgba(255,197,66,0.3),rgba(255,124,66,0.3)); border:1px solid rgba(255,197,66,0.2); display:flex; align-items:center; justify-content:center; font-size:12px; font-weight:700; color:var(--yellow); flex-shrink:0; }
+.client-chevron { width:16px; height:16px; stroke:var(--muted); fill:none; stroke-width:2.5; flex-shrink:0; opacity:0.5; }
 .client-modal-comment { margin-top:4px; font-size:11px; color:var(--muted); line-height:1.5; font-style:italic; }
 
 .fade-in { animation:fi 0.4s ease both; }
@@ -3124,7 +3125,7 @@ function buildStats() {
     if(dur==='Half Day')   pills+=`<span class="pill pill-hd">Half Day</span>`;
     const totalHrs=c.hours.toFixed(1);
     const nameEsc=escapeHtml(c.name);
-    return `<div class="client-row" onclick="openClientModal(${JSON.stringify(c.name)})"><div class="client-avatar">${initials}</div><div class="client-info"><div class="client-name">${nameEsc}</div>${pills?`<div class="client-pills">${pills}</div>`:''}</div><div class="client-stats"><div class="client-stat-days">${c.days.size}d</div><div class="client-stat-hrs">${totalHrs}h</div></div></div>`;
+    return `<div class="client-row" data-client="${nameEsc}" onclick="openClientModal(this.dataset.client)"><div class="client-avatar">${initials}</div><div class="client-info"><div class="client-name">${nameEsc}</div>${pills?`<div class="client-pills">${pills}</div>`:''}</div><div class="client-stats"><div class="client-stat-days">${c.days.size}d</div><div class="client-stat-hrs">${totalHrs}h</div></div><svg class="client-chevron" viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg></div>`;
   }).join('') : `<div class="empty-state" style="padding:32px 20px"><div class="empty-emoji">🎿</div><div class="empty-title">No private clients</div><div class="empty-sub">Private lesson bookings with named clients will show up here.</div></div>`;
 }
 
