@@ -894,12 +894,20 @@ body::after { content:''; position:fixed; inset:0; pointer-events:none; z-index:
 .hm-leg-swatch { width:12px; height:12px; border-radius:2px; flex-shrink:0; }
 
 .client-list { background:var(--card); border:1px solid var(--border); border-radius:16px; overflow:hidden; }
-.client-row { display:flex; align-items:center; gap:10px; padding:12px 16px; border-bottom:1px solid var(--border); }
+.client-row { display:flex; align-items:center; gap:10px; padding:12px 16px; border-bottom:1px solid var(--border); cursor:pointer; transition:background 0.15s; }
 .client-row:last-child { border-bottom:none; }
+.client-row:active { background:var(--panel-bg); }
 .client-avatar { width:30px; height:30px; border-radius:50%; background:linear-gradient(135deg,rgba(255,197,66,0.3),rgba(255,124,66,0.3)); border:1px solid rgba(255,197,66,0.2); display:flex; align-items:center; justify-content:center; font-size:11px; font-weight:700; color:var(--yellow); flex-shrink:0; }
-.client-name { font-size:13px; font-weight:600; flex:1; }
-.client-meta { font-size:10px; color:var(--muted); }
-.client-days { font-family:var(--f-mono); font-size:13px; color:var(--yellow); }
+.client-info { flex:1; min-width:0; }
+.client-name { font-size:13px; font-weight:600; }
+.client-pills { display:flex; flex-wrap:wrap; gap:4px; margin-top:4px; }
+.client-stats { display:flex; flex-direction:column; align-items:flex-end; gap:2px; flex-shrink:0; }
+.client-stat-days { font-family:var(--f-mono); font-size:13px; font-weight:700; color:var(--yellow); }
+.client-stat-hrs { font-family:var(--f-mono); font-size:11px; color:var(--muted); }
+.client-modal-hero { display:flex; align-items:center; gap:10px; flex:1; min-width:0; }
+.client-modal-avatar { width:34px; height:34px; border-radius:50%; background:linear-gradient(135deg,rgba(255,197,66,0.3),rgba(255,124,66,0.3)); border:1px solid rgba(255,197,66,0.2); display:flex; align-items:center; justify-content:center; font-size:12px; font-weight:700; color:var(--yellow); flex-shrink:0; }
+.client-chevron { width:16px; height:16px; stroke:var(--muted); fill:none; stroke-width:2.5; flex-shrink:0; opacity:0.5; }
+.client-modal-comment { margin-top:4px; font-size:11px; color:var(--muted); line-height:1.5; font-style:italic; }
 
 .fade-in { animation:fi 0.4s ease both; }
 @keyframes fi { from{opacity:0;transform:translateY(8px)} to{opacity:1;transform:translateY(0)} }
@@ -1678,6 +1686,26 @@ html[data-theme="light"] {
   </div>
 </div>
 
+<!-- ── CLIENT DETAIL MODAL ── -->
+<div class="prog-modal-overlay" id="clientModal" onclick="handleClientModalOverlay(event)">
+  <div class="prog-modal-sheet" id="clientModalSheet">
+    <div style="position:relative"><div class="prog-modal-handle"></div></div>
+    <div class="prog-modal-header">
+      <div class="client-modal-hero">
+        <div class="client-modal-avatar" id="clientModalAvatar"></div>
+        <div class="prog-modal-title" id="clientModalTitle"></div>
+      </div>
+      <button class="prog-modal-close" onclick="closeClientModal()">
+        <svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+    <div class="prog-modal-stats" id="clientModalStats"></div>
+    <div class="prog-modal-divider"></div>
+    <div class="prog-modal-section">Lessons</div>
+    <div class="prog-modal-list" id="clientModalList"></div>
+  </div>
+</div>
+
 <!-- ── PROFILE MODAL ── -->
 <div class="modal-overlay" id="profileModal" onclick="handleOverlayClick(event)">
   <div class="modal-sheet">
@@ -2324,6 +2352,7 @@ function getProgram(raw, assignment = 'Assignment') {
 let SEASON_END_KEY = null;
 let SEASON_START_KEY = null;
 const byDate = {};
+let _clientsCache = {};
 
 function getSeasonStartKey() {
   const keys = Object.keys(byDate).sort();
@@ -3014,8 +3043,11 @@ function buildStats() {
   const clients = {};
   validKeys.forEach(k => { byDate[k].forEach(l => {
     if (!l.client || !isPaid(l.assignment)) return;
-    if (!clients[l.client]) clients[l.client] = { name:l.client, days:new Set(), raws:[] };
-    clients[l.client].days.add(k); clients[l.client].raws.push(l.raw);
+    if (!clients[l.client]) clients[l.client] = { name:l.client, days:new Set(), raws:[], hours:0, lessons:[] };
+    clients[l.client].days.add(k);
+    clients[l.client].raws.push(l.raw);
+    clients[l.client].hours += l.hours || 0;
+    clients[l.client].lessons.push({ key:k, hours:l.hours||0, raw:l.raw, privateDetails:l.privateDetails, assignment:l.assignment });
   }); });
 
   const allKeys = Object.keys(byDate).sort();
@@ -3091,13 +3123,21 @@ function buildStats() {
     .map(it=>`<div class="hm-leg-item"><div class="hm-leg-swatch hm-cell ${it.cls}" style="width:12px;height:12px;border-radius:2px"></div>${it.label}</div>`)
     .join('') + '</div>';
 
+  _clientsCache = clients;
   const clientArr = Object.values(clients).sort((a,b)=>b.days.size-a.days.size);
   document.getElementById('clientList').innerHTML = clientArr.length ? clientArr.map(c => {
     const initials=c.name.split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase();
     const mainRaw=c.raws.find(r=>!/meeting|end of day/i.test(r))||c.raws[0];
     const disc=getDiscipline(mainRaw),loc=getLocation(mainRaw),dur=getPrivateDuration(mainRaw);
-    const meta=[disc==='ski'?'Ski':disc==='snowboard'?'Snowboard':null,loc,dur].filter(Boolean).join(' · ');
-    return `<div class="client-row"><div class="client-avatar">${initials}</div><div><div class="client-name">${c.name}</div><div class="client-meta">${meta||'Private Lesson'}</div></div><div class="client-days">${c.days.size}d</div></div>`;
+    let pills='';
+    if(disc==='ski')       pills+=`<span class="pill pill-ski">⛷ Ski</span>`;
+    if(disc==='snowboard') pills+=`<span class="pill pill-sb">🏂 Board</span>`;
+    if(loc)                pills+=`<span class="pill pill-loc">📍 ${loc}</span>`;
+    if(dur==='Full Day')   pills+=`<span class="pill pill-fd">Full Day</span>`;
+    if(dur==='Half Day')   pills+=`<span class="pill pill-hd">Half Day</span>`;
+    const totalHrs=c.hours.toFixed(1);
+    const nameEsc=escapeHtml(c.name);
+    return `<div class="client-row" data-client="${nameEsc}" onclick="openClientModal(this.dataset.client)"><div class="client-avatar">${initials}</div><div class="client-info"><div class="client-name">${nameEsc}</div>${pills?`<div class="client-pills">${pills}</div>`:''}</div><div class="client-stats"><div class="client-stat-days">${c.days.size}d</div><div class="client-stat-hrs">${totalHrs}h</div></div><svg class="client-chevron" viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg></div>`;
   }).join('') : `<div class="empty-state" style="padding:32px 20px"><div class="empty-emoji">🎿</div><div class="empty-title">No private clients</div><div class="empty-sub">Private lesson bookings with named clients will show up here.</div></div>`;
 }
 
@@ -3238,6 +3278,92 @@ function progDayClick(key) {
 }
 function _getSeasonMonths() {
   return getSeasonMonthRange();
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// CLIENT DETAIL MODAL
+// ─────────────────────────────────────────────────────────────────────────────
+function openClientModal(clientName) {
+  const c = _clientsCache[clientName];
+  if (!c) return;
+
+  const initials = clientName.split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase();
+  document.getElementById('clientModalAvatar').textContent = initials;
+  document.getElementById('clientModalTitle').textContent = clientName;
+
+  const avgHrs = c.days.size > 0 ? (c.hours / c.days.size).toFixed(1) : '—';
+  document.getElementById('clientModalStats').innerHTML = `
+    <div class="prog-modal-stat">
+      <div class="prog-modal-stat-val" style="color:var(--yellow)">${c.days.size}</div>
+      <div class="prog-modal-stat-lbl">Days</div>
+    </div>
+    <div class="prog-modal-stat">
+      <div class="prog-modal-stat-val" style="color:var(--orange)">${c.hours.toFixed(1)}</div>
+      <div class="prog-modal-stat-lbl">Hours</div>
+    </div>
+    <div class="prog-modal-stat">
+      <div class="prog-modal-stat-val" style="color:var(--muted)">${avgHrs}</div>
+      <div class="prog-modal-stat-lbl">Avg Hrs/Day</div>
+    </div>`;
+
+  const sortedLessons = [...c.lessons].sort((a,b) => a.key < b.key ? -1 : 1);
+  let listHtml = '';
+  let curMonth = null;
+  sortedLessons.forEach(l => {
+    const dt = new Date(l.key + 'T12:00:00');
+    const mon = MONTHS_LONG[dt.getMonth()] + ' ' + dt.getFullYear();
+    if (mon !== curMonth) {
+      if (curMonth !== null) listHtml += '</div>';
+      curMonth = mon;
+      listHtml += `<div class="prog-month-group"><div class="prog-month-sticky">${mon}</div>`;
+    }
+    const pd = l.privateDetails || null;
+    const dayLabel = DAYS_LONG[dt.getDay()] + ', ' + MONTHS_SHORT[dt.getMonth()] + ' ' + dt.getDate();
+    const hrsStr = l.hours > 0 ? l.hours.toFixed(1) + 'h' : '—';
+    const disc = getDiscipline(l.raw), loc = getLocation(l.raw), dur = getPrivateDuration(l.raw);
+    let pillsHtml = '';
+    if (disc === 'ski')       pillsHtml += `<span class="pill pill-ski">⛷ Ski</span>`;
+    if (disc === 'snowboard') pillsHtml += `<span class="pill pill-sb">🏂 Board</span>`;
+    if (loc)                  pillsHtml += `<span class="pill pill-loc">📍 ${loc}</span>`;
+    if (dur === 'Full Day')   pillsHtml += `<span class="pill pill-fd">Full Day</span>`;
+    if (dur === 'Half Day')   pillsHtml += `<span class="pill pill-hd">Half Day</span>`;
+    const lessonComment = cleanPrivateText(pd?.lessonComments);
+    const skillLevel = cleanPrivateText(pd?.skillLevel);
+    const cityState = cleanPrivateText(pd?.cityState);
+    const commentHtml = lessonComment
+      ? `<div class="client-modal-comment">"${escapeHtml(lessonComment)}"</div>` : '';
+    const metaItems = [skillLevel ? `Level ${skillLevel}` : '', cityState || ''].filter(Boolean).join(' · ');
+    const metaHtml = metaItems
+      ? `<div class="client-modal-comment" style="font-style:normal">${escapeHtml(metaItems)}</div>` : '';
+    const isFuture = l.key > TODAY_KEY;
+    const isToday = l.key === TODAY_KEY;
+    listHtml += `<div class="prog-day-row${isFuture?' is-future':''}${isToday?' is-today':''}" onclick="clientDayClick('${l.key}')">
+      <div style="flex:1;min-width:0">
+        <div class="prog-day-date">${dayLabel}${isToday?' · Today':''}</div>
+        ${pillsHtml ? `<div style="display:flex;flex-wrap:wrap;gap:4px;margin-top:4px">${pillsHtml}</div>` : ''}
+        ${metaHtml}
+        ${commentHtml}
+      </div>
+      <div class="prog-day-hrs" style="color:var(--yellow);flex-shrink:0">${hrsStr}</div>
+      <svg class="prog-day-chevron" viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg>
+    </div>`;
+  });
+  if (curMonth !== null) listHtml += '</div>';
+  document.getElementById('clientModalList').innerHTML = listHtml ||
+    '<p style="padding:20px;color:var(--muted);font-size:13px;text-align:center">No lessons recorded.</p>';
+
+  document.getElementById('clientModal').classList.add('open');
+}
+function closeClientModal() {
+  document.getElementById('clientModal').classList.remove('open');
+}
+function handleClientModalOverlay(e) {
+  if (e.target === document.getElementById('clientModal')) closeClientModal();
+}
+function clientDayClick(key) {
+  closeClientModal();
+  switchTab('schedule');
+  setTimeout(() => selectDay(key), 80);
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
