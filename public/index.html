@@ -1567,6 +1567,66 @@ html[data-theme="light"] {
   --install-badge-bg: rgba(45,204,138,0.10);
   --install-badge-border: rgba(22,148,100,0.22);
 }
+
+/* ── CHANGES MODAL ── */
+.changes-modal-sub {
+  font-size: 11px; font-weight: 600; color: var(--muted);
+  margin-top: 2px; letter-spacing: 0.02em;
+}
+.changes-modal-body {
+  flex: 1; min-height: 0;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  padding-bottom: max(20px, env(safe-area-inset-bottom, 20px));
+}
+.changes-date-header {
+  font-size: 10px; font-weight: 700; letter-spacing: 0.10em; text-transform: uppercase;
+  color: var(--muted); padding: 14px 20px 6px;
+  position: sticky; top: 0;
+  background: var(--sticky-sheet-bg);
+  backdrop-filter: blur(12px);
+  z-index: 2;
+}
+.change-group {
+  padding: 0 20px;
+  margin-bottom: 2px;
+}
+.change-badge {
+  display: inline-block;
+  font-size: 9px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase;
+  padding: 2px 8px; border-radius: 6px;
+  margin: 8px 0 4px;
+}
+.change-badge-new     { background: rgba(34,197,94,0.12); color: #4ade80; }
+.change-badge-removed { background: rgba(239,68,68,0.12); color: #f87171; }
+.change-badge-updated { background: rgba(59,139,255,0.12); color: #7ab8ff; }
+.change-row {
+  display: flex; align-items: flex-start; gap: 14px;
+  padding: 10px 14px; border-radius: 12px;
+}
+.change-row-added {
+  background: rgba(34,197,94,0.06);
+  border: 1px solid rgba(34,197,94,0.12);
+}
+.change-row-removed {
+  background: rgba(239,68,68,0.06);
+  border: 1px solid rgba(239,68,68,0.12);
+}
+.change-row-removed .lesson-title {
+  text-decoration: line-through;
+  opacity: 0.6;
+}
+.change-row-removed .lesson-pills { opacity: 0.5; }
+.change-arrow {
+  text-align: center;
+  padding: 2px 0;
+  color: var(--muted);
+  font-size: 16px;
+  line-height: 1;
+  opacity: 0.5;
+}
+.app-header-sync-bar.clickable { cursor: pointer; }
+.app-header-sync-bar.clickable:hover .app-sync-text { opacity: 0.8; }
 </style>
 <script>
   window.va = window.va || function () { (window.vaq = window.vaq || []).push(arguments); };
@@ -1798,6 +1858,24 @@ html[data-theme="light"] {
     <div class="modal-actions">
       <button class="modal-btn modal-btn-save" onclick="closeInstallWelcome()">Let’s go</button>
     </div>
+  </div>
+</div>
+
+<!-- ── SCHEDULE CHANGES MODAL ── -->
+<div class="prog-modal-overlay" id="changesModal" onclick="handleChangesModalOverlay(event)">
+  <div class="prog-modal-sheet" id="changesModalSheet">
+    <div style="position:relative"><div class="prog-modal-handle"></div></div>
+    <div class="prog-modal-header">
+      <div style="min-width:0">
+        <div class="prog-modal-title">Schedule Updated</div>
+        <div class="changes-modal-sub" id="changesModalSub"></div>
+      </div>
+      <button class="prog-modal-close" onclick="closeChangesModal()">
+        <svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+    <div class="prog-modal-divider"></div>
+    <div class="changes-modal-body" id="changesModalBody"></div>
   </div>
 </div>
 
@@ -3367,6 +3445,115 @@ function clientDayClick(key) {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
+// CHANGES MODAL
+// ─────────────────────────────────────────────────────────────────────────────
+let _lastDiff = null;
+
+function lessonToCard(l) {
+  const raw = (l.activity || '').trim();
+  const assignment = (l.assignment || '').trim();
+  const prog = getProgram(raw, assignment);
+  return {
+    title: cleanTitle(raw), program: prog, discipline: getDiscipline(raw),
+    location: getLocation(raw), isSched: isSched(raw) && !isPaid(assignment),
+    hours: parseFloat(l.hours) || 0, assignment: isPaid(assignment) ? assignment : null,
+    client: (l.client || '').trim() || null, duration: getPrivateDuration(raw),
+    privateDetails: l.private_details || null, startDateTime: l.start_datetime || '',
+  };
+}
+
+function buildChangeRowHtml(card, extraClass) {
+  const prog = card.program;
+  let pills = '';
+  if      (card.isSched)                               pills += `<span class="pill pill-sched">Scheduled</span>`;
+  else if (card.assignment === 'Continuing Assignment') pills += `<span class="pill pill-continuing">↻ Continuing</span>`;
+  else if (card.assignment === 'Assignment')            pills += `<span class="pill pill-assigned">✓ Assigned</span>`;
+  else if (card.assignment === 'Private Request')       pills += `<span class="pill pill-requested">★ Requested</span>`;
+  if (card.discipline === 'ski')       pills += `<span class="pill pill-ski">⛷ Ski</span>`;
+  if (card.discipline === 'snowboard') pills += `<span class="pill pill-sb">🏂 Board</span>`;
+  if (card.location)                   pills += `<span class="pill pill-loc">📍 ${card.location}</span>`;
+  if (card.client)                     pills += `<span class="pill pill-client">👤 ${escapeHtml(card.client)}</span>`;
+  const hrsColor = getProgHrsColor(prog);
+  const hoursHtml = (card.hours > 0 && !card.isSched)
+    ? `<div class="lesson-hours ${hrsColor}">${card.hours}<small>hrs</small></div>` : '';
+  return `<div class="change-row ${extraClass}">
+    <div class="lesson-dot prog-${prog}"></div>
+    <div class="lesson-main">
+      <div class="lesson-top">
+        <div class="lesson-head">
+          <div class="lesson-title">${escapeHtml(card.title)}</div>
+          ${pills ? `<div class="lesson-pills">${pills}</div>` : ''}
+        </div>
+        ${hoursHtml}
+      </div>
+    </div>
+  </div>`;
+}
+
+function buildChangesHtml(diff) {
+  // Collect all entries with type and dateKey, then group by date
+  const entries = [];
+  diff.added.forEach(a => entries.push({ type:'added', dateKey:a.dateKey, lesson:a.lesson }));
+  diff.removed.forEach(r => entries.push({ type:'removed', dateKey:r.dateKey, lesson:r.lesson }));
+  diff.changed.forEach(c => entries.push({ type:'changed', dateKey:c.dateKey, oldLesson:c.oldLesson, newLesson:c.newLesson }));
+
+  // Group by dateKey
+  const groups = {};
+  entries.forEach(e => {
+    if (!groups[e.dateKey]) groups[e.dateKey] = [];
+    groups[e.dateKey].push(e);
+  });
+  const sortedKeys = Object.keys(groups).sort();
+
+  let html = '';
+  sortedKeys.forEach(key => {
+    const d = new Date(key + 'T12:00:00');
+    const label = DAYS_LONG[d.getDay()] + ', ' + MONTHS_LONG[d.getMonth()] + ' ' + d.getDate();
+    html += `<div class="changes-date-header">${label}</div>`;
+    groups[key].forEach(entry => {
+      if (entry.type === 'added') {
+        const card = lessonToCard(entry.lesson);
+        html += `<div class="change-group">
+          <div class="change-badge change-badge-new">New</div>
+          ${buildChangeRowHtml(card, 'change-row-added')}
+        </div>`;
+      } else if (entry.type === 'removed') {
+        const card = lessonToCard(entry.lesson);
+        html += `<div class="change-group">
+          <div class="change-badge change-badge-removed">Removed</div>
+          ${buildChangeRowHtml(card, 'change-row-removed')}
+        </div>`;
+      } else {
+        const oldCard = lessonToCard(entry.oldLesson);
+        const newCard = lessonToCard(entry.newLesson);
+        html += `<div class="change-group">
+          <div class="change-badge change-badge-updated">Updated</div>
+          ${buildChangeRowHtml(oldCard, 'change-row-removed')}
+          <div class="change-arrow">↓</div>
+          ${buildChangeRowHtml(newCard, 'change-row-added')}
+        </div>`;
+      }
+    });
+  });
+  return html;
+}
+
+function openChangesModal(diff) {
+  _lastDiff = diff;
+  document.getElementById('changesModalSub').textContent = diff.summary;
+  document.getElementById('changesModalBody').innerHTML = buildChangesHtml(diff);
+  document.getElementById('changesModal').classList.add('open');
+  // Mark sync bars as clickable
+  document.querySelectorAll('.app-header-sync-bar').forEach(b => b.classList.add('clickable'));
+}
+function closeChangesModal() {
+  document.getElementById('changesModal').classList.remove('open');
+}
+function handleChangesModalOverlay(e) {
+  if (e.target === document.getElementById('changesModal')) closeChangesModal();
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
 // TABS
 // ─────────────────────────────────────────────────────────────────────────────
 function switchTab(tab) {
@@ -3592,16 +3779,25 @@ function updateSyncTimestamp() { showSyncIdle(); }   // alias for compat
 function diffLessons(oldLessons, newLessons) {
   const toMap = arr => { const m={}; (arr||[]).forEach(l=>{m[l.date+'|'+l.activity]=l;}); return m; };
   const oldMap = toMap(oldLessons), newMap = toMap(newLessons);
-  const addedM   = Object.keys(newMap).filter(k => !oldMap[k] && isPaid(newMap[k].assignment));
-  const removedM = Object.keys(oldMap).filter(k => !newMap[k] && isPaid(oldMap[k].assignment));
-  const changedM = Object.keys(newMap).filter(k => oldMap[k] && oldMap[k].assignment !== newMap[k].assignment
+  const addedKeys   = Object.keys(newMap).filter(k => !oldMap[k] && isPaid(newMap[k].assignment));
+  const removedKeys = Object.keys(oldMap).filter(k => !newMap[k] && isPaid(oldMap[k].assignment));
+  const changedKeys = Object.keys(newMap).filter(k => oldMap[k] && oldMap[k].assignment !== newMap[k].assignment
     && (isPaid(newMap[k].assignment) || isPaid(oldMap[k].assignment)));
-  if (!addedM.length && !removedM.length && !changedM.length) return null;
+  if (!addedKeys.length && !removedKeys.length && !changedKeys.length) return null;
   const parts = [];
-  if (addedM.length)   parts.push(`+${addedM.length} new`);
-  if (removedM.length) parts.push(`-${removedM.length} removed`);
-  if (changedM.length) parts.push(`${changedM.length} updated`);
-  return parts.join(', ');
+  if (addedKeys.length)   parts.push(`+${addedKeys.length} new`);
+  if (removedKeys.length) parts.push(`-${removedKeys.length} removed`);
+  if (changedKeys.length) parts.push(`${changedKeys.length} updated`);
+  const parseDateKey = l => {
+    const d = new Date(l.date.replace(/^[A-Za-z]+,\s*/,''));
+    return isNaN(d) ? '9999-99-99' : toKey(d);
+  };
+  return {
+    summary: parts.join(', '),
+    added:   addedKeys.map(k => ({ lesson: newMap[k], dateKey: parseDateKey(newMap[k]) })),
+    removed: removedKeys.map(k => ({ lesson: oldMap[k], dateKey: parseDateKey(oldMap[k]) })),
+    changed: changedKeys.map(k => ({ oldLesson: oldMap[k], newLesson: newMap[k], dateKey: parseDateKey(newMap[k]) })),
+  };
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -3638,6 +3834,8 @@ async function triggerRefresh(silent = false) {
   }
 
   _syncInFlight = true;
+  _lastDiff = null;
+  document.querySelectorAll('.app-header-sync-bar').forEach(b => b.classList.remove('clickable'));
   document.querySelectorAll('.app-header-refresh').forEach(b => {
     b.classList.add('spinning'); b.disabled = true;
   });
@@ -3664,7 +3862,7 @@ async function triggerRefresh(silent = false) {
       return;
     }
 
-    const summary = diffLessons(oldLessons, data.lessons);
+    const diff = diffLessons(oldLessons, data.lessons);
     ingestLessons(data.lessons);
     saveScheduleCache(data.lessons);
     renderDayList();
@@ -3677,10 +3875,13 @@ async function triggerRefresh(silent = false) {
       updateGreeting();
     }
 
-    if (summary) {
-      setSyncStatus('current', `Updated — ${summary}`);
+    if (diff) {
+      setSyncStatus('current', `Updated — ${diff.summary}`);
       scheduleSyncReturn(4000);
+      openChangesModal(diff);
     } else {
+      _lastDiff = null;
+      document.querySelectorAll('.app-header-sync-bar').forEach(b => b.classList.remove('clickable'));
       // No changes — show "current" briefly then idle
       setSyncStatus('current', 'Schedule is up to date');
       scheduleSyncReturn(3000);
@@ -3763,6 +3964,11 @@ window.addEventListener('load', () => {
       setTimeout(() => triggerRefresh(true), 800);
     }
   }
+
+  // Sync bar click — re-open changes modal if available
+  document.querySelectorAll('.app-header-sync-bar').forEach(bar => {
+    bar.addEventListener('click', () => { if (_lastDiff) openChangesModal(_lastDiff); });
+  });
 
   // Always re-fetch when user returns to the app (tab/phone focus)
   document.addEventListener('visibilitychange', () => {
