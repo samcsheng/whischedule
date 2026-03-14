@@ -1782,6 +1782,23 @@ const DAYS_LONG    = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday
 const TODAY_KEY = (() => { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`; })();
 
 
+// ─────────────────────────────────────────────────────────────────────────────
+// HAPTIC FEEDBACK
+// Uses the Web Vibration API where available (Android Chrome/Firefox).
+// iOS Safari does not support navigator.vibrate; calls are silently ignored.
+// ─────────────────────────────────────────────────────────────────────────────
+function haptic(type) {
+  if (!navigator.vibrate) return;
+  switch (type) {
+    case 'light':     navigator.vibrate(10);           break; // subtle tap
+    case 'medium':    navigator.vibrate(20);           break; // selection
+    case 'heavy':     navigator.vibrate(40);           break; // strong action
+    case 'success':   navigator.vibrate([10, 60, 15]); break; // double pulse
+    case 'error':     navigator.vibrate([50, 40, 50]); break; // double buzz
+    default:          navigator.vibrate(10);           break;
+  }
+}
+
 function resolveThemeColor(value) {
   if (!value || !value.startsWith('var(')) return value;
   const match = value.match(/var\((--[^)]+)\)/);
@@ -2054,6 +2071,7 @@ function maybeShowInstallWelcome() {
 }
 
 function closeInstallWelcome() {
+  haptic('light');
   safeLocalSet(PWA_INSTALL_KEYS.introSeen, 'true');
   closeInstallModal('installWelcomeModal');
 }
@@ -2129,6 +2147,7 @@ function updateInstallCtas() {
 }
 
 function handleInstallPrimaryAction() {
+  haptic('medium');
   if (isIOS() || !deferredInstallPrompt) {
     closeInstallModal('installHelpModal');
     return;
@@ -2138,6 +2157,7 @@ function handleInstallPrimaryAction() {
 }
 
 function handleInstallHintAction() {
+  haptic('medium');
   if (safeLocalGet(PWA_INSTALL_KEYS.installed) === 'true' || isStandalone()) return;
   if (isIOS()) { openInstallHelp(); return; }
   if (deferredInstallPrompt) { promptInstall(); return; }
@@ -2145,12 +2165,14 @@ function handleInstallHintAction() {
 }
 
 function dismissObInstallHint() {
+  haptic('light');
   safeLocalSet(PWA_INSTALL_KEYS.obHintDismissed, 'true');
   const hint = document.getElementById('obInstallHint');
   if (hint) hint.classList.remove('is-visible');
 }
 
 function handleInstallCtaClick() {
+  haptic('medium');
   if (safeLocalGet(PWA_INSTALL_KEYS.installed) === 'true' || isStandalone()) {
     openInstallHelp();
     return;
@@ -2604,6 +2626,7 @@ let weekOffset     = 0;
 let selectedKey    = TODAY_KEY;
 
 function togglePicker() {
+  haptic('light');
   pickerExpanded = !pickerExpanded;
   document.getElementById('pickerArea').classList.toggle('expanded', pickerExpanded);
   if (pickerExpanded) {
@@ -2823,6 +2846,7 @@ function renderPicker() {
 // NAVIGATION
 // ─────────────────────────────────────────────────────────────────────────────
 function selectDay(key) {
+  haptic('light');
   selectedKey = clampSelectedKey(key);
   weekOffset  = computeWeekOffsetForKey(selectedKey);
   if (pickerExpanded) {
@@ -2855,6 +2879,7 @@ function shiftWeek(dir) {
 }
 
 function goToToday() {
+  haptic('medium');
   const target = dayKeys && dayKeys.includes(TODAY_KEY) ? TODAY_KEY
     : (dayKeys.length ? (TODAY_KEY < dayKeys[0] ? dayKeys[0] : dayKeys[dayKeys.length-1]) : TODAY_KEY);
   selectedKey = target;
@@ -3094,6 +3119,7 @@ function buildStats() {
 // PROGRAM DETAIL MODAL
 // ─────────────────────────────────────────────────────────────────────────────
 function openProgModal(progKey, label, color) {
+  haptic('light');
   const seasonStart = getSeasonStartKey();
   const seasonEnd = getSeasonEndKey();
   const validKeys = Object.keys(byDate).sort().filter(k =>
@@ -3213,6 +3239,7 @@ function openProgModal(progKey, label, color) {
 }
 
 function closeProgModal() {
+  haptic('light');
   document.getElementById('progModal').classList.remove('open');
 }
 function handleProgModalOverlay(e) {
@@ -3232,6 +3259,7 @@ function _getSeasonMonths() {
 // TABS
 // ─────────────────────────────────────────────────────────────────────────────
 function switchTab(tab) {
+  haptic('medium');
   document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
   document.querySelectorAll('.tab').forEach(t  => t.classList.remove('active'));
   document.getElementById('page-' + tab).classList.add('active');
@@ -3305,6 +3333,7 @@ function loadCredentials() {
   return { passNumber: localStorage.getItem('wb_passNumber')||'', password: '$noW2526' };
 }
 function openProfile() {
+  haptic('light');
   const c = loadCredentials();
   document.getElementById('inputPassNumber').value = c.passNumber;
   document.getElementById('modalStatus').textContent = '';
@@ -3353,13 +3382,14 @@ function openProfile() {
 
   document.getElementById('profileModal').classList.add('open');
 }
-function closeProfile() { document.getElementById('profileModal').classList.remove('open'); }
+function closeProfile() { haptic('light'); document.getElementById('profileModal').classList.remove('open'); }
 function handleOverlayClick(e) { if (e.target === document.getElementById('profileModal')) closeProfile(); }
 function saveCredentials() {
   const pn = document.getElementById('inputPassNumber').value.trim();
-  if (!pn) { setModalStatus('Please enter your pass number.', 'err'); return; }
+  if (!pn) { haptic('error'); setModalStatus('Please enter your pass number.', 'err'); return; }
   localStorage.setItem('wb_passNumber', pn);
   localStorage.removeItem('wb_password'); // clear any legacy stored password
+  haptic('success');
   setModalStatus('✓ Saved!', 'ok');
   setTimeout(() => { closeProfile(); triggerRefresh(true); }, 600);
 }
@@ -3484,6 +3514,7 @@ function cacheAgeHours() {
 // REFRESH — always fires on open and visibility; deduped; offline-aware
 // ─────────────────────────────────────────────────────────────────────────────
 async function triggerRefresh(silent = false) {
+  if (!silent) haptic('light');
   const creds = loadCredentials();
   if (!creds.passNumber) {
     if (!silent) { openProfile(); setModalStatus('Enter your pass number first.', 'err'); }
@@ -3725,6 +3756,7 @@ function obInit() {
 }
 
 function obGoTo(screenNum) {
+  haptic('medium');
   const current = document.querySelector('.ob-screen.ob-active');
   const next    = document.getElementById('obScreen' + screenNum);
   if (!current || !next || current === next) return;
@@ -3753,6 +3785,7 @@ async function obConnect() {
   const btn = document.getElementById('obConnectBtn');
 
   if (!pn) {
+    haptic('error');
     obSetStatus('Please enter your pass number.');
     obShakeInputs();
     return;
@@ -3788,10 +3821,12 @@ async function obConnect() {
     ingestLessons(data.lessons);
 
     // Build success screen stats
+    haptic('success');
     obBuildSuccess(data);
     obGoTo(3);
 
   } catch (err) {
+    haptic('error');
     btn.disabled = false;
     btn.classList.remove('ob-loading');
     btn.innerHTML = `Connect &amp; Load Schedule →`;
@@ -3868,6 +3903,7 @@ function obBuildSuccess(data) {
 }
 
 function obEnterApp() {
+  haptic('success');
   localStorage.setItem('wb_onboarded', 'true');
   document.documentElement.style.overflow = '';
 
