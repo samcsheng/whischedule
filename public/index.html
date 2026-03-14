@@ -2089,87 +2089,45 @@ function closeInstallWelcome() {
 }
 
 function updateInstallCtas() {
-  const installed = (safeLocalGet(PWA_INSTALL_KEYS.installed) === 'true') || isStandalone();
-  const canPrompt = !!deferredInstallPrompt;
-
-  const ctaBtn = document.getElementById('installCtaBtn');
-  const ctaTitle = document.getElementById('installCtaTitle');
-  const ctaSub = document.getElementById('installCtaSub');
-  const ctaRight = document.getElementById('installCtaRight');
+  const ctaBtn = document.getElementById(‘installCtaBtn’);
+  const ctaTitle = document.getElementById(‘installCtaTitle’);
+  const ctaSub = document.getElementById(‘installCtaSub’);
+  const ctaRight = document.getElementById(‘installCtaRight’);
   if (ctaBtn && ctaTitle && ctaSub && ctaRight) {
-    if (installed) {
-      ctaBtn.disabled = true;
-      ctaTitle.textContent = 'WhisSchedule is installed';
-      ctaSub.textContent = 'You’re running the app version';
-      ctaRight.textContent = 'Installed';
-    } else if (isIOS()) {
-      ctaBtn.disabled = false;
-      ctaTitle.textContent = 'Install WhisSchedule';
-      ctaSub.textContent = 'Add to Home Screen (Safari Share menu)';
-      ctaRight.textContent = 'How';
-    } else if (canPrompt) {
-      ctaBtn.disabled = false;
-      ctaTitle.textContent = 'Install WhisSchedule';
-      ctaSub.textContent = 'Get one-tap access and offline cache';
-      ctaRight.textContent = 'Install';
-    } else {
-      ctaBtn.disabled = false;
-      ctaTitle.textContent = 'Install WhisSchedule';
-      ctaSub.textContent = isProbablyAndroid() ? 'Use your browser menu → Install app' : isProbablyDesktopChrome() ? 'Check Chrome\'s address bar for the install icon' : 'See install steps';
-      ctaRight.textContent = 'Info';
-    }
+    ctaBtn.disabled = false;
+    ctaTitle.textContent = ‘Install WhisSchedule’;
+    ctaSub.textContent = ‘Add to your Home Screen for quick access’;
+    ctaRight.textContent = ‘Install’;
   }
 
-  const hint = document.getElementById('obInstallHint');
-  const hintSub = document.getElementById('obInstallHintSub');
-  const hintBtn = document.getElementById('obInstallHintBtn');
+  const hint = document.getElementById(‘obInstallHint’);
+  const hintSub = document.getElementById(‘obInstallHintSub’);
+  const hintBtn = document.getElementById(‘obInstallHintBtn’);
   if (hint && hintSub && hintBtn) {
-    const dismissed = safeLocalGet(PWA_INSTALL_KEYS.obHintDismissed) === 'true';
-    const screen1 = document.getElementById('obScreen1');
-    const obScreen1Active = !!(screen1 && screen1.classList.contains('ob-active'));
+    const dismissed = safeLocalGet(PWA_INSTALL_KEYS.obHintDismissed) === ‘true’;
+    const screen1 = document.getElementById(‘obScreen1’);
+    const obScreen1Active = !!(screen1 && screen1.classList.contains(‘ob-active’));
 
-    if (installed || dismissed || !obScreen1Active) {
-      hint.classList.remove('is-visible');
+    if (dismissed || !obScreen1Active) {
+      hint.classList.remove(‘is-visible’);
     } else {
-      hint.classList.add('is-visible');
-      if (isIOS()) {
-        hintSub.textContent = 'Tip: Add it to your Home Screen for one‑tap access (Safari → Share → Add to Home Screen).';
-        hintBtn.style.display = '';
-        hintBtn.textContent = 'How to install';
-        hintBtn.disabled = false;
-      } else if (canPrompt) {
-        hintSub.textContent = 'Tip: Install the app for faster launch, offline cache, and one‑tap access.';
-        hintBtn.style.display = '';
-        hintBtn.textContent = 'Install app';
-        hintBtn.disabled = false;
-      } else {
-        hintSub.textContent = isProbablyAndroid()
-          ? 'Tip: Install via your browser menu (⋮ → Install app / Add to Home screen).'
-          : isProbablyDesktopChrome()
-            ? 'Tip: Reload the page once, then look for the ⊕ install icon in Chrome\'s address bar.'
-            : 'Tip: Install via your browser menu for a more app-like experience.';
-        hintBtn.style.display = isProbablyDesktopChrome() ? '' : 'none';
-        if (isProbablyDesktopChrome()) {
-          hintBtn.textContent = 'How to install';
-          hintBtn.disabled = false;
-        }
-      }
+      hint.classList.add(‘is-visible’);
+      hintSub.textContent = ‘Tip: Install for faster launch and one‑tap access.’;
+      hintBtn.style.display = ‘’;
+      hintBtn.textContent = ‘Install’;
+      hintBtn.disabled = false;
     }
   }
 }
 
 function handleInstallPrimaryAction() {
-  if (isIOS() || !deferredInstallPrompt) {
-    closeInstallModal('installHelpModal');
-    return;
-  }
   closeInstallModal('installHelpModal');
-  promptInstall();
+  if (deferredInstallPrompt) {
+    promptInstall();
+  }
 }
 
 function handleInstallHintAction() {
-  if (safeLocalGet(PWA_INSTALL_KEYS.installed) === 'true' || isStandalone()) return;
-  if (isIOS()) { openInstallHelp(); return; }
   if (deferredInstallPrompt) { promptInstall(); return; }
   openInstallHelp();
 }
@@ -2181,11 +2139,6 @@ function dismissObInstallHint() {
 }
 
 function handleInstallCtaClick() {
-  if (safeLocalGet(PWA_INSTALL_KEYS.installed) === 'true' || isStandalone()) {
-    openInstallHelp();
-    return;
-  }
-  if (isIOS()) { openInstallHelp(); return; }
   if (deferredInstallPrompt) { promptInstall(); return; }
   openInstallHelp();
 }
