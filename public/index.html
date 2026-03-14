@@ -869,6 +869,8 @@ body::after { content:''; position:fixed; inset:0; pointer-events:none; z-index:
 .brow-label { font-size:12px; font-weight:500; display:flex; align-items:center; gap:6px; }
 .brow-dot { width:7px; height:7px; border-radius:50%; flex-shrink:0; }
 .brow-vals { font-family:var(--f-mono); font-size:11px; color:var(--muted); }
+.brow-right { display:flex; align-items:center; gap:6px; }
+.brow-chevron { font-size:14px; color:var(--muted); opacity:0.35; line-height:1; }
 .brow-bar { height:4px; background:var(--bar-track); border-radius:2px; overflow:hidden; }
 .brow-fill { height:100%; border-radius:2px; transition:width 1.2s cubic-bezier(0.16,1,0.3,1); }
 
@@ -2994,12 +2996,18 @@ function buildStats() {
     byDate[k].some(l => isPaid(l.assignment) && !NON_WORK_PROGRAMS.has(getProgram(l.raw, l.assignment))));
   // Hours by program — all paid non-off rows; dynamic 'prog_*' keys included.
   const progHours = {};
-  validKeys.forEach(k => { byDate[k].forEach(l => {
-    if (!isPaid(l.assignment)) return;
-    const prog = getProgram(l.raw, l.assignment);
-    if (['off','end'].includes(prog)) return;
-    progHours[prog] = (progHours[prog] || 0) + l.hours;
-  }); });
+  const progDays = {};
+  validKeys.forEach(k => {
+    const progsToday = new Set();
+    byDate[k].forEach(l => {
+      if (!isPaid(l.assignment)) return;
+      const prog = getProgram(l.raw, l.assignment);
+      if (['off','end'].includes(prog)) return;
+      progHours[prog] = (progHours[prog] || 0) + l.hours;
+      progsToday.add(prog);
+    });
+    progsToday.forEach(prog => { progDays[prog] = (progDays[prog] || 0) + 1; });
+  });
   const lessonHrs = Object.values(progHours).reduce((a,b)=>a+b,0);
   const privateDayKeys = new Set(validKeys.filter(k =>
     byDate[k].some(l => isPaid(l.assignment) && getProgram(l.raw, l.assignment) === 'private')));
@@ -3034,10 +3042,14 @@ function buildStats() {
   document.getElementById('breakdown').innerHTML = activePrograms.map(p => {
     const h = progHours[p.key]; const pct = Math.round((h/maxH)*100);
     const sharePct = Math.round((h / totalLessonHrs) * 100);
+    const d = progDays[p.key] || 0;
     return `<div class="brow" style="cursor:pointer" onclick="openProgModal('${p.key}','${p.label.replace(/'/g,"\\'")}','${p.color}')">
       <div class="brow-top">
         <span class="brow-label"><span class="brow-dot" style="background:${p.color}"></span>${p.label}</span>
-        <span class="brow-vals">${h.toFixed(1)}h <span style="opacity:0.5;margin-left:3px">${sharePct}%</span></span>
+        <span class="brow-right">
+          <span class="brow-vals"><span style="opacity:0.5;margin-right:6px">${d}d</span>${h.toFixed(1)}h <span style="opacity:0.5;margin-left:3px">${sharePct}%</span></span>
+          <span class="brow-chevron">›</span>
+        </span>
       </div>
       <div class="brow-bar"><div class="brow-fill" style="width:${pct}%;background:${p.color}"></div></div>
     </div>`;
