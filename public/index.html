@@ -1781,6 +1781,16 @@ const DAYS_SHORT   = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
 const DAYS_LONG    = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
 const TODAY_KEY = (() => { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`; })();
 
+// ─────────────────────────────────────────────────────────────────────────────
+// HAPTIC FEEDBACK
+// ─────────────────────────────────────────────────────────────────────────────
+// Patterns (ms): 'light'=10, 'medium'=18, 'heavy'=30, 'success'=[10,80,20], 'error'=[30,60,30]
+function haptic(type = 'light') {
+  if (!navigator.vibrate) return;
+  const patterns = { light: 10, medium: 18, heavy: 30, success: [10, 80, 20], error: [30, 60, 30] };
+  navigator.vibrate(patterns[type] ?? type);
+}
+
 
 function resolveThemeColor(value) {
   if (!value || !value.startsWith('var(')) return value;
@@ -2604,6 +2614,7 @@ let weekOffset     = 0;
 let selectedKey    = TODAY_KEY;
 
 function togglePicker() {
+  haptic('light');
   pickerExpanded = !pickerExpanded;
   document.getElementById('pickerArea').classList.toggle('expanded', pickerExpanded);
   if (pickerExpanded) {
@@ -2823,6 +2834,7 @@ function renderPicker() {
 // NAVIGATION
 // ─────────────────────────────────────────────────────────────────────────────
 function selectDay(key) {
+  haptic('light');
   selectedKey = clampSelectedKey(key);
   weekOffset  = computeWeekOffsetForKey(selectedKey);
   if (pickerExpanded) {
@@ -2855,6 +2867,7 @@ function shiftWeek(dir) {
 }
 
 function goToToday() {
+  haptic('medium');
   const target = dayKeys && dayKeys.includes(TODAY_KEY) ? TODAY_KEY
     : (dayKeys.length ? (TODAY_KEY < dayKeys[0] ? dayKeys[0] : dayKeys[dayKeys.length-1]) : TODAY_KEY);
   selectedKey = target;
@@ -3094,6 +3107,7 @@ function buildStats() {
 // PROGRAM DETAIL MODAL
 // ─────────────────────────────────────────────────────────────────────────────
 function openProgModal(progKey, label, color) {
+  haptic('light');
   const seasonStart = getSeasonStartKey();
   const seasonEnd = getSeasonEndKey();
   const validKeys = Object.keys(byDate).sort().filter(k =>
@@ -3213,6 +3227,7 @@ function openProgModal(progKey, label, color) {
 }
 
 function closeProgModal() {
+  haptic('light');
   document.getElementById('progModal').classList.remove('open');
 }
 function handleProgModalOverlay(e) {
@@ -3232,6 +3247,7 @@ function _getSeasonMonths() {
 // TABS
 // ─────────────────────────────────────────────────────────────────────────────
 function switchTab(tab) {
+  haptic('light');
   document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
   document.querySelectorAll('.tab').forEach(t  => t.classList.remove('active'));
   document.getElementById('page-' + tab).classList.add('active');
@@ -3305,6 +3321,7 @@ function loadCredentials() {
   return { passNumber: localStorage.getItem('wb_passNumber')||'', password: '$noW2526' };
 }
 function openProfile() {
+  haptic('light');
   const c = loadCredentials();
   document.getElementById('inputPassNumber').value = c.passNumber;
   document.getElementById('modalStatus').textContent = '';
@@ -3353,13 +3370,14 @@ function openProfile() {
 
   document.getElementById('profileModal').classList.add('open');
 }
-function closeProfile() { document.getElementById('profileModal').classList.remove('open'); }
+function closeProfile() { haptic('light'); document.getElementById('profileModal').classList.remove('open'); }
 function handleOverlayClick(e) { if (e.target === document.getElementById('profileModal')) closeProfile(); }
 function saveCredentials() {
   const pn = document.getElementById('inputPassNumber').value.trim();
-  if (!pn) { setModalStatus('Please enter your pass number.', 'err'); return; }
+  if (!pn) { haptic('error'); setModalStatus('Please enter your pass number.', 'err'); return; }
   localStorage.setItem('wb_passNumber', pn);
   localStorage.removeItem('wb_password'); // clear any legacy stored password
+  haptic('success');
   setModalStatus('✓ Saved!', 'ok');
   setTimeout(() => { closeProfile(); triggerRefresh(true); }, 600);
 }
@@ -3486,12 +3504,13 @@ function cacheAgeHours() {
 async function triggerRefresh(silent = false) {
   const creds = loadCredentials();
   if (!creds.passNumber) {
-    if (!silent) { openProfile(); setModalStatus('Enter your pass number first.', 'err'); }
+    if (!silent) { haptic('error'); openProfile(); setModalStatus('Enter your pass number first.', 'err'); }
     return;
   }
 
   // Dedup: ignore if already in flight
   if (_syncInFlight) return;
+  if (!silent) haptic('medium');
 
   // Offline: show amber state, wait for reconnect
   if (!navigator.onLine) {
@@ -3540,6 +3559,7 @@ async function triggerRefresh(silent = false) {
     }
 
     if (summary) {
+      haptic('success');
       setSyncStatus('current', `Updated — ${summary}`);
       scheduleSyncReturn(4000);
     } else {
@@ -3742,6 +3762,7 @@ function obSetStatus(msg) {
 }
 
 function obShakeInputs() {
+  haptic('error');
   const el = document.getElementById('obPassNumber');
   el.classList.add('ob-error');
   setTimeout(() => el.classList.remove('ob-error'), 400);
@@ -3788,6 +3809,7 @@ async function obConnect() {
     ingestLessons(data.lessons);
 
     // Build success screen stats
+    haptic('success');
     obBuildSuccess(data);
     obGoTo(3);
 
