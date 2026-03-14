@@ -623,6 +623,23 @@ body::after { content:''; position:fixed; inset:0; pointer-events:none; z-index:
 .picker-day.selected .picker-day-num { color: white; }
 .picker-day.selected .picker-day-dot { background: var(--selected-dot) !important; }
 
+/* Future day dot — hatched overlay to indicate "not yet happened" */
+.picker-day.is-future:not(.selected) .picker-day-dot {
+  opacity: 0.55;
+  position: relative;
+  overflow: hidden;
+}
+.picker-day.is-future:not(.selected) .picker-day-dot::after {
+  content: '';
+  position: absolute; inset: 0;
+  background: repeating-linear-gradient(
+    45deg,
+    transparent 0px, transparent 1px,
+    rgba(0,0,0,0.35) 1px, rgba(0,0,0,0.35) 2px
+  );
+  border-radius: inherit;
+}
+
 /* Pull handle — slim, same height as DOW row, centred */
 .picker-handle {
   display: flex;
@@ -682,6 +699,22 @@ body::after { content:''; position:fixed; inset:0; pointer-events:none; z-index:
 .lesson-row:hover { background: var(--row-hover); }
 .lesson-row:last-child { border-bottom: none; }
 .lesson-row.is-off { opacity: 0.35; }
+/* Future lesson row — hatched side-bar to indicate "not yet happened" */
+.lesson-row.is-future { opacity: 0.6; }
+.lesson-row.is-future .lesson-dot {
+  position: relative;
+  overflow: hidden;
+}
+.lesson-row.is-future .lesson-dot::after {
+  content: '';
+  position: absolute; inset: 0;
+  background: repeating-linear-gradient(
+    45deg,
+    transparent 0px, transparent 2px,
+    rgba(0,0,0,0.3) 2px, rgba(0,0,0,0.3) 4px
+  );
+  border-radius: inherit;
+}
 .lesson-dot {
   width: 3px;
   align-self: stretch;
@@ -873,6 +906,22 @@ body::after { content:''; position:fixed; inset:0; pointer-events:none; z-index:
 .brow-chevron { font-size:14px; color:var(--muted); opacity:0.35; line-height:1; }
 .brow-bar { height:4px; background:var(--bar-track); border-radius:2px; overflow:hidden; }
 .brow-fill { height:100%; border-radius:2px; transition:width 1.2s cubic-bezier(0.16,1,0.3,1); }
+/* Future portion of bar — hatched to indicate "not yet happened" */
+.brow-fill-future {
+  height: 100%; border-radius: 0 2px 2px 0;
+  position: relative;
+  overflow: hidden;
+  opacity: 0.5;
+}
+.brow-fill-future::after {
+  content: '';
+  position: absolute; inset: 0;
+  background: repeating-linear-gradient(
+    45deg,
+    transparent 0px, transparent 1px,
+    rgba(0,0,0,0.3) 1px, rgba(0,0,0,0.3) 2px
+  );
+}
 
 .heatmap-wrap { background:var(--card); border:1px solid var(--border); border-radius:16px; padding:16px; overflow-x:auto; }
 .heatmap-months { display:flex; gap:14px; min-width:max-content; }
@@ -1527,7 +1576,17 @@ body::after { content:''; position:fixed; inset:0; pointer-events:none; z-index:
 }
 .prog-day-row:active { background: var(--brow-active); }
 .prog-day-row:last-child { border-bottom: none; }
-.prog-day-row.is-future { opacity: 0.6; }
+.prog-day-row.is-future { opacity: 0.6; position: relative; }
+.prog-day-row.is-future::before {
+  content: '';
+  position: absolute; left: 0; top: 0; bottom: 0; width: 3px;
+  background: repeating-linear-gradient(
+    45deg,
+    rgba(59,139,255,0.4) 0px, rgba(59,139,255,0.4) 2px,
+    transparent 2px, transparent 4px
+  );
+  border-radius: 2px;
+}
 .prog-day-date {
   flex: 1;
   font-size: 13px; font-weight: 500; color: var(--snow);
@@ -2484,7 +2543,7 @@ function getProgHrsColor(prog) {
 }
 
 
-function buildRowsHtml(cards) {
+function buildRowsHtml(cards, isFuture) {
   return cards.map(c => {
     const isOff = (c.program === 'off' || c.program === 'sick');
 
@@ -2544,7 +2603,7 @@ function buildRowsHtml(cards) {
       ? `<div class="lesson-extra"><div class="lesson-note">📝 ${escapeHtml(scheduleWithOperator)}</div></div>`
       : '';
 
-    return `<div class="lesson-row${isOff ? ' is-off' : ''}">
+    return `<div class="lesson-row${isOff ? ' is-off' : ''}${isFuture ? ' is-future' : ''}">
       <div class="lesson-dot prog-${c.program}"></div>
       <div class="lesson-main">
         <div class="lesson-top">
@@ -2589,12 +2648,13 @@ function formatDayHeader(key) {
 
 function renderDaySection(key) {
   const isToday = key === TODAY_KEY;
+  const isFuture = key > TODAY_KEY;
   const cards   = buildDayView(key);
   const label   = formatDayHeader(key);
   const labelCls = isToday ? 'day-header-date is-today' : 'day-header-date';
 
   const bodyHtml = cards.length
-    ? buildRowsHtml(cards)
+    ? buildRowsHtml(cards, isFuture)
     : `<div class="day-empty">—</div>`;
 
   return `<section class="day-section" data-key="${key}">
@@ -2703,6 +2763,7 @@ function dayCell(key, num) {
     !hasWork && !isOutsideSeason ? 'is-off' : '',
     key < TODAY_KEY && key !== selectedKey ? 'past' : '',
     isOutsideSeason ? 'faded' : '',
+    isFuture && hasWork ? 'is-future' : '',
     dotClass,
   ].filter(Boolean).join(' ');
 
@@ -3021,32 +3082,41 @@ function buildStats() {
   );
   // Work day = any paid row that isn't a non-work category.
   // 'other' intentionally absent: Charity, AMDP etc. ARE work days.
-  const workDayKeys = validKeys.filter(k =>
+  const pastKeys = validKeys.filter(k => k <= TODAY_KEY);
+  const workDayKeys = pastKeys.filter(k =>
     byDate[k].some(l => isPaid(l.assignment) && !NON_WORK_PROGRAMS.has(getProgram(l.raw, l.assignment))));
   // Hours by program — all paid non-off rows; dynamic 'prog_*' keys included.
-  const progHours = {};
+  // Tracked separately for past (actual) and future (scheduled) for display.
+  const progHours = {};       // past only (actual hours)
+  const progHoursFuture = {}; // future only (scheduled hours)
   const progDays = {};
   validKeys.forEach(k => {
+    const isFutureDay = k > TODAY_KEY;
     const progsToday = new Set();
     byDate[k].forEach(l => {
       if (!isPaid(l.assignment)) return;
       const prog = getProgram(l.raw, l.assignment);
       if (['off','end'].includes(prog)) return;
-      progHours[prog] = (progHours[prog] || 0) + l.hours;
+      if (isFutureDay) {
+        progHoursFuture[prog] = (progHoursFuture[prog] || 0) + l.hours;
+      } else {
+        progHours[prog] = (progHours[prog] || 0) + l.hours;
+      }
       progsToday.add(prog);
     });
     progsToday.forEach(prog => { progDays[prog] = (progDays[prog] || 0) + 1; });
   });
   const lessonHrs = Object.values(progHours).reduce((a,b)=>a+b,0);
-  const privateDayKeys = new Set(validKeys.filter(k =>
+  const privateDayKeys = new Set(pastKeys.filter(k =>
     byDate[k].some(l => isPaid(l.assignment) && getProgram(l.raw, l.assignment) === 'private')));
   const clients = {};
   validKeys.forEach(k => { byDate[k].forEach(l => {
     if (!l.client || !isPaid(l.assignment)) return;
-    if (!clients[l.client]) clients[l.client] = { name:l.client, days:new Set(), raws:[], hours:0, lessons:[] };
+    if (!clients[l.client]) clients[l.client] = { name:l.client, days:new Set(), raws:[], hours:0, pastHours:0, lessons:[] };
     clients[l.client].days.add(k);
     clients[l.client].raws.push(l.raw);
     clients[l.client].hours += l.hours || 0;
+    if (k <= TODAY_KEY) clients[l.client].pastHours += l.hours || 0;
     clients[l.client].lessons.push({ key:k, hours:l.hours||0, raw:l.raw, privateDetails:l.privateDetails, assignment:l.assignment });
   }); });
 
@@ -3062,28 +3132,36 @@ function buildStats() {
   // Known programs first (display order from PROGRAM_DEFS), then any dynamic
   // prog_* slugs found in this season's data appended at the end.
   const knownKeys = new Set(PROGRAM_DEFS.map(p => p.key));
-  const dynamicKeys = Object.keys(progHours).filter(k => !knownKeys.has(k) && k !== 'other');
+  const allProgKeys = new Set([...Object.keys(progHours), ...Object.keys(progHoursFuture)]);
+  const dynamicKeys = [...allProgKeys].filter(k => !knownKeys.has(k) && k !== 'other');
   const programs = [
     ...PROGRAM_DEFS.map(p => ({ key:p.key, label:p.label, color:p.color })),
     ...dynamicKeys.map(k => ({ key:k, label:progLabel(k), color:progColor(k) })),
   ];
 
-  const activePrograms = programs.filter(p=>(progHours[p.key]||0)>0).sort((a,b)=>(progHours[b.key]||0)-(progHours[a.key]||0));
-  const maxH = activePrograms.length ? (progHours[activePrograms[0].key]||1) : 1;
+  const activePrograms = programs.filter(p=>((progHours[p.key]||0)+(progHoursFuture[p.key]||0))>0)
+    .sort((a,b)=>((progHours[b.key]||0)+(progHoursFuture[b.key]||0))-((progHours[a.key]||0)+(progHoursFuture[a.key]||0)));
+  const maxH = activePrograms.length ? ((progHours[activePrograms[0].key]||0)+(progHoursFuture[activePrograms[0].key]||0)||1) : 1;
   const totalLessonHrs = lessonHrs || 1;
   document.getElementById('breakdown').innerHTML = activePrograms.map(p => {
-    const h = progHours[p.key]; const pct = Math.round((h/maxH)*100);
-    const sharePct = Math.round((h / totalLessonHrs) * 100);
+    const h = progHours[p.key] || 0;
+    const hf = progHoursFuture[p.key] || 0;
+    const totalH = h + hf;
+    const pct = Math.round((h/maxH)*100);
+    const pctFuture = Math.round((hf/maxH)*100);
+    const sharePct = h > 0 ? Math.round((h / totalLessonHrs) * 100) : 0;
     const d = progDays[p.key] || 0;
+    const hrsDisplay = h > 0 ? h.toFixed(1) + 'h' : '';
+    const futureDisplay = hf > 0 ? `<span style="opacity:0.45">${hf > 0 && h > 0 ? ' + ' : ''}${hf.toFixed(1)}h sched</span>` : '';
     return `<div class="brow" style="cursor:pointer" onclick="openProgModal('${p.key}','${p.label.replace(/'/g,"\\'")}','${p.color}')">
       <div class="brow-top">
         <span class="brow-label"><span class="brow-dot" style="background:${p.color}"></span>${p.label}</span>
         <span class="brow-right">
-          <span class="brow-vals"><span style="opacity:0.5;margin-right:6px">${d}d</span>${h.toFixed(1)}h <span style="opacity:0.5;margin-left:3px">${sharePct}%</span></span>
+          <span class="brow-vals"><span style="opacity:0.5;margin-right:6px">${d}d</span>${hrsDisplay}${futureDisplay}${sharePct > 0 ? ` <span style="opacity:0.5;margin-left:3px">${sharePct}%</span>` : ''}</span>
           <span class="brow-chevron">›</span>
         </span>
       </div>
-      <div class="brow-bar"><div class="brow-fill" style="width:${pct}%;background:${p.color}"></div></div>
+      <div class="brow-bar" style="display:flex"><div class="brow-fill" style="width:${pct}%;background:${p.color}"></div>${hf > 0 ? `<div class="brow-fill-future" style="width:${pctFuture}%;background:${p.color}"></div>` : ''}</div>
     </div>`;
   }).join('') || '<p style="color:var(--muted);padding:16px;font-size:13px">No lesson hours recorded yet.</p>';
 
@@ -3135,7 +3213,7 @@ function buildStats() {
     if(loc)                pills+=`<span class="pill pill-loc">📍 ${loc}</span>`;
     if(dur==='Full Day')   pills+=`<span class="pill pill-fd">Full Day</span>`;
     if(dur==='Half Day')   pills+=`<span class="pill pill-hd">Half Day</span>`;
-    const totalHrs=c.hours.toFixed(1);
+    const totalHrs=c.pastHours.toFixed(1);
     const nameEsc=escapeHtml(c.name);
     return `<div class="client-row" data-client="${nameEsc}" onclick="openClientModal(this.dataset.client)"><div class="client-avatar">${initials}</div><div class="client-info"><div class="client-name">${nameEsc}</div>${pills?`<div class="client-pills">${pills}</div>`:''}</div><div class="client-stats"><div class="client-stat-days">${c.days.size}d</div><div class="client-stat-hrs">${totalHrs}h</div></div><svg class="client-chevron" viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg></div>`;
   }).join('') : `<div class="empty-state" style="padding:32px 20px"><div class="empty-emoji">🎿</div><div class="empty-title">No private clients</div><div class="empty-sub">Private lesson bookings with named clients will show up here.</div></div>`;
@@ -3162,10 +3240,12 @@ function openProgModal(progKey, label, color) {
     progDays.push({ key: k, hours: parseFloat(hours.toFixed(2)), isFuture: k > TODAY_KEY });
   });
 
-  const totalHrs  = progDays.reduce((s,d) => s + d.hours, 0);
+  const pastProgDays = progDays.filter(d => !d.isFuture);
+  const totalHrs  = pastProgDays.reduce((s,d) => s + d.hours, 0);
+  const futureHrs = progDays.filter(d => d.isFuture).reduce((s,d) => s + d.hours, 0);
   const allLessonHrs = Object.values(
     (() => { const ph = {};
-      validKeys.forEach(k => { (byDate[k]||[]).forEach(l => {
+      validKeys.filter(k => k <= TODAY_KEY).forEach(k => { (byDate[k]||[]).forEach(l => {
         if (!isPaid(l.assignment)) return;
         const p = getProgram(l.raw, l.assignment);
         if (['off','end'].includes(p)) return;
@@ -3183,6 +3263,7 @@ function openProgModal(progKey, label, color) {
   const resolvedColor = resolveThemeColor(color);
   const statStyle = `color:${resolvedColor}`;
 
+  const futureHrsNote = futureHrs > 0 ? `<div style="font-size:10px;color:var(--muted);margin-top:2px">+${futureHrs.toFixed(1)} sched</div>` : '';
   document.getElementById('progModalStats').innerHTML = `
     <div class="prog-modal-stat">
       <div class="prog-modal-stat-val" style="${statStyle}">${progDays.length}</div>
@@ -3191,6 +3272,7 @@ function openProgModal(progKey, label, color) {
     <div class="prog-modal-stat">
       <div class="prog-modal-stat-val" style="${statStyle}">${totalHrs.toFixed(1)}</div>
       <div class="prog-modal-stat-lbl">Hours</div>
+      ${futureHrsNote}
     </div>
     <div class="prog-modal-stat">
       <div class="prog-modal-stat-val" style="${statStyle}">${sharePct}%</div>
@@ -3219,7 +3301,11 @@ function openProgModal(progKey, label, color) {
         cls += 'prog-hm-empty';
       } else if (progDaySet.has(key)) {
         cls += 'prog-hm-active';
-        style = `background:${resolvedColor};opacity:0.85`;
+        if (key > TODAY_KEY) {
+          style = `background:repeating-linear-gradient(45deg,${resolvedColor}80 0px,${resolvedColor}80 3px,${resolvedColor}30 3px,${resolvedColor}30 6px)`;
+        } else {
+          style = `background:${resolvedColor};opacity:0.85`;
+        }
       } else {
         cls += 'prog-hm-season';
       }
@@ -3291,15 +3377,20 @@ function openClientModal(clientName) {
   document.getElementById('clientModalAvatar').textContent = initials;
   document.getElementById('clientModalTitle').textContent = clientName;
 
-  const avgHrs = c.days.size > 0 ? (c.hours / c.days.size).toFixed(1) : '—';
+  const pastHrs = c.pastHours || 0;
+  const futureClientHrs = c.hours - pastHrs;
+  const pastDays = [...c.days].filter(k => k <= TODAY_KEY).length;
+  const avgHrs = pastDays > 0 ? (pastHrs / pastDays).toFixed(1) : '—';
+  const futureNote = futureClientHrs > 0 ? `<div style="font-size:10px;color:var(--muted);margin-top:2px">+${futureClientHrs.toFixed(1)} sched</div>` : '';
   document.getElementById('clientModalStats').innerHTML = `
     <div class="prog-modal-stat">
       <div class="prog-modal-stat-val" style="color:var(--yellow)">${c.days.size}</div>
       <div class="prog-modal-stat-lbl">Days</div>
     </div>
     <div class="prog-modal-stat">
-      <div class="prog-modal-stat-val" style="color:var(--orange)">${c.hours.toFixed(1)}</div>
+      <div class="prog-modal-stat-val" style="color:var(--orange)">${pastHrs.toFixed(1)}</div>
       <div class="prog-modal-stat-lbl">Hours</div>
+      ${futureNote}
     </div>
     <div class="prog-modal-stat">
       <div class="prog-modal-stat-val" style="color:var(--muted)">${avgHrs}</div>
@@ -3469,7 +3560,7 @@ function openProfile() {
     const seasonStart = getSeasonStartKey();
     const seasonEnd = getSeasonEndKey();
     const validKeys = Object.keys(byDate).filter(k =>
-      (!seasonStart || k >= seasonStart) && (!seasonEnd || k <= seasonEnd)
+      (!seasonStart || k >= seasonStart) && (!seasonEnd || k <= seasonEnd) && k <= TODAY_KEY
     );
     const workDays = validKeys.filter(k =>
       byDate[k].some(l => isPaid(l.assignment) && !NON_WORK_PROGRAMS.has(getProgram(l.raw, l.assignment)))
