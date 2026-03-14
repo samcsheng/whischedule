@@ -599,7 +599,6 @@ body::after { content:''; position:fixed; inset:0; pointer-events:none; z-index:
 .picker-day.today   .picker-day-num { color: var(--blue); }
 .picker-day.selected .picker-day-bg { background: var(--blue); }
 .picker-day.selected .picker-day-num { color: white; }
-.picker-day.selected .picker-day-dot { background: var(--selected-dot) !important; }
 
 /* Future day indicators — hatched overlay to indicate "not yet happened" */
 .picker-day.is-future:not(.selected) .picker-day-dot::after {
@@ -2792,11 +2791,12 @@ function renderPickerWeek() {
   const weekRow = document.getElementById('pickerWeekRow');
   weekRow.innerHTML = html;
 
-  // Scroll to selected week (snap groups are exactly 100% wide each)
-  const snapGroups = weekRow.querySelectorAll('.picker-week-snap');
-  if (snapGroups[selectedSnapIndex]) {
-    weekRow.scrollLeft = snapGroups[selectedSnapIndex].offsetLeft;
-  }
+  // Scroll to selected week — defer one frame so layout is settled
+  const _snapIdx = selectedSnapIndex;
+  requestAnimationFrame(() => {
+    const snapGroups = weekRow.querySelectorAll('.picker-week-snap');
+    if (snapGroups[_snapIdx]) weekRow.scrollLeft = snapGroups[_snapIdx].offsetLeft;
+  });
 
   // Update month label
   const selD = new Date(selectedKey + 'T12:00:00');
@@ -2929,10 +2929,20 @@ function goToToday() {
     : (dayKeys.length ? (TODAY_KEY < dayKeys[0] ? dayKeys[0] : dayKeys[dayKeys.length-1]) : TODAY_KEY);
   selectedKey = target;
   weekOffset  = computeWeekOffsetForKey(selectedKey);
-  if (pickerExpanded) renderPickerMonth();
-  else renderPickerWeek();
+  if (pickerExpanded) {
+    renderPickerMonth();
+    requestAnimationFrame(() => {
+      const grid = document.getElementById('pickerMonthGrid');
+      const selEl = grid && grid.querySelector('.picker-day.selected');
+      if (selEl) {
+        const block = selEl.closest('.picker-month-block');
+        if (block) grid.scrollTop = block.offsetTop;
+      }
+    });
+  } else {
+    renderPickerWeek();
+  }
   scrollToDay(selectedKey, true);
-  
 }
 
 function clampSelectedKey(key) {
