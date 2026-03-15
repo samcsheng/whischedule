@@ -1655,8 +1655,28 @@ html[data-theme="light"] {
   line-height: 1;
   opacity: 0.5;
 }
+.app-sync-chevron {
+  font-size: 13px;
+  color: var(--muted);
+  line-height: 1;
+  flex-shrink: 0;
+  opacity: 0;
+  transform: translateX(-4px);
+  transition: opacity 0.25s, transform 0.25s;
+  pointer-events: none;
+}
 .app-header-sync-bar.clickable { cursor: pointer; }
+.app-header-sync-bar.clickable .app-sync-chevron {
+  opacity: 0.55;
+  transform: translateX(0);
+}
+.app-header-sync-bar.clickable .app-sync-text {
+  text-decoration: underline;
+  text-decoration-color: rgba(255,255,255,0.18);
+  text-underline-offset: 2px;
+}
 .app-header-sync-bar.clickable:hover .app-sync-text { opacity: 0.8; }
+.app-header-sync-bar.clickable:active { opacity: 0.6; }
 </style>
 <script>
   window.va = window.va || function () { (window.vaq = window.vaq || []).push(arguments); };
@@ -1682,6 +1702,7 @@ html[data-theme="light"] {
     <div class="app-header-sync-bar">
       <div class="app-sync-dot" id="syncDot"></div>
       <span class="app-sync-text" id="syncText"></span>
+      <span class="app-sync-chevron">›</span>
     </div>
   </div>
 
@@ -1728,6 +1749,7 @@ html[data-theme="light"] {
     <div class="app-header-sync-bar">
       <div class="app-sync-dot" id="syncDot2"></div>
       <span class="app-sync-text" id="syncText2"></span>
+      <span class="app-sync-chevron">›</span>
     </div>
   </div>
   <div class="stats-page">
@@ -3853,6 +3875,7 @@ function showSyncIdle() {
     const hrs = Math.round(mins / 60);
     label = hrs < 24 ? `Synced ${hrs}h ago` : `Synced ${Math.round(hrs/24)}d ago`;
   }
+  if (_lastDiff) label += ` · ${_lastDiff.summary}`;
   setSyncStatus('', label);
 }
 
